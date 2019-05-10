@@ -80,7 +80,8 @@ STCLNK_NAME=$(OUTLIB)/lib$(PROJNAME).a
 # ######################################################################
 # Declare the intermediate outputs
 BINOBS=\
-	$(OUTOBS)/xcgi_test.o
+	$(OUTOBS)/xcgi_test.o\
+	$(OUTOBS)/xcgi_faker.o
 
 
 OBS=\
