@@ -19,6 +19,7 @@ endif
 	EXE_EXT=.exe
 	LIB_EXT=.dll
 	PLATFORM_LDFLAGS=-lmingw32 -lws2_32 -lmsvcrt -lgcc
+	HOME=$(HOMEDRIVE)/$(HOMEPATH)
 endif
 
 ifneq ($(MAKEPROGRAM_MINGW),)
@@ -28,7 +29,8 @@ endif
 	PLATFORM=Windows
 	EXE_EXT=.exe
 	LIB_EXT=.dll
-	PLATFORM_LDFLAGS=-lmingw32 -lws2_32 -lmsvcrt -lgcc
+	PLATFORM_LDFLAGS=-lmingw32 -lws2_32 -lmsvcrt -lgcc -lds
+	HOME=$(HOMEDRIVE)/$(HOMEPATH)
 endif
 
 # If neither of the above are true then we assume a working POSIX
@@ -37,6 +39,7 @@ ifeq ($(PLATFORM),)
 	PLATFORM=POSIX
 	EXE_EXT=.elf
 	LIB_EXT=.so
+	PLATFORM_LDFLAGS= -lds
 endif
 
 
@@ -54,7 +57,7 @@ ifneq (,$(findstring release,$(MAKECMDGOALS)))
 OUTDIR=release
 endif
 
-VERSION=1.0.0
+VERSION=0.0.1
 PROJNAME=xcgi
 
 TARGET=$(shell $(GCC) -dumpmachine)
@@ -105,13 +108,15 @@ CC=$(GCC)
 CXX=$(GXX)
 
 COMMONFLAGS=\
-	-W -Wall -c -fPIC \
-	-DPLATFORM=$(PLATFORM) -DPLATFORM_$(PLATFORM)
+	-W -Wall -c -fPIC -I$(HOME)/include\
+	-DPLATFORM=$(PLATFORM) -DPLATFORM_$(PLATFORM)\
+	-DXCGI_VERSION=\"$(VERSION)\"
+
 
 CFLAGS=$(COMMONFLAGS) -std=c99
 CXXFLAGS=$(COMMONFLAGS) -std=c++x11
 LD=$(GCC)
-LDFLAGS= -lm $(PLATFORM_LDFLAGS)
+LDFLAGS= -L$(HOME)/lib -lm $(PLATFORM_LDFLAGS)
 AR=ar
 ARFLAGS= rcs
 
