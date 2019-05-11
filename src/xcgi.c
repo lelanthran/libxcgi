@@ -303,25 +303,25 @@ char *xcgi_string_unescape (const char *src)
       goto errorexit;
 
    for (size_t i=0; src[i] && i<len; i++) {
-      if (src[i]=='%') {
-         int tmp;
-         char c;
-         i++;
-         if ((sscanf (&src[i], "%02x", &tmp))!=1) {
-            fprintf (stderr, "Failed to scan escaped character at %s\n",
-                     &src[i]);
-            goto errorexit;
-         }
-         c = tmp;
-         ret[index++] = c;
-         i++;
 
-      } else {
-
+      if (src[i]!='%') {
          ret[index++] = src[i];
-
+         continue;
       }
+
+      int tmp;
+      char c;
+      i++;
+      if ((sscanf (&src[i], "%02x", &tmp))!=1) {
+         fprintf (stderr, "Failed to scan escaped character at %s\n",
+                  &src[i]);
+         goto errorexit;
+      }
+      c = tmp;
+      ret[index++] = c;
+      i++;
    }
+
    ret[index] = 0;
 
    error = false;
