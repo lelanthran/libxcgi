@@ -17,6 +17,7 @@ extern "C" {
 
    // Initialises the cgi variables. Returns true on success, false on error.
    bool xcgi_init (void);
+   void xcgi_shutdown (void);
 
    // Load/save the cgi environment for later playback.
    bool xcgi_load (const char *fname);
@@ -26,6 +27,23 @@ extern "C" {
    // must not free the result.
    const char *xcgi_getenv (const char *name);
 
+   // Returns a copy of the specified string with all the non-ascii
+   // characters replaced with their hex equivalent using %xx as the
+   // format. The replacement is performed for any characters not in the
+   // regex [a-zA-Z0-9$-_.+!*'(),].
+   //
+   // On success a new string allocated with malloc() is returned. On
+   // failure NULL is returned. The caller must free the result.
+   char *xcgi_string_escape (const char *src);
+
+   // Returns a copy of the specified string with all the escaped
+   // characters replaced with their ascii equivalent using %xx as the
+   // escape format. This function undoes the escaping performed by
+   // xcgi_string_escape().
+   //
+   // On success a new string allocated with malloc() is returned. On
+   // failure NULL is returned. The caller must free the result.
+   char *xcgi_string_unescape (const char *src);
 
 #ifdef __cplusplus
 };

@@ -113,7 +113,9 @@ bool xcgi_save (const char *fname)
    }
 
    for (size_t i=0; i<sizeof g_vars/sizeof g_vars[0]; i++) {
-      fprintf (outf, "%s\x01%s\n", g_vars[i].name, *(g_vars[i].variable));
+      char *tmp = xcgi_string_escape (*(g_vars[i].variable));
+      fprintf (outf, "%s\x01%s\n", g_vars[i].name, tmp);
+      free (tmp);
    }
    fprintf (outf, "%s\n", MARKER_EOV);
 
@@ -162,6 +164,7 @@ bool xcgi_load (const char *fname)
          break;
       }
 
+      printf ("Read [%s]\n", g_line);
       tmp = strchr (g_line, '\n');
       if (tmp)
          *tmp = 0;
@@ -178,9 +181,19 @@ bool xcgi_load (const char *fname)
          goto errorexit;
       }
       *tmp++ = 0;
+
+      if (!(ltmp = xcgi_string_unescape (tmp))) {
+         fprintf (stderr, "Failed to unescape string, aborting\n");
+         goto errorexit;
+      }
+
       // TODO: For Windows must use putenv_s()
-      setenv (g_line, tmp, 1);
+      setenv (g_line, ltmp, 1);
+      printf ("Set [%s:%s]\n", g_line, ltmp);
+      free (ltmp);
    }
+
+   xcgi_init ();
 
    if (!(fgets (g_line, sizeof g_line - 1, inf))) {
       error = false;
@@ -221,3 +234,105 @@ const char *xcgi_getenv (const char *name)
 
    return "";
 }
+
+char *xcgi_string_escape (const char *src)
+{
+   bool error = true;
+   char *ret = NULL;
+
+   static const char *allowed =
+      "abcdefghijklmnopqrstuvwxyz"
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      "0123456789"
+      "$-_.+!*'(),";
+
+   if (!src)
+      return NULL;
+
+   size_t dst_size = 0;
+   size_t dst_index = 0;
+
+   for (size_t i=0; src[i]; i++) {
+      if (!(strchr (allowed, src[i])))
+         dst_size += 2;
+      dst_size++;
+   }
+
+   if (!(ret = malloc (dst_size + 1))) {
+      fprintf (stderr, "OOM error allocating escaped string\n");
+      goto errorexit;
+   }
+
+   memset (ret, 0, dst_size + 1);
+
+   for (size_t i=0; src[i]; i++) {
+      if (!(strchr (allowed, src[i]))) {
+         ret[dst_index++] = '%';
+         sprintf (&ret[dst_index], "%02x", src[i]);
+         dst_index += 2;
+      } else {
+         ret[dst_index++] = src[i];
+      }
+   }
+
+   error = false;
+errorexit:
+
+   if (error) {
+      free (ret);
+      ret = NULL;
+   }
+
+   return ret;
+
+}
+
+char *xcgi_string_unescape (const char *src)
+{
+   bool error = true;
+   char *ret = NULL;
+   size_t len = 0,
+          index = 0;
+
+   if (!src)
+      return NULL;
+
+   len = strlen (src) + 1;
+
+   if (!(ret = malloc (len)))
+      goto errorexit;
+
+   for (size_t i=0; src[i] && i<len; i++) {
+      if (src[i]=='%') {
+         int tmp;
+         char c;
+         i++;
+         if ((sscanf (&src[i], "%02x", &tmp))!=1) {
+            fprintf (stderr, "Failed to scan escaped character at %s\n",
+                     &src[i]);
+            goto errorexit;
+         }
+         c = tmp;
+         ret[index++] = c;
+         i++;
+
+      } else {
+
+         ret[index++] = src[i];
+
+      }
+   }
+   ret[index] = 0;
+
+   error = false;
+
+errorexit:
+
+   if (error) {
+      free (ret);
+      ret = NULL;
+   }
+
+   return ret;
+}
+
