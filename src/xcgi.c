@@ -14,9 +14,6 @@ const char *xcgi_gateway_interface;
 const char *xcgi_hostname;
 const char *xcgi_hosttype;
 const char *xcgi_http_accept;
-const char *xcgi_http_host;
-const char *xcgi_http_user_agent;
-const char *xcgi_document_root;
 const char *xcgi_http_cookie;
 const char *xcgi_http_host;
 const char *xcgi_http_referer;
@@ -56,9 +53,6 @@ struct {
       { "HOSTNAME",                 &xcgi_hostname                },
       { "HOSTTYPE",                 &xcgi_hosttype                },
       { "HTTP_ACCEPT",              &xcgi_http_accept             },
-      { "HTTP_HOST",                &xcgi_http_host               },
-      { "HTTP_USER_AGENT",          &xcgi_http_user_agent         },
-      { "DOCUMENT_ROOT",            &xcgi_document_root           },
       { "HTTP_COOKIE",              &xcgi_http_cookie             },
       { "HTTP_HOST",                &xcgi_http_host               },
       { "HTTP_REFERER",             &xcgi_http_referer            },
