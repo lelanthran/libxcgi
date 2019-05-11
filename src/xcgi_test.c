@@ -63,7 +63,6 @@ int main (void)
                                              *(vars[i].variable),
                                              vars[i].value);
    }
-   printf ("%s\n", xcgi_path);
 
    if (!(xcgi_save ("test-vars.dat"))) {
       fprintf (stderr, "Failed to save the vars to file\n");

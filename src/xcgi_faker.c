@@ -7,10 +7,16 @@
 int main (int argc, char ** argv)
 {
    int ret = EXIT_FAILURE;
+
    printf ("Fake a cgi execution.\n");
 
    if (argc < 2) {
       fprintf (stderr, "Specify a filename to load the cgi env from\n");
+      goto errorexit;
+   }
+
+   if (argc < 3) {
+      fprintf (stderr, "Specify the cgi executable to run\n");
       goto errorexit;
    }
 
