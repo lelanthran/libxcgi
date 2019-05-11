@@ -64,11 +64,9 @@ int main (void)
                                              vars[i].value);
    }
 
-   while (!feof (xcgi_stdin) && !ferror (xcgi_stdin)) {
-      int c = fgetc (xcgi_stdin);
-      if (c!=EOF) {
-         fputc (c, stdout);
-      }
+   if (!(xcgi_save ("test-vars.dat"))) {
+      fprintf (stderr, "Failed to save the vars to file\n");
+      goto errorexit;
    }
 
    ret = EXIT_SUCCESS;

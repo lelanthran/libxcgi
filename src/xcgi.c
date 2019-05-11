@@ -91,6 +91,12 @@ bool xcgi_init (void)
    return true;
 }
 
+void xcgi_shutdown (void)
+{
+   if (xcgi_stdin)
+      fclose (xcgi_stdin);
+}
+
 #define MARKER_EOV      ("MARKER-END-OF-VARS")
 
 static char g_line[1024  * 16];
@@ -117,7 +123,12 @@ bool xcgi_save (const char *fname)
          size_t must_read = clen < sizeof g_line ? clen : sizeof g_line;
          size_t nbytes = fread (g_line, 1, must_read, stdin);
          printf ("Read [%zu] bytes, [%zu] remaining\n", nbytes, clen);
-         fwrite (g_line, 1, nbytes, outf);
+         size_t written = fwrite (g_line, 1, nbytes, outf);
+         if (written != nbytes) {
+            fprintf (stderr, "Wrote only [%zu/%zu] bytes to file\n",
+                     written, nbytes);
+            goto errorexit;
+         }
          clen -= nbytes;
       }
    }
@@ -180,8 +191,11 @@ bool xcgi_load (const char *fname)
    if (tmp)
       *tmp = 0;
 
-   if ((strcmp (xcgi_getenv ("CONTENT_LENGTH"), g_line))!=0)
+   if ((strcmp (xcgi_getenv ("CONTENT_LENGTH"), g_line))!=0) {
+      fprintf (stderr, "Content length differs: [%s:%s]\n",
+                  xcgi_getenv ("CONTENT_LENGTH"), g_line);
       goto errorexit;
+   }
 
    if ((sscanf (g_line, "%zu\n", &clen))!=1)
       goto errorexit;

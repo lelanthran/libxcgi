@@ -71,7 +71,8 @@ OUTDIRS=$(OUTLIB) $(OUTBIN) $(OUTOBS)
 # Declare the final outputs
 BINPROGS=\
 	$(OUTBIN)/xcgi_test$(EXE_EXT)\
-	$(OUTBIN)/xcgi_faker$(EXE_EXT)
+	$(OUTBIN)/xcgi_faker$(EXE_EXT)\
+	$(OUTBIN)/xcgi_gendata$(EXE_EXT)
 
 DYNLIB=$(OUTLIB)/lib$(PROJNAME)-$(VERSION)$(LIB_EXT)
 STCLIB=$(OUTLIB)/lib$(PROJNAME)-$(VERSION).a
@@ -85,7 +86,8 @@ STCLNK_NAME=$(OUTLIB)/lib$(PROJNAME).a
 # Declare the intermediate outputs
 BINOBS=\
 	$(OUTOBS)/xcgi_test.o\
-	$(OUTOBS)/xcgi_faker.o
+	$(OUTOBS)/xcgi_faker.o\
+	$(OUTOBS)/xcgi_gendata.o
 
 
 OBS=\
