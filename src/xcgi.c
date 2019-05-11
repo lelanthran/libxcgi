@@ -336,3 +336,19 @@ errorexit:
    return ret;
 }
 
+bool xcgi_qstrings_parse (void)
+{
+   return false;
+}
+
+size_t xcgi_qstrings_count (void)
+{
+   return 0;
+}
+
+const char ***xcgi_qstrings (void)
+{
+   return NULL;
+}
+
+

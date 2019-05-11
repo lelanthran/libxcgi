@@ -8,6 +8,9 @@ int main (void)
 {
    int ret = EXIT_FAILURE;
 
+   char ***qstrings = NULL;
+   size_t nqstrings = 0;
+
    if (!(xcgi_init ())) {
       fprintf (stderr, "Failed to initialise the library\n");
       goto errorexit;
@@ -71,9 +74,31 @@ int main (void)
       }
    }
 
+   if (!(xcgi_qstrings_parse ())) {
+      fprintf (stderr, "Failed to parse the query strings\n");
+      goto errorexit;
+   }
+
+   nqstrings = xcgi_qstrings_count ();
+   if (!nqstrings) {
+      fprintf (stderr, "No query strings, was expecting query strings\n");
+      goto errorexit;
+   }
+
+   if (!(qstrings = xcgi_qstrings ())) {
+      fprintf (stderr, "Could not retrieve query strings\n");
+      goto errorexit;
+   }
+
+   for (size_t i=0; qstrings[i]; i++) {
+      printf ("qs [%s:%s]\n", qstrings[i][0], qstrings[i][1]);
+   }
+
    ret = EXIT_SUCCESS;
 
 errorexit:
+
+   xcgi_shutdown ();
 
    return ret;
 }

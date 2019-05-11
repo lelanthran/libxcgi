@@ -16,7 +16,22 @@ extern "C" {
 #endif
 
    // Initialises the cgi variables. Returns true on success, false on error.
+   //
+   // NOTE: This function does not load the query strings nor does it read
+   // any POST data. For that the caller must explicitly call
+   // xcgi_qstrings_parse().
+   //
+   // The reason for this is because the POST data may not be query
+   // strings; it might be binary data that is not encoded in a manner
+   // compatible with query strings, such as json.
+   //
+   // If we unconditionally consume all of the stdin input trying to find
+   // query strings then we won't later be able to read it when we
+   // discover that the POST data was not query strings.
    bool xcgi_init (void);
+
+   // Frees and/or closes all resources allocated or opened during the
+   // course of execution of this library.
    void xcgi_shutdown (void);
 
    // Load/save the cgi environment for later playback.
@@ -44,6 +59,21 @@ extern "C" {
    // On success a new string allocated with malloc() is returned. On
    // failure NULL is returned. The caller must free the result.
    char *xcgi_string_unescape (const char *src);
+
+   // Parse the query strings into memory. Returns true on success and
+   // false on error (for example, running out of memory).
+   //
+   // The caller can iterate across the query strings by using
+   // xcgi_qstrings_count() to get a count of the query strings and
+   // then using xcgi_qstrings() to get a const array of name/value pairs
+   // that contain the parsed query strings.
+   //
+   // The usage of xcgi_qstrings_count is optional as the const array of
+   // name/value pairs is terminated with a NULL and can be looped over
+   // until the NULL is encountered.
+   bool xcgi_qstrings_parse (void);
+   size_t xcgi_qstrings_count (void);
+   const char ***xcgi_qstrings (void);
 
 #ifdef __cplusplus
 };
