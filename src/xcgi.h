@@ -3,9 +3,13 @@
 #define H_XCGI
 
 #include <stdbool.h>
+#include <stdio.h>
 
-// This is a global non-thread-safe file. A CGI program runs once, then
-// exits. Memory used by this module is never freed.
+// This is a global non-thread-safe library. A CGI program runs once and
+// then exits. Memory used by this module is potentially never freed. The
+// caller MUST call xcgi_init() before calling any other function. Before
+// program return the caller can call xcgi_shutdown() to ensure that all
+// files are closed, although this is not necessary.
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,6 +22,10 @@ extern "C" {
    bool xcgi_load (const char *fname);
    bool xcgi_save (const char *fname);
 
+   // Return the value of the http variable specified, never NULL. Caller
+   // must not free the result.
+   const char *xcgi_getenv (const char *name);
+
 
 #ifdef __cplusplus
 };
@@ -26,39 +34,41 @@ extern "C" {
 // All of these variables are non-NULL after a successful xcgi_init(). The
 // caller MUST NOT modify the variables.
 
-extern const char *xcgi_content_length;
-extern const char *xcgi_content_type;
-extern const char *xcgi_context_document_root;
-extern const char *xcgi_content_prefix;
-extern const char *xcgi_document_root;
-extern const char *xcgi_gateway_interface;
-extern const char *xcgi_hostname;
-extern const char *xcgi_hosttype;
-extern const char *xcgi_http_accept;
-extern const char *xcgi_http_cookie;
-extern const char *xcgi_http_host;
-extern const char *xcgi_http_referer;
-extern const char *xcgi_http_user_agent;
-extern const char *xcgi_https;
-extern const char *xcgi_path;
-extern const char *xcgi_pwd;
-extern const char *xcgi_query_string;
-extern const char *xcgi_remote_addr;
-extern const char *xcgi_remote_host;
-extern const char *xcgi_remote_port;
-extern const char *xcgi_remote_user;
-extern const char *xcgi_request_method;
-extern const char *xcgi_request_scheme;
-extern const char *xcgi_request_uri;
-extern const char *xcgi_script_filename;
-extern const char *xcgi_script_name;
-extern const char *xcgi_server_addr;
-extern const char *xcgi_server_admin;
-extern const char *xcgi_server_name;
-extern const char *xcgi_server_port;
-extern const char *xcgi_server_protocol;
-extern const char *xcgi_server_signature;
-extern const char *xcgi_server_software;
+extern const char *xcgi_CONTENT_LENGTH;
+extern const char *xcgi_CONTENT_TYPE;
+extern const char *xcgi_CONTEXT_DOCUMENT_ROOT;
+extern const char *xcgi_CONTENT_PREFIX;
+extern const char *xcgi_DOCUMENT_ROOT;
+extern const char *xcgi_GATEWAY_INTERFACE;
+extern const char *xcgi_HOSTNAME;
+extern const char *xcgi_HOSTTYPE;
+extern const char *xcgi_HTTP_ACCEPT;
+extern const char *xcgi_HTTP_COOKIE;
+extern const char *xcgi_HTTP_HOST;
+extern const char *xcgi_HTTP_REFERER;
+extern const char *xcgi_HTTP_USER_AGENT;
+extern const char *xcgi_HTTPS;
+extern const char *xcgi_PATH;
+extern const char *xcgi_PWD;
+extern const char *xcgi_QUERY_STRING;
+extern const char *xcgi_REMOTE_ADDR;
+extern const char *xcgi_REMOTE_HOST;
+extern const char *xcgi_REMOTE_PORT;
+extern const char *xcgi_REMOTE_USER;
+extern const char *xcgi_REQUEST_METHOD;
+extern const char *xcgi_REQUEST_SCHEME;
+extern const char *xcgi_REQUEST_URI;
+extern const char *xcgi_SCRIPT_FILENAME;
+extern const char *xcgi_SCRIPT_NAME;
+extern const char *xcgi_SERVER_ADDR;
+extern const char *xcgi_SERVER_ADMIN;
+extern const char *xcgi_SERVER_NAME;
+extern const char *xcgi_SERVER_PORT;
+extern const char *xcgi_SERVER_PROTOCOL;
+extern const char *xcgi_SERVER_SIGNATURE;
+extern const char *xcgi_SERVER_SOFTWARE;
+
+extern FILE *xcgi_stdin;
 
 #endif
 
