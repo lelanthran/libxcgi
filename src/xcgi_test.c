@@ -52,6 +52,11 @@ int main (void)
    }
    printf ("%s\n", xcgi_path);
 
+   if (!(xcgi_save ("test-vars.dat"))) {
+      fprintf (stderr, "Failed to save the vars to file\n");
+      goto errorexit;
+   }
+
    ret = EXIT_SUCCESS;
 
 errorexit:

@@ -1,5 +1,6 @@
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "xcgi.h"
 
@@ -57,5 +58,81 @@ bool xcgi_init (void)
       *(g_vars[i].variable) = tmp ? tmp : "";
    }
    return true;
+}
+
+#define MARKER_EOV      ("MARKER-END-OF-VARS")
+
+bool xcgi_save (const char *fname)
+{
+   bool error = true;
+   FILE *outf = NULL;
+
+   if (!(outf = fopen (fname, "w"))) {
+      fprintf (stderr, "Failed to open [%s] for writing: %m\n", fname);
+      goto errorexit;
+   }
+
+   for (size_t i=0; i<sizeof g_vars/sizeof g_vars[0]; i++) {
+      fprintf (outf, "%s\x01%s\n", g_vars[i].name, *(g_vars[i].variable));
+   }
+   fprintf (outf, "%s", MARKER_EOV);
+   // TODO: Save stdin?
+
+   error = false;
+
+errorexit:
+   if (outf) {
+      fclose (outf);
+   }
+
+   return !error;
+}
+
+bool xcgi_load (const char *fname)
+{
+   bool error = true;
+   FILE *inf = NULL;
+   static char line[1024  * 16];
+   size_t nlines = 0;
+
+   if (!(inf = fopen (fname, "r"))) {
+      fprintf (stderr, "Failed to open [%s] for reading: %m\n", fname);
+      goto errorexit;
+   }
+
+   while (!(feof (inf) && !ferror (inf))) {
+      char *ltmp = fgets (line, sizeof line - 1, inf);
+      if (!ltmp) {
+         break;
+      }
+
+      nlines++;
+      line[sizeof line - 1] = 0;
+      if ((memcmp (line, MARKER_EOV, strlen (MARKER_EOV)+1))==0)
+         break;
+
+      char *tmp = strchr (line, '\n');
+      if (tmp)
+         *tmp = 0;
+
+      tmp = strchr (line, 0x01);
+      if (!tmp) {
+         fprintf (stderr, "%zu Failed to parse variable line [%s]. Aborting\n",
+                           nlines, line);
+         goto errorexit;
+      }
+      *tmp++ = 0;
+      setenv (line, tmp, 1);
+   }
+   // TODO: Read stdin?
+
+   error = false;
+
+errorexit:
+   if (inf) {
+      fclose (inf);
+   }
+
+   return !error;
 }
 

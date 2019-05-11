@@ -5,14 +5,19 @@
 #include <stdbool.h>
 
 // This is a global non-thread-safe file. A CGI program runs once, then
-// exits.
+// exits. Memory used by this module is never freed.
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-   // Returns false on error.
+   // Initialises the cgi variables. Returns true on success, false on error.
    bool xcgi_init (void);
+
+   // Load/save the cgi environment for later playback.
+   bool xcgi_load (const char *fname);
+   bool xcgi_save (const char *fname);
+
 
 #ifdef __cplusplus
 };
