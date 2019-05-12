@@ -5,6 +5,8 @@
 
 #include "xcgi.h"
 
+#include "ds_str.h"
+
 void sigh (int n)
 {
    fprintf (stderr, "Rxed signal %i, ignoring\n", n);

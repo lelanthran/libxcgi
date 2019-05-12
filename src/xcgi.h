@@ -104,14 +104,6 @@ extern "C" {
    bool xcgi_qstrings_accept_content_type (const char *content_type);
    bool xcgi_qstrings_reject_content_type (const char *content_type);
 
-   // Return a NULL-terminated array of strings that contain all the
-   // acceptable query string content types for POST data. Caller must not
-   // free or modify the array or the contents of the array.
-   //
-   // On success an array of strings is returned. On failure NULL is
-   // returned.
-   const char **xcgi_qstrings_content_types (void);
-
    // Parse the query strings into memory. Returns true on success and
    // false on error (for example, running out of memory). Both GET and
    // POST query strings are checked, with an added check on the
@@ -123,8 +115,8 @@ extern "C" {
    //
    // The caller can iterate across the query strings by using
    // xcgi_qstrings_count() to get a count of the query strings and
-   // then using xcgi_qstrings() to get a const array of name/value pairs
-   // that contain the parsed query strings.
+   // then using the xcgi_qstrings const array of name/value pairs
+   // to access the names and values.
    //
    // The usage of xcgi_qstrings_count is optional as the const array of
    // name/value pairs is terminated with a NULL and can be looped over
@@ -134,11 +126,6 @@ extern "C" {
    // Return the number of query strings found. Must be called only after
    // a successful call to xcgi_qstrings_parse().
    size_t xcgi_qstrings_count (void);
-
-   // Return an array of char *[2], terminated with a NULL pointer, that
-   // contains all the query strings found by xcgi_qstrings_parse(). Must
-   // be called only after a successful call to xcgi_qstrings_parse()
-   const char ***xcgi_qstrings (void);
 
 #ifdef __cplusplus
 };
@@ -181,7 +168,33 @@ extern const char *xcgi_SERVER_PROTOCOL;
 extern const char *xcgi_SERVER_SIGNATURE;
 extern const char *xcgi_SERVER_SOFTWARE;
 
+// All output must be read from this stream, because stdin is not
+// guaranteed to the the source of POST data.
 extern FILE *xcgi_stdin;
+
+// These variables are all available after certain parsing is performed
+// and not necessarily after xcgi_init(). An indication of when each
+// variable is available is given in the comments.
+
+// Available after xcgi_init(). Contains an array of strings, terminated
+// with a NULL, that consists of each of the path elements passed to this
+// script via PATH_INFO.
+extern const char **xcgi_parsed_path_info;
+
+// Available after xcgi_qstrings_parse(). Contains an array of the
+// content-types that will be chekced to determine if POST data must be
+// passed as name=value query strings. See the functions:
+//    xcgi_qstrings_accept_content_type() => content-type to accept
+//    xcgi_qstrings_reject_content_type() => content-type to reject
+// The caller usually does not need to read this variable; the caller must
+// set the acceptable content-types using the two functions above.
+extern const char **xcgi_qstrings_content_types;
+
+// Available after xcgi_qstrings_parse(). Contains an array of name=value
+// pairs for all the query strings passed to this script. This includes the
+// POST data if content-type matches a content-type specified in the list
+// of acceptable content_types `xcgi_qstrings_content_types`.
+extern const char ***xcgi_qstrings;
 
 #endif
 

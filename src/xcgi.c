@@ -45,22 +45,28 @@ const char *xcgi_SERVER_SOFTWARE;
 
 FILE *xcgi_stdin;
 
+const char **xcgi_parsed_path_info;
+const char **xcgi_qstrings_content_types;
+const char ***xcgi_qstrings;
+
 /* ************************************************************************
  */
-static char **g_qs_content_types;
-
 static bool qs_content_types_init (void)
 {
-   return (g_qs_content_types = (char **)ds_array_new ()) ? true : false;
+   return (xcgi_qstrings_content_types = (const char **)ds_array_new ())
+            ? true : false;
 }
 
 static void qs_content_types_shutdown (void)
 {
-   for (size_t i=0; g_qs_content_types && g_qs_content_types[i]; i++) {
-      free (g_qs_content_types[i]);
+   if (!xcgi_qstrings_content_types)
+      return;
+
+   for (size_t i=0; xcgi_qstrings_content_types[i]; i++) {
+      free ((char *)xcgi_qstrings_content_types[i]);
    }
-   ds_array_del ((void **)g_qs_content_types);
-   g_qs_content_types = NULL;
+   ds_array_del ((void **)xcgi_qstrings_content_types);
+   xcgi_qstrings_content_types = NULL;
 }
 
 static char *qs_content_types_add (const char *ct)
@@ -82,7 +88,7 @@ static char *qs_content_types_add (const char *ct)
 
    ret[len-1] = 0;
 
-   if (!(ds_array_ins_tail ((void ***)&g_qs_content_types, ret)))
+   if (!(ds_array_ins_tail ((void ***)&xcgi_qstrings_content_types, ret)))
       goto errorexit;
 
    error = false;
@@ -98,6 +104,9 @@ errorexit:
 
 static bool qs_content_types_remove (const char *ct)
 {
+   if (!xcgi_qstrings_content_types)
+      return true;
+
    bool found = false;
    char *tmp = ds_str_dup (ct);
    if (!tmp)
@@ -106,9 +115,10 @@ static bool qs_content_types_remove (const char *ct)
    for (size_t i=0; tmp[i]; i++)
       tmp[i] = toupper (tmp[i]);
 
-   for (size_t i=0; g_qs_content_types && g_qs_content_types[i]; i++) {
-      if ((strcmp (tmp, g_qs_content_types[i]))==0) {
-         char *old = ds_array_remove ((void ***)&g_qs_content_types, i);
+
+   for (size_t i=0; xcgi_qstrings_content_types[i]; i++) {
+      if ((strcmp (tmp, xcgi_qstrings_content_types[i]))==0) {
+         char *old = ds_array_remove ((void ***)&xcgi_qstrings_content_types, i);
          free (old);
          found = true;
          // DO NOT BREAK HERE! We want to remove duplicates as well.
@@ -121,6 +131,9 @@ static bool qs_content_types_remove (const char *ct)
 
 static bool qs_content_types_check (const char *ct)
 {
+   if (!xcgi_qstrings_content_types)
+      return false;
+
    char *tmp = ds_str_dup (ct);
    if (!tmp)
       return false;
@@ -128,8 +141,8 @@ static bool qs_content_types_check (const char *ct)
    for (size_t i=0; tmp[i]; i++)
       tmp[i] = toupper (tmp[i]);
 
-   for (size_t i=0; g_qs_content_types && g_qs_content_types[i]; i++) {
-      if ((strcmp (tmp, g_qs_content_types[i]))==0) {
+   for (size_t i=0; xcgi_qstrings_content_types[i]; i++) {
+      if ((strcmp (tmp, xcgi_qstrings_content_types[i]))==0) {
          free (tmp);
          return true;
       }
@@ -143,22 +156,20 @@ static bool qs_content_types_check (const char *ct)
 
 /* ************************************************************************
  */
-static char ***g_qstrings;
-
 static bool qstrings_init (void)
 {
-   return (g_qstrings = (char ***)ds_array_new ()) ? true : false;
+   return (xcgi_qstrings = (const char ***)ds_array_new ()) ? true : false;
 }
 
 static void qstrings_shutdown (void)
 {
-   for (size_t i=0; g_qstrings && g_qstrings[i]; i++) {
-      free (g_qstrings[i][0]);
-      free (g_qstrings[i][1]);
-      free (g_qstrings[i]);
+   for (size_t i=0; xcgi_qstrings && xcgi_qstrings[i]; i++) {
+      free ((void *)xcgi_qstrings[i][0]);
+      free ((void *)xcgi_qstrings[i][1]);
+      free ((void *)xcgi_qstrings[i]);
    }
-   ds_array_del ((void **)g_qstrings);
-   g_qstrings = NULL;
+   ds_array_del ((void **)xcgi_qstrings);
+   xcgi_qstrings = NULL;
 }
 
 static char **qstrings_add (const char *name, const char *value)
@@ -176,7 +187,7 @@ static char **qstrings_add (const char *name, const char *value)
    if (!ret[0] || !ret[1])
       goto errorexit;
 
-   if (!(ds_array_ins_tail ((void ***)&g_qstrings, ret)))
+   if (!(ds_array_ins_tail ((void ***)&xcgi_qstrings, ret)))
       goto errorexit;
 
    error = false;
@@ -523,12 +534,6 @@ bool xcgi_qstrings_reject_content_type (const char *content_type)
    return qs_content_types_remove (content_type);
 }
 
-const char **xcgi_qstrings_content_types (void)
-{
-   return (const char **)g_qs_content_types;
-}
-
-
 static bool xcgi_parse_query_string (void)
 {
    bool error = true;
@@ -644,12 +649,7 @@ errorexit:
 
 size_t xcgi_qstrings_count (void)
 {
-   return ds_array_length ((void **)g_qstrings);
-}
-
-const char ***xcgi_qstrings (void)
-{
-   return (const char ***)g_qstrings;
+   return ds_array_length ((void **)xcgi_qstrings);
 }
 
 

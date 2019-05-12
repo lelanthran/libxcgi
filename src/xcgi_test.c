@@ -14,8 +14,6 @@ int main (void)
    char ***qstrings = NULL;
    size_t nqstrings = 0;
 
-   char **qs_content_types = NULL;
-
    if (!(xcgi_init ())) {
       fprintf (stderr, "Failed to initialise the library\n");
       goto errorexit;
@@ -82,9 +80,14 @@ int main (void)
       goto errorexit;
    }
 
-   qs_content_types = xcgi_qstrings_content_types ();
-   for (size_t i=0; qs_content_types && qs_content_types[i]; i++) {
-      printf ("Accepting POST content-type: [%s]\n", qs_content_types[i]);
+   if (!xcgi_qstrings_content_types) {
+      fprintf (stderr, "Failed to set content-types\n");
+      goto errorexit;
+   }
+
+   for (size_t i=0; xcgi_qstrings_content_types[i]; i++) {
+      printf ("Accepting POST content-type: [%s]\n",
+               xcgi_qstrings_content_types[i]);
    }
 
    if (!(xcgi_qstrings_reject_content_type (CT_QSTRING2))) {
@@ -92,9 +95,9 @@ int main (void)
       goto errorexit;
    }
 
-   qs_content_types = xcgi_qstrings_content_types ();
-   for (size_t i=0; qs_content_types && qs_content_types[i]; i++) {
-      printf ("Final POST content-type: [%s]\n", qs_content_types[i]);
+   for (size_t i=0; xcgi_qstrings_content_types[i]; i++) {
+      printf ("Final POST content-type: [%s]\n",
+               xcgi_qstrings_content_types[i]);
    }
 
    if (!(xcgi_qstrings_parse ())) {
@@ -108,7 +111,7 @@ int main (void)
       goto errorexit;
    }
 
-   if (!(qstrings = xcgi_qstrings ())) {
+   if (!(qstrings = xcgi_qstrings)) {
       fprintf (stderr, "Could not retrieve query strings\n");
       goto errorexit;
    }
