@@ -41,4 +41,6 @@ export SERVER_PROTOCOL=HTTP/1.1
 export SERVER_SIGNATURE=$'<address>Apache/2.4.29 (Ubuntu) Server at localhost Port 80</address>\n'
 export SERVER_SOFTWARE='Apache/2.4.29 (Ubuntu)'
 
+# Note, enable this line to test query string retrieval from POST data
+export stdin_data="NAME1=VALUE1&NAME%202=VALUE%201TWO%41"
 echo -ne "$stdin_data" | valgrind --leak-check=yes --show-leak-kinds=all ./xcgi_gendata.elf

@@ -42,7 +42,8 @@ int main (int argc, char ** argv)
    }
 
    if (!(ds_str_append (&child_cmd,
-                        "valgrind --leak-check=full ",
+                        "valgrind ",
+                        "--leak-check=full ",
                         "--track-origins=yes ",
                         "--show-leak-kinds=all ",
                         argv[2], NULL))) {

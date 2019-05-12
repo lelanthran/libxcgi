@@ -4,12 +4,17 @@
 
 #include "xcgi.h"
 
+#define CT_QSTRING1  ("applicatiON/X-www-form-urlencoded")
+#define CT_QSTRING2  ("applicatiON/X-unknown")
+
 int main (void)
 {
    int ret = EXIT_FAILURE;
 
    char ***qstrings = NULL;
    size_t nqstrings = 0;
+
+   char **qs_content_types = NULL;
 
    if (!(xcgi_init ())) {
       fprintf (stderr, "Failed to initialise the library\n");
@@ -67,11 +72,29 @@ int main (void)
                                              vars[i].value);
    }
 
-   while (!feof (xcgi_stdin) && !ferror (xcgi_stdin)) {
-      int c = fgetc (xcgi_stdin);
-      if (c!=EOF) {
-         fputc (c, stdout);
-      }
+   if (!(xcgi_qstrings_accept_content_type (CT_QSTRING2))) {
+      fprintf (stderr, "Failed to add [%s] to content types\n", CT_QSTRING2);
+      goto errorexit;
+   }
+
+   if (!(xcgi_qstrings_accept_content_type (CT_QSTRING1))) {
+      fprintf (stderr, "Failed to add [%s] to content types\n", CT_QSTRING1);
+      goto errorexit;
+   }
+
+   qs_content_types = xcgi_qstrings_content_types ();
+   for (size_t i=0; qs_content_types && qs_content_types[i]; i++) {
+      printf ("Accepting POST content-type: [%s]\n", qs_content_types[i]);
+   }
+
+   if (!(xcgi_qstrings_reject_content_type (CT_QSTRING2))) {
+      fprintf (stderr, "Failed to reject [%s] content type\n", CT_QSTRING2);
+      goto errorexit;
+   }
+
+   qs_content_types = xcgi_qstrings_content_types ();
+   for (size_t i=0; qs_content_types && qs_content_types[i]; i++) {
+      printf ("Final POST content-type: [%s]\n", qs_content_types[i]);
    }
 
    if (!(xcgi_qstrings_parse ())) {
@@ -93,6 +116,15 @@ int main (void)
    for (size_t i=0; qstrings[i]; i++) {
       printf ("qs [%s:%s]\n", qstrings[i][0], qstrings[i][1]);
    }
+
+   printf ("--");
+   while (!feof (xcgi_stdin) && !ferror (xcgi_stdin)) {
+      int c = fgetc (xcgi_stdin);
+      if (c!=EOF) {
+         fputc (c, stdout);
+      }
+   }
+   printf ("--\n");
 
    ret = EXIT_SUCCESS;
 

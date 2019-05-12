@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "xcgi.h"
 
@@ -46,14 +47,110 @@ FILE *xcgi_stdin;
 
 /* ************************************************************************
  */
+static char **g_qs_content_types;
+
+static bool qs_content_types_init (void)
+{
+   return (g_qs_content_types = (char **)ds_array_new ()) ? true : false;
+}
+
+static void qs_content_types_shutdown (void)
+{
+   for (size_t i=0; g_qs_content_types && g_qs_content_types[i]; i++) {
+      free (g_qs_content_types[i]);
+   }
+   ds_array_del ((void **)g_qs_content_types);
+   g_qs_content_types = NULL;
+}
+
+static char *qs_content_types_add (const char *ct)
+{
+   bool error = true;
+   char *ret = NULL;
+   size_t len = 0;
+
+   if (!ct)
+      return NULL;
+
+   len = strlen (ct) + 1;
+
+   if (!(ret = malloc (len)))
+      goto errorexit;
+
+   for (size_t i=0; ct[i]; i++)
+      ret[i] = toupper (ct[i]);
+
+   ret[len-1] = 0;
+
+   if (!(ds_array_ins_tail ((void ***)&g_qs_content_types, ret)))
+      goto errorexit;
+
+   error = false;
+
+errorexit:
+   if (error) {
+      free (ret);
+      ret = NULL;
+   }
+
+   return ret;
+}
+
+static bool qs_content_types_remove (const char *ct)
+{
+   bool found = false;
+   char *tmp = ds_str_dup (ct);
+   if (!tmp)
+      return false;
+
+   for (size_t i=0; tmp[i]; i++)
+      tmp[i] = toupper (tmp[i]);
+
+   for (size_t i=0; g_qs_content_types && g_qs_content_types[i]; i++) {
+      if ((strcmp (tmp, g_qs_content_types[i]))==0) {
+         char *old = ds_array_remove ((void ***)&g_qs_content_types, i);
+         free (old);
+         found = true;
+         // DO NOT BREAK HERE! We want to remove duplicates as well.
+      }
+   }
+
+   free (tmp);
+   return found;
+}
+
+static bool qs_content_types_check (const char *ct)
+{
+   char *tmp = ds_str_dup (ct);
+   if (!tmp)
+      return false;
+
+   for (size_t i=0; tmp[i]; i++)
+      tmp[i] = toupper (tmp[i]);
+
+   for (size_t i=0; g_qs_content_types && g_qs_content_types[i]; i++) {
+      if ((strcmp (tmp, g_qs_content_types[i]))==0) {
+         free (tmp);
+         return true;
+      }
+   }
+
+   free (tmp);
+
+   return false;
+}
+
+
+/* ************************************************************************
+ */
 static char ***g_qstrings;
 
-static bool qstrings_new (void)
+static bool qstrings_init (void)
 {
    return (g_qstrings = (char ***)ds_array_new ()) ? true : false;
 }
 
-static void qstrings_del (void)
+static void qstrings_shutdown (void)
 {
    for (size_t i=0; g_qstrings && g_qstrings[i]; i++) {
       free (g_qstrings[i][0]);
@@ -139,15 +236,33 @@ struct {
 
 bool xcgi_init (void)
 {
+   bool error = true;
+
    for (size_t i=0; i<sizeof g_vars/sizeof g_vars[0]; i++) {
       char *tmp = getenv (g_vars[i].name);
       *(g_vars[i].variable) = tmp ? tmp : "";
    }
    xcgi_stdin = stdin;
-   if (!(qstrings_new ()))
-      return false;
 
-   return true;
+   if (!(qstrings_init ())) {
+      fprintf (stderr, "Failed to allocate storage for the qstrings\n");
+      goto errorexit;
+   }
+
+   if (!(qs_content_types_init ())) {
+      fprintf (stderr, "Failed to allocate storage for the content types\n");
+      goto errorexit;
+   }
+
+   error = false;
+
+errorexit:
+
+   if (error) {
+      xcgi_shutdown ();
+   }
+
+   return !error;
 }
 
 void xcgi_shutdown (void)
@@ -155,7 +270,8 @@ void xcgi_shutdown (void)
    if (xcgi_stdin)
       fclose (xcgi_stdin);
 
-   qstrings_del ();
+   qstrings_shutdown ();
+   qs_content_types_shutdown ();
 }
 
 #define MARKER_EOV      ("MARKER-END-OF-VARS")
@@ -251,7 +367,8 @@ bool xcgi_load (const char *fname)
       free (ltmp);
    }
 
-   qstrings_del ();
+   qstrings_shutdown ();
+   qs_content_types_shutdown ();
 
    xcgi_init ();
 
@@ -396,6 +513,22 @@ errorexit:
    return ret;
 }
 
+bool xcgi_qstrings_accept_content_type (const char *content_type)
+{
+   return (qs_content_types_add (content_type)==NULL) ? false : true;
+}
+
+bool xcgi_qstrings_reject_content_type (const char *content_type)
+{
+   return qs_content_types_remove (content_type);
+}
+
+const char **xcgi_qstrings_content_types (void)
+{
+   return (const char **)g_qs_content_types;
+}
+
+
 static bool xcgi_parse_query_string (void)
 {
    bool error = true;
@@ -427,9 +560,86 @@ errorexit:
    return !error;
 }
 
+static char *read_next_pair (FILE *inf)
+{
+   bool error = true;
+   char *ret = NULL;
+
+   char tmp[2];
+   tmp[0] = 0;
+   tmp[1] = 0;
+
+   while (!feof (inf) && !ferror (inf) && ((tmp[0] = fgetc (inf))!=EOF)) {
+      if (tmp[0]=='&')
+         break;
+
+      if (!(ds_str_append (&ret, tmp, NULL))) {
+         fprintf (stderr, "OOM error reading POST pairs\n");
+         goto errorexit;
+      }
+   }
+
+   error = false;
+
+errorexit:
+   if (error) {
+      free (ret);
+      ret = NULL;
+   }
+   return ret;
+}
+
+static bool xcgi_parse_POST_query_string (void)
+{
+   bool error = true;
+   char *pair = NULL;
+   char *tmp = NULL;
+
+   while ((pair = read_next_pair (xcgi_stdin))) {
+      free (tmp);
+      tmp = xcgi_string_unescape (pair);
+      free (pair); pair = NULL;
+
+      char *sep = strchr (tmp, '=');
+      if (!sep) {
+         fprintf (stderr, "Failed to find delimiter in [%s]\n", tmp);
+         goto errorexit;
+      }
+
+      *sep++ = 0;
+
+      if (!(qstrings_add (tmp, sep))) {
+         fprintf (stderr, "Failed to add qstrings [%s:%s]\n", pair, sep);
+         goto errorexit;
+      }
+
+   }
+
+   error = false;
+
+errorexit:
+
+   free (tmp);
+
+   return !error;
+}
+
 bool xcgi_qstrings_parse (void)
 {
-   return xcgi_parse_query_string ();
+   bool error = true;
+
+   if (!(xcgi_parse_query_string ()))
+      goto errorexit;
+
+   if ((qs_content_types_check (xcgi_CONTENT_TYPE))) {
+      if (!(xcgi_parse_POST_query_string ()))
+         goto errorexit;
+   }
+
+   error = false;
+
+errorexit:
+   return !error;
 }
 
 size_t xcgi_qstrings_count (void)
@@ -439,7 +649,7 @@ size_t xcgi_qstrings_count (void)
 
 const char ***xcgi_qstrings (void)
 {
-   return g_qstrings;
+   return (const char ***)g_qstrings;
 }
 
 

@@ -46,7 +46,8 @@ extern "C" {
    bool xcgi_save (const char *fname);
 
    // Return the value of the http variable specified, never NULL. Caller
-   // must not free the result.
+   // must not free the result. Caller may optionally use the variables
+   // themselves directly; see the list of xcgi_[A-Z]* variables below.
    const char *xcgi_getenv (const char *name);
 
 
@@ -101,7 +102,15 @@ extern "C" {
    // NOTE: The list of acceptable content-types is ignored when parsing
    // query strings that are passed in the URI.
    bool xcgi_qstrings_accept_content_type (const char *content_type);
-   bool xcgi_qstrings_remove_content_type (const char *content_type);
+   bool xcgi_qstrings_reject_content_type (const char *content_type);
+
+   // Return a NULL-terminated array of strings that contain all the
+   // acceptable query string content types for POST data. Caller must not
+   // free or modify the array or the contents of the array.
+   //
+   // On success an array of strings is returned. On failure NULL is
+   // returned.
+   const char **xcgi_qstrings_content_types (void);
 
    // Parse the query strings into memory. Returns true on success and
    // false on error (for example, running out of memory). Both GET and

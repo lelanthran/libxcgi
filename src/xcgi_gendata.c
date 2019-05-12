@@ -73,6 +73,8 @@ int main (void)
 
 errorexit:
 
+   xcgi_shutdown ();
+
    return ret;
 }
 
