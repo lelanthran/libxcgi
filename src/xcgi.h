@@ -149,6 +149,7 @@ extern const char *xcgi_HTTP_REFERER;
 extern const char *xcgi_HTTP_USER_AGENT;
 extern const char *xcgi_HTTPS;
 extern const char *xcgi_PATH;
+extern const char *xcgi_PATH_INFO;
 extern const char *xcgi_PWD;
 extern const char *xcgi_QUERY_STRING;
 extern const char *xcgi_REMOTE_ADDR;

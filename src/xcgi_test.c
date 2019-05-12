@@ -120,6 +120,12 @@ int main (void)
       printf ("qs [%s:%s]\n", qstrings[i][0], qstrings[i][1]);
    }
 
+   printf ("Path info:\n");
+   for (size_t i=0; xcgi_parsed_path_info[i]; i++) {
+      printf ("   [%s]\n", xcgi_parsed_path_info[i]);
+   }
+   printf ("/Path info\n");
+
    printf ("--");
    while (!feof (xcgi_stdin) && !ferror (xcgi_stdin)) {
       int c = fgetc (xcgi_stdin);

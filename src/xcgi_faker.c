@@ -75,6 +75,7 @@ errorexit:
    free (child_cmd);
 
    xcgi_shutdown ();
+
    if (childf)
       pclose (childf);
 

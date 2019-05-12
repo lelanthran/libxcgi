@@ -24,6 +24,7 @@ const char *xcgi_HTTP_REFERER;
 const char *xcgi_HTTP_USER_AGENT;
 const char *xcgi_HTTPS;
 const char *xcgi_PATH;
+const char *xcgi_PATH_INFO;
 const char *xcgi_PWD;
 const char *xcgi_QUERY_STRING;
 const char *xcgi_REMOTE_ADDR;
@@ -203,6 +204,39 @@ errorexit:
    return ret;
 }
 
+/* ************************************************************************
+ */
+static bool parse_path_info (void)
+{
+   if (!(xcgi_parsed_path_info = ds_array_new ()))
+      return false;
+
+   char *tmp = ds_str_dup (xcgi_PATH_INFO);
+   if (!tmp)
+      return true;
+
+   char *pathf = strtok (tmp, "/");
+   while (pathf) {
+      char *e = ds_str_dup (pathf);
+      if (!e || !ds_array_ins_tail ((void ***)&xcgi_parsed_path_info, e)) {
+         free (tmp);
+         return false;
+      }
+      pathf = strtok (NULL, "/");
+   }
+   free (tmp);
+
+   return true;
+}
+
+static void path_info_shutdown (void)
+{
+   for (size_t i=0; xcgi_parsed_path_info && xcgi_parsed_path_info[i]; i++) {
+      free ((void *)xcgi_parsed_path_info[i]);
+   }
+   ds_array_del (xcgi_parsed_path_info);
+   xcgi_parsed_path_info = NULL;
+}
 
 /* ************************************************************************
  */
@@ -225,6 +259,7 @@ struct {
       { "HTTP_USER_AGENT",          &xcgi_HTTP_USER_AGENT         },
       { "HTTPS",                    &xcgi_HTTPS                   },
       { "PATH",                     &xcgi_PATH                    },
+      { "PATH_INFO",                &xcgi_PATH_INFO               },
       { "PWD",                      &xcgi_PWD                     },
       { "QUERY_STRING",             &xcgi_QUERY_STRING            },
       { "REMOTE_ADDR",              &xcgi_REMOTE_ADDR             },
@@ -265,6 +300,12 @@ bool xcgi_init (void)
       goto errorexit;
    }
 
+   if (!(parse_path_info ())) {
+      fprintf (stderr, "Failed to parse the path info [%s]\n",
+               xcgi_PATH_INFO);
+      goto errorexit;
+   }
+
    error = false;
 
 errorexit:
@@ -283,6 +324,7 @@ void xcgi_shutdown (void)
 
    qstrings_shutdown ();
    qs_content_types_shutdown ();
+   path_info_shutdown ();
 }
 
 #define MARKER_EOV      ("MARKER-END-OF-VARS")
@@ -380,6 +422,7 @@ bool xcgi_load (const char *fname)
 
    qstrings_shutdown ();
    qs_content_types_shutdown ();
+   path_info_shutdown ();
 
    xcgi_init ();
 
