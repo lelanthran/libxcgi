@@ -119,7 +119,7 @@ int main (void)
       printf ("qs [%s:%s]\n", xcgi_qstrings[i][0], xcgi_qstrings[i][1]);
    }
 
-   printf ("Path info:\n");
+   printf ("Path info [%zu]:\n", xcgi_path_info_count ());
    for (size_t i=0; xcgi_path_info[i]; i++) {
       printf ("   [%s]\n", xcgi_path_info[i]);
    }

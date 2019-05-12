@@ -695,5 +695,9 @@ size_t xcgi_qstrings_count (void)
    return ds_array_length ((void **)xcgi_qstrings);
 }
 
+size_t xcgi_path_info_count (void)
+{
+   return ds_array_length ((void **)xcgi_path_info);
+}
 
 

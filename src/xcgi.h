@@ -127,6 +127,12 @@ extern "C" {
    // a successful call to xcgi_qstrings_parse().
    size_t xcgi_qstrings_count (void);
 
+
+   //////////////////////////////////////////////////////////////////
+
+   // Returns the number of strings in the xcgi_path_info array.
+   size_t xcgi_path_info_count (void);
+
 #ifdef __cplusplus
 };
 #endif
@@ -179,7 +185,8 @@ extern FILE *xcgi_stdin;
 
 // Available after xcgi_init(). Contains an array of strings, terminated
 // with a NULL, that consists of each of the path elements passed to this
-// script via PATH_INFO.
+// script via PATH_INFO. Use the function xcgi_path_info_count() to get
+// the number of strings in the array for iteration purposes.
 extern const char **xcgi_path_info;
 
 // Available after xcgi_qstrings_parse(). Contains an array of the
