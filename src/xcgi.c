@@ -46,7 +46,7 @@ const char *xcgi_SERVER_SOFTWARE;
 
 FILE *xcgi_stdin;
 
-const char **xcgi_parsed_path_info;
+const char **xcgi_path_info;
 const char **xcgi_qstrings_content_types;
 const char ***xcgi_qstrings;
 
@@ -208,7 +208,7 @@ errorexit:
  */
 static bool parse_path_info (void)
 {
-   if (!(xcgi_parsed_path_info = ds_array_new ()))
+   if (!(xcgi_path_info = ds_array_new ()))
       return false;
 
    char *tmp = ds_str_dup (xcgi_PATH_INFO);
@@ -218,7 +218,7 @@ static bool parse_path_info (void)
    char *pathf = strtok (tmp, "/");
    while (pathf) {
       char *e = ds_str_dup (pathf);
-      if (!e || !ds_array_ins_tail ((void ***)&xcgi_parsed_path_info, e)) {
+      if (!e || !ds_array_ins_tail ((void ***)&xcgi_path_info, e)) {
          free (tmp);
          return false;
       }
@@ -231,11 +231,11 @@ static bool parse_path_info (void)
 
 static void path_info_shutdown (void)
 {
-   for (size_t i=0; xcgi_parsed_path_info && xcgi_parsed_path_info[i]; i++) {
-      free ((void *)xcgi_parsed_path_info[i]);
+   for (size_t i=0; xcgi_path_info && xcgi_path_info[i]; i++) {
+      free ((void *)xcgi_path_info[i]);
    }
-   ds_array_del (xcgi_parsed_path_info);
-   xcgi_parsed_path_info = NULL;
+   ds_array_del (xcgi_path_info);
+   xcgi_path_info = NULL;
 }
 
 /* ************************************************************************

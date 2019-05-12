@@ -180,7 +180,7 @@ extern FILE *xcgi_stdin;
 // Available after xcgi_init(). Contains an array of strings, terminated
 // with a NULL, that consists of each of the path elements passed to this
 // script via PATH_INFO.
-extern const char **xcgi_parsed_path_info;
+extern const char **xcgi_path_info;
 
 // Available after xcgi_qstrings_parse(). Contains an array of the
 // content-types that will be chekced to determine if POST data must be

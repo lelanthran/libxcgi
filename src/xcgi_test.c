@@ -11,7 +11,6 @@ int main (void)
 {
    int ret = EXIT_FAILURE;
 
-   char ***qstrings = NULL;
    size_t nqstrings = 0;
 
    if (!(xcgi_init ())) {
@@ -111,18 +110,18 @@ int main (void)
       goto errorexit;
    }
 
-   if (!(qstrings = xcgi_qstrings)) {
+   if (!xcgi_qstrings) {
       fprintf (stderr, "Could not retrieve query strings\n");
       goto errorexit;
    }
 
-   for (size_t i=0; qstrings[i]; i++) {
-      printf ("qs [%s:%s]\n", qstrings[i][0], qstrings[i][1]);
+   for (size_t i=0; xcgi_qstrings[i]; i++) {
+      printf ("qs [%s:%s]\n", xcgi_qstrings[i][0], xcgi_qstrings[i][1]);
    }
 
    printf ("Path info:\n");
-   for (size_t i=0; xcgi_parsed_path_info[i]; i++) {
-      printf ("   [%s]\n", xcgi_parsed_path_info[i]);
+   for (size_t i=0; xcgi_path_info[i]; i++) {
+      printf ("   [%s]\n", xcgi_path_info[i]);
    }
    printf ("/Path info\n");
 
