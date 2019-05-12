@@ -5,6 +5,9 @@
 
 #include "xcgi.h"
 
+#include "ds_array.h"
+#include "ds_str.h"
+
 const char *xcgi_CONTENT_LENGTH;
 const char *xcgi_CONTENT_TYPE;
 const char *xcgi_CONTEXT_DOCUMENT_ROOT;
@@ -41,7 +44,60 @@ const char *xcgi_SERVER_SOFTWARE;
 
 FILE *xcgi_stdin;
 
+/* ************************************************************************
+ */
+static char ***g_qstrings;
 
+static bool qstrings_new (void)
+{
+   return (g_qstrings = (char ***)ds_array_new ()) ? true : false;
+}
+
+static void qstrings_del (void)
+{
+   for (size_t i=0; g_qstrings && g_qstrings[i]; i++) {
+      free (g_qstrings[i][0]);
+      free (g_qstrings[i][1]);
+      free (g_qstrings[i]);
+   }
+   ds_array_del ((void **)g_qstrings);
+   g_qstrings = NULL;
+}
+
+static char **qstrings_add (const char *name, const char *value)
+{
+   bool error = true;
+   char **ret = NULL;
+   if (!name || !value)
+      return NULL;
+
+   if (!(ret = malloc (sizeof *ret * 2)))
+      goto errorexit;
+
+   ret[0] = ds_str_dup (name);
+   ret[1] = ds_str_dup (value);
+   if (!ret[0] || !ret[1])
+      goto errorexit;
+
+   if (!(ds_array_ins_tail ((void ***)&g_qstrings, ret)))
+      goto errorexit;
+
+   error = false;
+
+errorexit:
+   if (error) {
+      free (ret[0]);
+      free (ret[1]);
+      free (ret);
+      ret = NULL;
+   }
+
+   return ret;
+}
+
+
+/* ************************************************************************
+ */
 struct {
    const char *name;
    const char **variable;
@@ -88,6 +144,9 @@ bool xcgi_init (void)
       *(g_vars[i].variable) = tmp ? tmp : "";
    }
    xcgi_stdin = stdin;
+   if (!(qstrings_new ()))
+      return false;
+
    return true;
 }
 
@@ -95,6 +154,8 @@ void xcgi_shutdown (void)
 {
    if (xcgi_stdin)
       fclose (xcgi_stdin);
+
+   qstrings_del ();
 }
 
 #define MARKER_EOV      ("MARKER-END-OF-VARS")
@@ -124,7 +185,6 @@ bool xcgi_save (const char *fname)
       while (!ferror (stdin) && !feof (stdin) && clen>0) {
          size_t must_read = clen < sizeof g_line ? clen : sizeof g_line;
          size_t nbytes = fread (g_line, 1, must_read, stdin);
-         printf ("Read [%zu] bytes, [%zu] remaining\n", nbytes, clen);
          size_t written = fwrite (g_line, 1, nbytes, outf);
          if (written != nbytes) {
             fprintf (stderr, "Wrote only [%zu/%zu] bytes to file\n",
@@ -164,7 +224,6 @@ bool xcgi_load (const char *fname)
          break;
       }
 
-      printf ("Read [%s]\n", g_line);
       tmp = strchr (g_line, '\n');
       if (tmp)
          *tmp = 0;
@@ -189,9 +248,10 @@ bool xcgi_load (const char *fname)
 
       // TODO: For Windows must use putenv_s()
       setenv (g_line, ltmp, 1);
-      printf ("Set [%s:%s]\n", g_line, ltmp);
       free (ltmp);
    }
+
+   qstrings_del ();
 
    xcgi_init ();
 
@@ -336,19 +396,51 @@ errorexit:
    return ret;
 }
 
+static bool xcgi_parse_query_string (void)
+{
+   bool error = true;
+   char *uestring = xcgi_string_unescape (xcgi_QUERY_STRING);
+
+   char *pair = NULL;
+
+   pair = strtok (uestring, "&");
+   while (pair) {
+      char *sep = strchr (pair, '=');
+      if (!sep) {
+         fprintf (stderr, "Failed to find delimiter in [%s]\n", pair);
+         goto errorexit;
+      }
+      *sep = 0;
+      if (!(qstrings_add (pair, &sep[1]))) {
+         fprintf (stderr, "Failed to add qstrings [%s:%s]\n", pair, sep);
+         goto errorexit;
+      }
+      *sep = '=';
+      pair = strtok (NULL, "&");
+   }
+
+   error = false;
+
+errorexit:
+
+   free (uestring);
+   return !error;
+}
+
 bool xcgi_qstrings_parse (void)
 {
-   return false;
+   return xcgi_parse_query_string ();
 }
 
 size_t xcgi_qstrings_count (void)
 {
-   return 0;
+   return ds_array_length ((void **)g_qstrings);
 }
 
 const char ***xcgi_qstrings (void)
 {
-   return NULL;
+   return g_qstrings;
 }
+
 
 

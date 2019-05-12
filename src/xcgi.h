@@ -97,6 +97,9 @@ extern "C" {
    // On success true is returned. On error false is returned. Adding
    // duplicated content-types is not an error (returns true) and removing
    // non-existing content-types is not an error (returns true).
+   //
+   // NOTE: The list of acceptable content-types is ignored when parsing
+   // query strings that are passed in the URI.
    bool xcgi_qstrings_accept_content_type (const char *content_type);
    bool xcgi_qstrings_remove_content_type (const char *content_type);
 

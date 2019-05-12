@@ -15,6 +15,7 @@ int main (int argc, char ** argv)
    int ret = EXIT_FAILURE;
    static char input[1024 * 16];
    FILE *childf = NULL;
+   char *child_cmd = NULL;
 
    printf ("Fake a cgi execution.\n");
 
@@ -40,7 +41,16 @@ int main (int argc, char ** argv)
       goto errorexit;
    }
 
-   if (!(childf = popen (argv[2], "w"))) {
+   if (!(ds_str_append (&child_cmd,
+                        "valgrind --leak-check=full ",
+                        "--track-origins=yes ",
+                        "--show-leak-kinds=all ",
+                        argv[2], NULL))) {
+      fprintf (stderr, "Failed to construct command\n");
+      goto errorexit;
+   }
+
+   if (!(childf = popen (child_cmd, "w"))) {
       fprintf (stderr, "Failed to execute [%s]\n", argv[2]);
       goto errorexit;
    }
@@ -58,6 +68,8 @@ int main (int argc, char ** argv)
    ret = EXIT_SUCCESS;
 
 errorexit:
+
+   free (child_cmd);
 
    xcgi_shutdown ();
    if (childf)
