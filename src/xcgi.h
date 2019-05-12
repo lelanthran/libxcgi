@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
    //////////////////////////////////////////////////////////////////
-
+   // Initialisation/shutdown functions
 
    // Initialises the cgi variables. Returns true on success, false on error.
    //
@@ -39,7 +39,7 @@ extern "C" {
 
 
    //////////////////////////////////////////////////////////////////
-
+   // Environment functions
 
    // Load/save the cgi environment for later playback.
    bool xcgi_load (const char *fname);
@@ -52,7 +52,7 @@ extern "C" {
 
 
    //////////////////////////////////////////////////////////////////
-
+   // String functions
 
    // Returns a copy of the specified string with all the non-ascii
    // characters replaced with their hex equivalent using %xx as the
@@ -74,8 +74,8 @@ extern "C" {
 
 
    //////////////////////////////////////////////////////////////////
-
-
+   // Query strings functions
+   //
    // When parsing query strings, the library will refuse to parse POST
    // request query strings that do not match an acceptable content-type.
    // These two functions add and remove acceptable content-type
@@ -129,9 +129,47 @@ extern "C" {
 
 
    //////////////////////////////////////////////////////////////////
+   // Header functions
+   //
+   // Each header, with the exception of SetCookie, may have multiple
+   // values. The value passed to xcgi_header_value_set() must be complete,
+   // together with any of the optional data that the caller wants to
+   // store in the header value field (the data which is present after the
+   // semicolon in the transmitted response header).
+   //
+   // SetCookie MUST NOT be set by this function. Use the cookie functions
+   // specifically. In general the caller should only use these header
+   // functions for setting response headers that cannot be set using a
+   // specific response-header function (such as xcgi_header_SetCookie(),
+   // or xcgi_header_Accept(), etc.
+   //
+   // Prior to transmission, headers can be examined by iterating over
+   // them using the xcgi_response_headers array. This includes the
+   // headers set by calling specific response-header functions such as
+   // xcgi_header_SetCookie(), xcgi_header_Accept(), etc.
+   //
+
+   // Append a new value to the named header. If the header does not exist
+   // it will be created. Returns true on success and false on failure.
+   //
+   bool xcgi_header_value_set (const char *header, const char *value);
+
+   // Clear the entire response header field for the named response header.
+   // Does nothing if the header does not exist.
+   void xcgi_header_clear (const char *header);
+
+   // Writes the headers out
+   bool xcgi_header_write (void);
+
+
+
+   //////////////////////////////////////////////////////////////////
+   // Misc functions
 
    // Returns the number of strings in the xcgi_path_info array.
    size_t xcgi_path_info_count (void);
+
+   // Returns the number of response headers currently stored
 
 #ifdef __cplusplus
 };
@@ -203,6 +241,13 @@ extern const char **xcgi_qstrings_content_types;
 // POST data if content-type matches a content-type specified in the list
 // of acceptable content_types `xcgi_qstrings_content_types`.
 extern const char ***xcgi_qstrings;
+
+// Available after setting any/all response headers. Contains an array of
+// strings that each represent a single response header to be transmitted
+// verbatim.
+extern const char **xcgi_response_headers;
+// TODO: Stopped here last.
+
 
 #endif
 

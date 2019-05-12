@@ -1,5 +1,7 @@
 # libxcgi - C library to support Common Gateway Interface programs
 
+## Note: this library is not yet usable, still in development.
+
 ## Dependencies
 1. Download the Data Structures library **libds**
    [from github](https://github.com/lelanthran/libds).
