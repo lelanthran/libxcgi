@@ -229,7 +229,7 @@ extern FILE *xcgi_stdin;
 extern const char **xcgi_path_info;
 
 // Available after xcgi_qstrings_parse(). Contains an array of the
-// content-types that will be chekced to determine if POST data must be
+// content-types that will be checked to determine if POST data must be
 // passed as name=value query strings. See the functions:
 //    xcgi_qstrings_accept_content_type() => content-type to accept
 //    xcgi_qstrings_reject_content_type() => content-type to reject
@@ -247,7 +247,7 @@ extern const char ***xcgi_qstrings;
 // strings that each represent a single response header to be transmitted
 // verbatim.
 extern const char **xcgi_response_headers;
-// TODO: Stopped here last.
+
 
 
 #endif

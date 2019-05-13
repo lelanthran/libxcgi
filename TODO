@@ -1,0 +1,4 @@
+1. Add support for parsing multi-part input with multiple file uploads.
+2. Add support for parsing JSON input.
+3. Create an example program; maybe a framework that allows the caller to
+   map urls to functions?
