@@ -161,6 +161,9 @@ all:	real-all
 	cp -Rv $(HEADERS) include
 	ln -f -s $(STCLNK_TARGET) $(STCLNK_NAME)
 	ln -f -s $(DYNLNK_TARGET) $(DYNLNK_NAME)
+	ln -f -s $(TARGET)/$(STCLNK_TARGET) $(OUTDIR)/lib/lib$(PROJNAME).a
+	ln -f -s $(TARGET)/$(DYNLNK_TARGET) $(OUTDIR)/lib/lib$(PROJNAME)$(LIB_EXT)
+
 
 real-show:	$(OUTDIRS)
 	@echo "SHELL:        $(GITSHELL)"
