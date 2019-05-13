@@ -125,6 +125,35 @@ int main (void)
    }
    printf ("/Path info\n");
 
+   if (!(xcgi_headers_value_set ("HEADer-1", "My Value; With options"))) {
+      fprintf (stderr, "Failed to set header 1\n");
+      goto errorexit;
+   }
+
+   if (!(xcgi_headers_value_set ("HeADer-1", "New Value; With new options"))) {
+      fprintf (stderr, "Failed to set header 2\n");
+      goto errorexit;
+   }
+
+   if (!(xcgi_headers_value_set ("hEADer-2", "Value"))) {
+      fprintf (stderr, "Failed to set header 3\n");
+      goto errorexit;
+   }
+
+   printf ("Headers [%zu]:\n", xcgi_headers_count ());
+   for (size_t i=0; xcgi_response_headers[i]; i++) {
+      printf ("   [%s]\n", xcgi_response_headers[i]);
+   }
+   printf ("/Headers\n");
+
+   xcgi_headers_clear ("Header-2");
+   printf ("Headers [%zu]:\n", xcgi_headers_count ());
+   for (size_t i=0; xcgi_response_headers[i]; i++) {
+      printf ("   [%s]\n", xcgi_response_headers[i]);
+   }
+   printf ("/Headers\n");
+
+
    printf ("--");
    while (!feof (xcgi_stdin) && !ferror (xcgi_stdin)) {
       int c = fgetc (xcgi_stdin);

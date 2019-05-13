@@ -152,14 +152,14 @@ extern "C" {
    // Append a new value to the named header. If the header does not exist
    // it will be created. Returns true on success and false on failure.
    //
-   bool xcgi_header_value_set (const char *header, const char *value);
+   bool xcgi_headers_value_set (const char *header, const char *value);
 
    // Clear the entire response header field for the named response header.
    // Does nothing if the header does not exist.
-   void xcgi_header_clear (const char *header);
+   void xcgi_headers_clear (const char *header);
 
    // Writes the headers out
-   bool xcgi_header_write (void);
+   bool xcgi_headers_write (void);
 
 
 
@@ -169,7 +169,8 @@ extern "C" {
    // Returns the number of strings in the xcgi_path_info array.
    size_t xcgi_path_info_count (void);
 
-   // Returns the number of response headers currently stored
+   // Returns the number of response headers ready for transmission
+   size_t xcgi_headers_count (void);
 
 #ifdef __cplusplus
 };

@@ -49,6 +49,7 @@ FILE *xcgi_stdin;
 const char **xcgi_path_info;
 const char **xcgi_qstrings_content_types;
 const char ***xcgi_qstrings;
+const char **xcgi_response_headers;
 
 /* ************************************************************************
  */
@@ -208,7 +209,7 @@ errorexit:
  */
 static bool parse_path_info (void)
 {
-   if (!(xcgi_path_info = ds_array_new ()))
+   if (!(xcgi_path_info = (const char **)ds_array_new ()))
       return false;
 
    char *tmp = ds_str_dup (xcgi_PATH_INFO);
@@ -234,9 +235,27 @@ static void path_info_shutdown (void)
    for (size_t i=0; xcgi_path_info && xcgi_path_info[i]; i++) {
       free ((void *)xcgi_path_info[i]);
    }
-   ds_array_del (xcgi_path_info);
+   ds_array_del ((void **)xcgi_path_info);
    xcgi_path_info = NULL;
 }
+
+/* ************************************************************************
+ */
+static bool response_headers_init (void)
+{
+   return (xcgi_response_headers = (const char **)ds_array_new ())
+               ? true : false;
+}
+
+static void response_headers_shutdown (void)
+{
+   for (size_t i=0; xcgi_response_headers[i]; i++) {
+      free ((char *)xcgi_response_headers[i]);
+   }
+   ds_array_del ((void **)xcgi_response_headers);
+   xcgi_response_headers = NULL;
+}
+
 
 /* ************************************************************************
  */
@@ -306,6 +325,11 @@ bool xcgi_init (void)
       goto errorexit;
    }
 
+   if (!(response_headers_init ())) {
+      fprintf (stderr, "Failed to allocate storage for response headers\n");
+      goto errorexit;
+   }
+
    error = false;
 
 errorexit:
@@ -325,6 +349,7 @@ void xcgi_shutdown (void)
    qstrings_shutdown ();
    qs_content_types_shutdown ();
    path_info_shutdown ();
+   response_headers_shutdown ();
 }
 
 #define MARKER_EOV      ("MARKER-END-OF-VARS")
@@ -423,6 +448,7 @@ bool xcgi_load (const char *fname)
    qstrings_shutdown ();
    qs_content_types_shutdown ();
    path_info_shutdown ();
+   response_headers_shutdown ();
 
    xcgi_init ();
 
@@ -695,9 +721,28 @@ size_t xcgi_qstrings_count (void)
    return ds_array_length ((void **)xcgi_qstrings);
 }
 
+bool xcgi_headers_value_set (const char *header, const char *value)
+{
+   return false;
+}
+
+void xcgi_headers_clear (const char *header)
+{
+}
+
+bool xcgi_headers_write (void)
+{
+
+}
+
 size_t xcgi_path_info_count (void)
 {
    return ds_array_length ((void **)xcgi_path_info);
+}
+
+size_t xcgi_headers_count (void)
+{
+   return ds_array_length ((void **)xcgi_response_headers);
 }
 
 
