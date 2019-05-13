@@ -256,6 +256,25 @@ static void response_headers_shutdown (void)
    xcgi_response_headers = NULL;
 }
 
+static size_t response_headers_find (const char *name)
+{
+   if (!xcgi_response_headers)
+      if (!(response_headers_init ()))
+         return (size_t)-1;
+
+   if (!name)
+      return (size_t)-1;
+
+   size_t len = strlen (name);
+
+   for (size_t i=0; xcgi_response_headers[i]; i++) {
+      if ((strncasecmp (xcgi_response_headers[i], name, len))==0)
+         return i;
+   }
+
+   return (size_t)-1;
+}
+
 
 /* ************************************************************************
  */
@@ -683,7 +702,7 @@ static bool xcgi_parse_POST_query_string (void)
       *sep++ = 0;
 
       if (!(qstrings_add (tmp, sep))) {
-         fprintf (stderr, "Failed to add qstrings [%s:%s]\n", pair, sep);
+         fprintf (stderr, "Failed to add qstrings [%s:%s]\n", tmp, sep);
          goto errorexit;
       }
 
@@ -723,16 +742,49 @@ size_t xcgi_qstrings_count (void)
 
 bool xcgi_headers_value_set (const char *header, const char *value)
 {
-   return false;
+   size_t index = response_headers_find (header);
+   char *tmp = NULL;
+
+   if (index == (size_t)-1) {
+
+      if (!(ds_str_printf (&tmp, "%s:%s", header, value)))
+         return false;
+
+      bool ret = ds_array_ins_tail ((void ***)&xcgi_response_headers, tmp);
+      if (!ret)
+         free (tmp);
+      return ret;
+
+   }
+
+   if (!(ds_str_printf (&tmp, "%s, %s", xcgi_response_headers[index], value)))
+      return false;
+
+   free ((void *)xcgi_response_headers[index]);
+   xcgi_response_headers[index] = tmp;
+   return true;
 }
 
 void xcgi_headers_clear (const char *header)
 {
+   size_t index = response_headers_find (header);
+
+   if (index != (size_t)-1) {
+      free ((void *)xcgi_response_headers[index]);
+      ds_array_remove ((void ***)&xcgi_response_headers, index);
+   }
 }
 
 bool xcgi_headers_write (void)
 {
+   if (!xcgi_response_headers)
+      return true;
 
+   for (size_t i=0; xcgi_response_headers[i]; i++) {
+      fprintf (stdout, "%s\r\n", xcgi_response_headers[i]);
+   }
+
+   return true;
 }
 
 size_t xcgi_path_info_count (void)

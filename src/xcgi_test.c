@@ -153,6 +153,7 @@ int main (void)
    }
    printf ("/Headers\n");
 
+   xcgi_headers_write ();
 
    printf ("--");
    while (!feof (xcgi_stdin) && !ferror (xcgi_stdin)) {
