@@ -249,6 +249,9 @@ static bool response_headers_init (void)
 
 static void response_headers_shutdown (void)
 {
+   if (!xcgi_response_headers)
+      return;
+
    for (size_t i=0; xcgi_response_headers[i]; i++) {
       free ((char *)xcgi_response_headers[i]);
    }
