@@ -28,6 +28,8 @@ export PATH_INFO=/one/two/three/four
 export PWD=/home/lelanthran/public_html/cgi-bin
 export QUERY_STRING="name1=value1&name%202=value%201two%41"
 export REMOTE_ADDR=127.0.0.1
+export REMOTE_HOST=anywhere.com
+export REMOTE_USER=test_user
 export REMOTE_PORT=48134
 export REQUEST_METHOD=POST
 export REQUEST_SCHEME=http
