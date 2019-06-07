@@ -37,9 +37,8 @@ The list of permissions that can be granted/revoked is:
 ```
 #### New user
 ```javascript
-POST
+POST /user-new
 {
-   "action":      "add-user",
    "email":       "example@email.com",
    "nick":        "Nickname to use",
    "password":    "cleartext password"
@@ -48,18 +47,16 @@ POST
 
 #### Remove user
 ```javascript
-POST
+POST /user-rm
 {
-   "action":      "rm-user",
    "email":       "example@email.com",
 }
 ```
 
 #### Modify user
 ```javascript
-POST
+POST /user-mod
 {
-   "action":      "mod-user",
    "old-email":   "old@email.com",
    "new-email":   "new@email.com",
    "nick":        "Nickname to use",      // optional
@@ -69,27 +66,25 @@ POST
 
 #### New group
 ```javascript
-POST
+POST /group-new
 {
-   "action":      "add-group",
    "name":        "group name",
+   "description": "A description of the group",
 }
 ```
 
 #### Remove group
 ```javascript
-POST
+POST /group-rm
 {
-   "action":      "rm-group",
    "name":        "group name",
 }
 ```
 
 #### Grant perms to a user
 ```javascript
-POST
+POST /perms-grant-user
 {
-   "action":      "grant-user",
    "email":       "example@email.com",
    "perms":       "See list of perms allowed",
    "resource":    "A queue, user or group"
@@ -98,9 +93,8 @@ POST
 
 #### Revoke perms to a user
 ```javascript
-POST
+POST /perms-revoke-user
 {
-   "action":      "revoke-user",
    "email":       "example@email.com",
    "perms":       "See list of perms allowed",
    "resource":    "A queue, user or group"
@@ -109,9 +103,8 @@ POST
 
 #### Grant perms to a group
 ```javascript
-POST
+POST /perms-grant-group
 {
-   "action":      "grant-user",
    "name":        "group name",
    "perms":       "See list of perms allowed",
    "resource":    "A queue, user or group"
@@ -120,9 +113,8 @@ POST
 
 #### Revoke perms to a group
 ```javascript
-POST
+POST /perms-revoke-group
 {
-   "action":      "revoke-user",
    "name":        "group name",
    "perms":       "See list of perms allowed",
    "resource":    "A queue, user or group"
@@ -132,10 +124,10 @@ POST
 ### Queue creation, enqueuing and deleting
 #### Queue creation
 ```javascript
-POST
+POST /queue-create
 {
-   "action":      "queue-create",
    "name":        "name",
+   "description": "A description of the queue",
 }
 ```
 
@@ -190,8 +182,9 @@ Unfortunately this means at least one more dependency: sqlite.
       cnick:   TEXT);
 
    CREATE TABLE tgroup (
-      cid:     INTEGER PRIMARY KEY,
-      cname:   TEXT UNIQUE);
+      cid:        INTEGER PRIMARY KEY,
+      cname:      TEXT UNIQUE,
+      description: TEXT);
 
    CREATE TABLE tgroup_membership (
       cuser:   INTEGER,
