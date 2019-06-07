@@ -2,3 +2,7 @@
 2. Add support for parsing JSON input.
 3. Create an example program; maybe a framework that allows the caller to
    map urls to functions?
+
+4. Create the skeleton pubsub.cgi application. For now simply accepting
+   and responding to the API (even if responding with junk data) is
+   enough.
