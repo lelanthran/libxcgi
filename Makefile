@@ -207,7 +207,6 @@ show:	real-show
 $(BINOBS) $(OBS):	$(OUTOBS)/%.o:	src/%.c $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ $<
 
-
 $(OUTBIN)/%.exe:	$(OUTOBS)/%.o $(OBS) $(OUTDIRS)
 	$(LD) $< $(OBS) -o $@ $(LDFLAGS)
 
@@ -229,7 +228,7 @@ clean-release:
 clean-debug:
 	rm -rfv debug
 
-veryclean:	clean-release clean-debug
+clean-all:	clean-release clean-debug
 
 
 clean:
