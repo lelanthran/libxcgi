@@ -1,8 +1,29 @@
 # Generic PubSub Implementation
 
 ## Authentication
-Authentication must be performed by the web server which, even if md5sum
-hashes are used, will be suitable over https.
+Initially I had intended to rely on user authentication via the http spec,
+now I am reconsidering doing the auth in the program itself.
+
+Doing http-auth:
++ The web server does all the work of authentication, denial, approval,
+  etc. All the cgi program has to do is simply use the name provided by
+  the web server.
++ As web auth methods get more secure the cgi program will not have to be
+  changed to accomodate them (For example, Mutual Auth, HOBA, AWS-HMAC)
+- The cgi program will be tied to a specific web-server as it will (for
+  apache) manage the UserAuthFile itself which the webserver will read.
+- The security provided by the http specification for authentication may
+  be inadequate (md5 sums) and is a risk if the authfile ever gets leaked.
+
+Doing it in the program:
++ Makes the cgi program portable to other web-servers.
+- means a whole lot more work just to auth users (check a cookie, lookup a
+  session, determine the user).
+- If an upgrade occurs to a more secure authentication scheme then the
+  cgi program needs to be updated (and will for a time allow old and new
+  authentication schemes). This is more work.
+
+For now, using the web server's authentication.
 
 *(TODO: The cgi program must manually do the addition/removal of hashes in
 the password file being used by apache)*
