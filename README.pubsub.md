@@ -40,6 +40,58 @@ users.
 
 ## API in brief
 
+### Session maintenance
+All the endpoints below will check the cookie for session ID and generate
+an error if the session ID is missing or present but invalid. The only
+exception is the Login (duh) which needs no session ID.
+
+The caller must perform the requisite authentication via the `Login`
+endpoint if the returned error indicates an invalid session
+
+### Error handling
+All the responses except `queue-get` will include in the root of the reply
+two fields (note case):
+```javascript
+."errorCode"      // An integer value containing a the error number
+."errorMessage"   // An english description of the error
+```
+
+The `queue-get` indicates errors using http status codes only, as it does
+not return a JSON tree.
+
+(TODO: Create a list of error response codes).
+
+### Session management
+#### Login
+```javascript
+POST /login
+{
+   "email":       "example@email.com",
+   "password":    "cleartext password"
+}
+```
+RETURNS:
+```javascript
+{
+   "session":     "session ID"      // Also in cookie
+}
+```
+
+#### Logout
+```javascript
+POST /logout
+{
+   // Empty, session is destroyed based on cookie value
+}
+```
+RETURNS:
+```javascript
+{
+   "session":     "0000000000000000"  // Also in cookie
+}
+```
+
+
 ### User, group and permissions management
 The list of permissions that can be granted/revoked is:
 ```javascript
@@ -65,6 +117,12 @@ POST /user-new
    "password":    "cleartext password"
 }
 ```
+RETURNS:
+```javascript
+{
+   "user-id":     "ID of created user"
+}
+```
 
 #### Remove user
 ```javascript
@@ -73,6 +131,8 @@ POST /user-rm
    "email":       "example@email.com",
 }
 ```
+RETURNS: HTTP status code only
+
 
 #### Modify user
 ```javascript
@@ -84,6 +144,8 @@ POST /user-mod
    "password":    "cleartext password"    // optional
 }
 ```
+RETURNS: HTTP status code only
+
 
 #### New group
 ```javascript
@@ -91,6 +153,12 @@ POST /group-new
 {
    "name":        "group name",
    "description": "A description of the group",
+}
+```
+RETURNS:
+```javascript
+{
+   "group-id":     "ID of created group"
 }
 ```
 
@@ -101,6 +169,8 @@ POST /group-rm
    "name":        "group name",
 }
 ```
+RETURNS: HTTP status code only
+
 
 #### Grant perms to a user
 ```javascript
@@ -111,6 +181,8 @@ POST /perms-grant-user
    "resource":    "A queue, user or group"
 }
 ```
+RETURNS: HTTP status code only
+
 
 #### Revoke perms to a user
 ```javascript
@@ -121,6 +193,8 @@ POST /perms-revoke-user
    "resource":    "A queue, user or group"
 }
 ```
+RETURNS: HTTP status code only
+
 
 #### Grant perms to a group
 ```javascript
@@ -131,6 +205,8 @@ POST /perms-grant-group
    "resource":    "A queue, user or group"
 }
 ```
+RETURNS: HTTP status code only
+
 
 #### Revoke perms to a group
 ```javascript
@@ -141,6 +217,8 @@ POST /perms-revoke-group
    "resource":    "A queue, user or group"
 }
 ```
+RETURNS: HTTP status code only
+
 
 ### Queue creation, enqueuing and deleting
 #### Queue creation
@@ -151,12 +229,18 @@ POST /queue-create
    "description": "A description of the queue",
 }
 ```
+RETURNS:
+```javascript
+{
+   "queue-id":     "ID of created queue"
+}
+```
 
 #### Listing messages in a queue
 Retrieves all message ids starting at the specified id
 `GET /queue-list/queue-id/message-id`
 
-RETURNS
+RETURNS:
 ```javascript
    {
       "message-ids":    [message-id, ...]
@@ -167,7 +251,7 @@ RETURNS
 `PUT /queue-put/queue-id`
 `<content body>`
 
-RETURNS
+RETURNS:
 ```javascript
 {
    "message-id:   "ID of message added to queue"
@@ -177,12 +261,15 @@ RETURNS
 #### Getting a message from a queue
 `GET /queue-get/queue-id/message-id`
 
-RETURNS
-`<binary data/octet-stream>`
+RETURNS:
+```javascript
+<binary data/octet-stream>
+```
 
 
 #### Removing a message from a queue
 `DELETE /queue-del/queue-id`
+RETURNS: HTTP status code only
 
 
 
@@ -194,13 +281,16 @@ permissions lookups will take time unless a dedicated indexed storage is used.
 
 Unfortunately this means at least one more dependency: sqlite.
 
-[**NOTE**: All the unique clumns should be indexed]
+[**NOTE**: All the unique columns should be indexed]
 
 ```SQL
    CREATE TABLE tuser (
       cid:     INTEGER PRIMARY KEY,
       cemail:  TEXT UNIQUE,
-      cnick:   TEXT);
+      cnick:   TEXT,
+      session: TEXT,
+      salt:    TEXT,
+      hash:    TEXT);
 
    CREATE TABLE tgroup (
       cid:        INTEGER PRIMARY KEY,
