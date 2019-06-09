@@ -21,14 +21,12 @@ int main (void)
 
    xcgi_headers_write ();
 
-   printf ("--");
    while (!feof (xcgi_stdin) && !ferror (xcgi_stdin)) {
       int c = fgetc (xcgi_stdin);
       if (c!=EOF) {
          fputc (c, stdout);
       }
    }
-   printf ("--\n");
 
    ret = EXIT_SUCCESS;
 

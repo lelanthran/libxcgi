@@ -128,10 +128,31 @@ RETURNS:
 ```javascript
 POST /user-rm
 {
-   "email":       "example@email.com",
+   "email":       "example@email.com"
 }
 ```
 RETURNS: HTTP status code only
+
+
+#### List users
+```javascript
+POST /user-list
+{
+   "emailPattern":      "Pattern to find for for emails",
+   "nickPattern":       "Pattern to find for for nicks",
+   "idPattern":         "Pattern to find for for IDs",
+}
+```
+RETURNS:
+```javascript
+{
+   "emailPattern":      "Pattern matched against email address",
+   "nickPattern":       "Pattern matched against nicknames",
+   "idPattern":         "Pattern matched against IDs",
+   "resultsetCount":    64,               // Number of users in the results
+   "resultset":         [email1, ...]
+}
+```
 
 
 #### Modify user
@@ -162,6 +183,7 @@ RETURNS:
 }
 ```
 
+
 #### Remove group
 ```javascript
 POST /group-rm
@@ -170,6 +192,61 @@ POST /group-rm
 }
 ```
 RETURNS: HTTP status code only
+
+
+#### Add to group
+```javascript
+POST /group-adduser
+{
+   "name":        "group name",
+   "email":       "email of user to add"
+}
+```
+RETURNS: HTTP status code only
+
+
+#### Remove from group
+```javascript
+POST /group-rmuser
+{
+   "name":        "group name",
+   "email":       "email of user to remove"
+}
+```
+RETURNS: HTTP status code only
+
+
+#### List groups
+```javascript
+POST /group-list
+{
+   "pattern":      "Pattern to find",
+}
+```
+RETURNS:
+```javascript
+{
+   "pattern":           "Pattern used for matching",
+   "resultsetCount":    64,               // Number of groups in the results
+   "resultset":         [group1, ...]
+}
+```
+
+#### List group members
+```javascript
+POST /group-members
+{
+   "name":     "Name of group"
+}
+```
+RETURNS:
+```javascript
+{
+   "name":              "Name of group",
+   "resultsetCount":    64,               // Number of groups in the results
+   "resultset":         [group1, ...]
+}
+```
 
 
 #### Grant perms to a user
@@ -196,6 +273,24 @@ POST /perms-revoke-user
 RETURNS: HTTP status code only
 
 
+#### List user's perms on resource
+```javascript
+POST /perms-resource-user
+{
+   "email":     "email@example.com",
+   "resource":  "Resource to be examined"
+}
+```
+RETURNS:
+```javascript
+{
+   "email":             "email@example.com",
+   "resultsetCount":    64,               // Number of results
+   "resultset":         [email1-perms, ...]
+}
+```
+
+
 #### Grant perms to a group
 ```javascript
 POST /perms-grant-group
@@ -219,6 +314,23 @@ POST /perms-revoke-group
 ```
 RETURNS: HTTP status code only
 
+
+#### List groups's perms on resource
+```javascript
+POST /perms-resource-group
+{
+   "name":      "Name of group",
+   "resource":  "Resource to be examined"
+}
+```
+RETURNS:
+```javascript
+{
+   "name":              "Name of group being examined",
+   "resultsetCount":    64,               // Number of results
+   "resultset":         [group1-perms, ...]
+}
+```
 
 ### Queue creation, enqueuing and deleting
 #### Queue creation
