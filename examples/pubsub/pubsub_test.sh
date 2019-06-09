@@ -29,10 +29,10 @@ export SERVER_PORT=80
 export SERVER_PROTOCOL=HTTP/1.1
 export SERVER_SIGNATURE=$'<address>Apache/2.4.29 (Ubuntu) Server at localhost Port 80</address>\n'
 export SERVER_SOFTWARE='Apache/2.4.29 (Ubuntu)'
-export SHELL=/usr/sbin/nologin
-export SHELLOPTS=braceexpand:hashall:interactive-comments
-export VARS=
 
 
 # For each of the endpoints we test we set PATH_INFO and call the cgi
 # program
+export PATH_INFO=/login
+echo -ne '{"email": "example@email.com" }' | valgrind ./pubsub.elf > results
+
