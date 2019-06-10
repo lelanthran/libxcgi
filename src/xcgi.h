@@ -198,6 +198,11 @@ extern "C" {
    // Returns the number of response headers ready for transmission
    size_t xcgi_headers_count (void);
 
+   // Returns the reason phrase for the specified http status code. If the
+   // code is unknown then the string "Internal Server Error" with the
+   // code embedded into it is returned.
+   const char *xcgi_get_reason_phrase (int status_code);
+
 #ifdef __cplusplus
 };
 #endif
