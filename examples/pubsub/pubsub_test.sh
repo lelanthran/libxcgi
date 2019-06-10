@@ -461,6 +461,14 @@ echo -ne '{
 
 ###############################################
 
+export PATH_INFO=/group-mod
+echo -ne '{
+   "old-name":         "Group1",
+   "new-name":         "p1-Renamed"
+}' | valgrind ./pubsub.elf > results
+
+###############################################
+
 export PATH_INFO=/group-list
 echo -ne '{
    "pattern":         "*"

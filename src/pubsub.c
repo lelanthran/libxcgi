@@ -15,7 +15,7 @@
 static bool set_field (ds_hmap_t *hm, const char *name, const void *value,
                        int type)
 {
-   if (!hm || !name || !value)
+   if (!hm || !name)
       return false;
 
    char *tmp = NULL;
@@ -88,12 +88,97 @@ errorexit:
    free (keys);
 }
 
+typedef enum endpoint_t endpoint_t;
+enum endpoint_t {
+   endpoint_ERROR = 0,
+   endpoint_LOGIN,
+   endpoint_LOGOUT,
+
+   endpoint_USER_NEW,
+   endpoint_USER_RM,
+   endpoint_USER_LIST,
+   endpoint_USER_MOD,
+
+   endpoint_GROUP_NEW,
+   endpoint_GROUP_RM,
+   endpoint_GROUP_MOD,
+   endpoint_GROUP_ADDUSER,
+   endpoint_GROUP_RMUSER,
+   endpoint_GROUP_LIST,
+   endpoint_GROUP_MEMBERS,
+
+   endpoint_PERMS_GRANT_USER,
+   endpoint_PERMS_REVOKE_USER,
+   endpoint_PERMS_RESOURCE_USER,
+   endpoint_PERMS_GRANT_GROUP,
+   endpoint_PERMS_REVOKE_GROUP,
+   endpoint_PERMS_RESOURCE_GROUP,
+
+   endpoint_QUEUE_NEW,
+   endpoint_QUEUE_RM,
+   endpoint_QUEUE_MOD,
+   endpoint_QUEUE_PUT,
+   endpoint_QUEUE_GET,
+   endpoint_QUEUE_DEL,
+   endpoint_QUEUE_LIST,
+};
+
+static endpoint_t endpoint_parse (const char *srcstr)
+{
+   static const struct {
+      endpoint_t  code;
+      const char *str;
+   } endpts[] = {
+      {  endpoint_ERROR,                  ""                      },
+      {  endpoint_LOGIN,                  "login"                 },
+      {  endpoint_LOGOUT,                 "logout"                },
+
+      {  endpoint_USER_NEW,               "user-new"              },
+      {  endpoint_USER_RM,                "user-rm"               },
+      {  endpoint_USER_LIST,              "user-list"             },
+      {  endpoint_USER_MOD,               "user-mod"              },
+
+      {  endpoint_GROUP_NEW,              "group-new"             },
+      {  endpoint_GROUP_RM,               "group-rm"              },
+      {  endpoint_GROUP_MOD,              "group-mod"             },
+      {  endpoint_GROUP_ADDUSER,          "group-adduser"         },
+      {  endpoint_GROUP_RMUSER,           "group-rmuser"          },
+      {  endpoint_GROUP_LIST,             "group-list"            },
+      {  endpoint_GROUP_MEMBERS,          "group-members"         },
+
+      {  endpoint_PERMS_GRANT_USER,       "perms-grant-user"      },
+      {  endpoint_PERMS_REVOKE_USER,      "perms-revoke-user"     },
+      {  endpoint_PERMS_RESOURCE_USER,    "perms-resource-user"   },
+      {  endpoint_PERMS_GRANT_GROUP,      "perms-grant-group"     },
+      {  endpoint_PERMS_REVOKE_GROUP,     "perms-revoke-group"    },
+      {  endpoint_PERMS_RESOURCE_GROUP,   "perms-resource-group"  },
+
+      {  endpoint_QUEUE_NEW,              "queue-new"             },
+      {  endpoint_QUEUE_RM,               "queue-rm"              },
+      {  endpoint_QUEUE_MOD,              "queue-mod"             },
+      {  endpoint_QUEUE_PUT,              "queue-put"             },
+      {  endpoint_QUEUE_GET,              "queue-get"             },
+      {  endpoint_QUEUE_DEL,              "queue-del"             },
+      {  endpoint_QUEUE_LIST,             "queue-list"            },
+   };
+
+   if (!srcstr)
+      return endpoint_ERROR;
+
+   for (size_t i=0; i<sizeof endpts/sizeof endpts[0]; i++) {
+      if ((strcmp (srcstr, endpts[i].str))==0)
+         return endpts[i].code;
+   }
+   return endpoint_ERROR;
+}
+
 int main (void)
 {
    int ret = EXIT_FAILURE;
    int errorCode = 0;
    const char *errorMessage = "Success";
    ds_hmap_t *jfields = NULL;
+   endpoint_t endpoint = endpoint_ERROR;
 
    if (!(jfields = ds_hmap_new (32))) {
       fprintf (stderr, "Failed to create hashmap for json fields\n");
@@ -110,14 +195,17 @@ int main (void)
       goto errorexit;
    }
 
-   if (!(xcgi_HTTP_COOKIE[0])) {
-      errorCode = EPUBSUB_AUTH;
-   }
+   endpoint = endpoint_parse (xcgi_path_info[0]);
 
+   if (!(xcgi_HTTP_COOKIE[0]) && endpoint!=endpoint_LOGIN) {
+      errorCode = EPUBSUB_AUTH;
+      // goto errorexit;
+   }
 
    printf ("Path info [%zu]:\n", xcgi_path_info_count ());
    for (size_t i=0; xcgi_path_info[i]; i++) {
-      printf ("   [%s]\n", xcgi_path_info[i]);
+      printf ("   [%s]: %i\n", xcgi_path_info[i],
+                               endpoint_parse (xcgi_path_info[i]));
    }
    printf ("/Path info\n");
 
