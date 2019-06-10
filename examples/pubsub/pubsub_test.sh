@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Exit on first error
+set -e
+
 # These variables cause the cgi program to think that it has been invoked
 # by a web server.
 export CONTEXT_DOCUMENT_ROOT=/home/lelanthran/public_html

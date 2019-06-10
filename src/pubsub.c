@@ -4,14 +4,76 @@
 
 #include "xcgi.h"
 
+#include "pubsub_error.h"
+
+#include "ds_hmap.h"
+#include "ds_str.h"
+
+#define TYPE_STRING        (1)
+#define TYPE_INT           (2)
+
+static bool set_field (ds_hmap_t *hm, const char *name, const void *value,
+                       int type)
+{
+   if (!hm || !name || !value)
+      return false;
+
+   char *tmp = NULL;
+   size_t nbytes = 0;
+
+   if (type==TYPE_STRING)
+      nbytes = ds_str_printf (&tmp, "\"%s\"", value);
+
+   if (type==TYPE_INT)
+      nbytes = ds_str_printf (&tmp, "%i", (int)((intptr_t)value));
+
+   if (nbytes==0)
+      return false;
+
+   if (!(ds_hmap_set_str_str (hm, name, tmp))) {
+      free (tmp);
+      return false;
+   }
+
+   return true;
+}
+
+static bool set_sfield (ds_hmap_t *hm, const char *name, const char *value)
+{
+   return set_field (hm, name, value, TYPE_STRING);
+}
+
+static bool set_ifield (ds_hmap_t *hm, const char *name, int value)
+{
+   return set_field (hm, name, &value, TYPE_INT);
+}
+
 int main (void)
 {
    int ret = EXIT_FAILURE;
+   int errorCode = 0;
+   const char *errorMessage = "Success";
+   ds_hmap_t *jfields = NULL;
+
+   if (!(jfields = ds_hmap_new (32))) {
+      fprintf (stderr, "Failed to create hashmap for json fields\n");
+      return EXIT_FAILURE;
+   }
+
+   if (!errorMessage) {
+      fprintf (stderr, "Failed to allocate memory for error message\n");
+      goto errorexit;
+   }
 
    if (!(xcgi_init ())) {
       fprintf (stderr, "Failed to initialise the library\n");
       goto errorexit;
    }
+
+   if (!(xcgi_HTTP_COOKIE[0])) {
+      errorCode = EPUBSUB_AUTH;
+   }
+
 
    printf ("Path info [%zu]:\n", xcgi_path_info_count ());
    for (size_t i=0; xcgi_path_info[i]; i++) {
@@ -32,7 +94,24 @@ int main (void)
 
 errorexit:
 
+   if (errorCode) {
+      errorMessage = pubsub_error_msg (errorCode);
+   }
+
+   if (!(set_ifield (jfields, "errorCode", errorCode))) {
+      fprintf (stderr, "Failed setting the errorCode field\n");
+      return EXIT_FAILURE;
+   }
+
+   if (!(set_sfield (jfields, "errorMessage", errorMessage))) {
+      fprintf (stderr, "Failed setting the errorMessage field\n");
+      return EXIT_FAILURE;
+   }
+
    xcgi_shutdown ();
+
+   ds_hmap_del (jfields);  // Memory leak here, must iterate and free all
+                           // keys first.
 
    return ret;
 }

@@ -94,11 +94,13 @@ BINOBS=\
 
 OBS=\
 	$(OUTOBS)/xcgi.o\
-	$(OUTOBS)/xcgi_json.o
+	$(OUTOBS)/xcgi_json.o\
+	$(OUTOBS)/pubsub_error.o
 
 
 HEADERS=\
-	src/xcgi.h
+	src/xcgi.h\
+	src/pubsub_error.h
 
 
 # ######################################################################
