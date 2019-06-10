@@ -4,12 +4,20 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <time.h>
+#include <stdint.h>
 
 // This is a global non-thread-safe library. A CGI program runs once and
 // then exits. Memory used by this module is potentially never freed. The
 // caller MUST call xcgi_init() before calling any other function. Before
 // program return the caller can call xcgi_shutdown() to ensure that all
 // files are closed, although this is not necessary.
+
+#define XCGI_COOKIE_SECURE             (1 << 0)
+#define XCGI_COOKIE_HTTPONLY           (1 << 1)
+#define XCGI_COOKIE_SAMESITE_STRICT    (1 << 2)
+#define XCGI_COOKIE_SAMESITE_LAX       (1 << 3)
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -160,6 +168,21 @@ extern "C" {
 
    // Writes the headers out
    bool xcgi_headers_write (void);
+
+   // ///////////////////////////////////////////////////////////////
+   // Set specific headers
+
+   // Set and clear cookies. An expiry of '0' causes a session cookie to
+   // be set (no expiry is specified in the response header).
+   //
+   // Setting a cookie multiple times is allowed - it will be duplicated
+   // in the response headers. Clearing a cookie removes all instances of
+   // it.
+   bool xcgi_header_cookie_set (const char *name, const char *value,
+                                time_t    expires,
+                                uint32_t  flags);
+
+   void xcgi_header_cookie_clear (const char *name);
 
 
 

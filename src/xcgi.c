@@ -52,6 +52,150 @@ const char ***xcgi_qstrings;
 const char **xcgi_response_headers;
 
 /* ************************************************************************
+ * All the cookie-related storage. This is all private to this module.
+ */
+typedef struct cookie_t cookie_t;
+struct cookie_t {
+   char       *name;
+   char       *value;
+   time_t      expires;
+   uint32_t    flags;
+};
+
+static cookie_t **xcgi_cookielist;
+
+static bool cookielist_init (void)
+{
+   return (xcgi_cookielist = (cookie_t **)ds_array_new ()) ? true : false;
+}
+
+static const char *cookie_time (time_t expires)
+{
+   static char ret[30];
+
+   ret[0] = ';';
+   ret[1] = ' ';
+   strcpy (&ret[2], ctime (&expires));
+   char *tmp = strchr (ret, '\n');
+   if (tmp)
+      *tmp = 0;
+
+   return ret;
+}
+
+static const char *cookie_samesite (uint32_t flags)
+{
+   static char ret[20];
+   memset (ret, 0, sizeof ret);
+   if (flags & XCGI_COOKIE_SAMESITE_LAX) {
+      strcpy (ret, "; SameSite=Lax");
+   }
+   if (flags & XCGI_COOKIE_SAMESITE_STRICT) {
+      strcpy (ret, "; SameSite=Strict");
+   }
+   return ret;
+}
+
+static bool cookielist_write (void)
+{
+   for (size_t i=0; xcgi_cookielist[i]; i++) {
+      cookie_t *cookie = xcgi_cookielist[i];
+      fprintf (stdout, "Set-Cookie: %s=%s%s%s%s%s\r\n",
+               cookie->name,
+               cookie->value,
+               cookie->expires ? cookie_time (cookie->expires) : "",
+               cookie->flags & XCGI_COOKIE_SECURE ? "; Secure" : "",
+               cookie->flags & XCGI_COOKIE_HTTPONLY ? "; HttpOnly" : "",
+               cookie_samesite (cookie->flags));
+   }
+   return true;
+}
+
+static void cookie_del (cookie_t *cookie)
+{
+   if (!cookie)
+      return;
+   free (cookie->name);
+   free (cookie->value);
+   free (cookie);
+}
+
+static cookie_t *cookie_new (const char *name, const char *value,
+                             time_t expires, uint32_t flags)
+{
+   bool error = true;
+   cookie_t *ret = NULL;
+
+   if (!name || !value)
+      goto errorexit;
+
+   if (!(ret = malloc (sizeof *ret)))
+      goto errorexit;
+
+   memset (ret, 0, sizeof *ret);
+
+   name = ds_str_dup (name);
+   value = ds_str_dup (value);
+   ret->expires = expires;
+   ret->flags = flags;
+
+   if (!ret->name || !ret->value)
+      goto errorexit;
+
+   error = false;
+
+errorexit:
+   if (error) {
+      cookie_del (ret);
+      ret = NULL;
+   }
+
+   return ret;
+}
+static void cookielist_shutdown (void)
+{
+   for (size_t i=0; xcgi_cookielist[i]; i++) {
+      cookie_del (xcgi_cookielist[i]);
+   }
+   ds_array_del ((void **)xcgi_cookielist);
+   xcgi_cookielist = NULL;
+}
+
+bool xcgi_header_cookie_set (const char *name, const char *value,
+                             time_t    expires,
+                             uint32_t  flags)
+{
+   bool error = true;
+   cookie_t *newcookie = NULL;
+
+   if (!(newcookie = cookie_new (name, value, expires, flags)))
+      goto errorexit;
+
+   if (!(ds_array_ins_tail ((void ***)&xcgi_cookielist, newcookie)))
+      goto errorexit;
+
+   error = false;
+
+errorexit:
+   if (error) {
+      cookie_del (newcookie);
+   }
+   return !error;
+}
+
+void xcgi_header_cookie_clear (const char *name)
+{
+   for (size_t i=0; xcgi_cookielist[i]; i++) {
+      cookie_t *cookie = xcgi_cookielist[i];
+      if ((strcmp (cookie->name, name))==0) {
+         cookie_del (cookie);
+         ds_array_remove ((void ***)&xcgi_cookielist, i);
+      }
+   }
+}
+
+
+/* ************************************************************************
  */
 static bool qs_content_types_init (void)
 {
@@ -243,12 +387,17 @@ static void path_info_shutdown (void)
  */
 static bool response_headers_init (void)
 {
+   if (!(cookielist_init ()))
+      return false;
+
    return (xcgi_response_headers = (const char **)ds_array_new ())
                ? true : false;
 }
 
 static void response_headers_shutdown (void)
 {
+   cookielist_shutdown ();
+
    if (!xcgi_response_headers)
       return;
 
@@ -782,6 +931,9 @@ bool xcgi_headers_write (void)
 {
    if (!xcgi_response_headers)
       return true;
+
+   if (!(cookielist_write ()))
+      return false;
 
    for (size_t i=0; xcgi_response_headers[i]; i++) {
       fprintf (stdout, "%s\r\n", xcgi_response_headers[i]);
