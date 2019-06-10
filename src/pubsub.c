@@ -45,7 +45,47 @@ static bool set_sfield (ds_hmap_t *hm, const char *name, const char *value)
 
 static bool set_ifield (ds_hmap_t *hm, const char *name, int value)
 {
-   return set_field (hm, name, &value, TYPE_INT);
+   return set_field (hm, name, value, TYPE_INT);
+}
+
+static void print_json (ds_hmap_t *hm)
+{
+   char **keys = NULL;
+   size_t nkeys = ds_hmap_keys (hm, &keys, NULL);
+
+   printf ("{");
+   for (size_t i=0; i<nkeys; i++) {
+      char *value = NULL;
+      if (!(ds_hmap_get_str_str (hm, keys[i], &value))) {
+         fprintf (stderr, "Failed to retrieve key [%s]\n", keys[i]);
+         goto errorexit;
+      }
+      printf ("%s\n\"%s\": %s", i ? "," : "", keys[i], value);
+   }
+   printf ("\n}\n");
+
+errorexit:
+   free (keys);
+}
+
+static void free_json (ds_hmap_t *hm)
+{
+   char **keys = NULL;
+   size_t nkeys = ds_hmap_keys (hm, &keys, NULL);
+
+   for (size_t i=0; i<nkeys; i++) {
+      char *value = NULL;
+      if (!(ds_hmap_get_str_str (hm, keys[i], &value))) {
+         fprintf (stderr, "Failed to retrieve key [%s]\n", keys[i]);
+         goto errorexit;
+      }
+      free (value);
+   }
+
+   ds_hmap_del (hm);
+
+errorexit:
+   free (keys);
 }
 
 int main (void)
@@ -108,10 +148,10 @@ errorexit:
       return EXIT_FAILURE;
    }
 
-   xcgi_shutdown ();
+   print_json (jfields);
+   free_json (jfields);
 
-   ds_hmap_del (jfields);  // Memory leak here, must iterate and free all
-                           // keys first.
+   xcgi_shutdown ();
 
    return ret;
 }

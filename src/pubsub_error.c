@@ -11,7 +11,7 @@ const char *pubsub_error_msg (int errorcode)
       int code;
       const char *msg;
    } errs[] = {
-
+      { EPUBSUB_AUTH, "Not authenticated" },
    };
 
    for (size_t i=0; i<sizeof errs/sizeof errs[0]; i++) {
@@ -19,7 +19,7 @@ const char *pubsub_error_msg (int errorcode)
          return errs[i].msg;
    }
 
-   snprintf (ret, "Unknown Error [%i]", errorcode);
+   snprintf (ret, sizeof ret, "Unknown Error [%i]", errorcode);
 
    return ret;
 }

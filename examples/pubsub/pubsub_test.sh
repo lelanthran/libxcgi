@@ -37,7 +37,11 @@ export SERVER_SOFTWARE='Apache/2.4.29 (Ubuntu)'
 # For each of the endpoints we test we set PATH_INFO and call the cgi
 # program
 export PATH_INFO=/login
-echo -ne '{"email": "example@email.com" }' | valgrind ./pubsub.elf > results
+echo -ne '{
+   "email": "example@email.com"
+}' | valgrind --leak-check=full ./pubsub.elf > results
+
+exit 1
 
 ###############################################
 
@@ -46,7 +50,7 @@ echo -ne '{
    "email": "example@email.com",
    "nick": "Example1",
    "password": "12345"
-}' | valgrind ./pubsub.elf > results
+}' | valgrind --leak-check=full ./pubsub.elf > results
 
 echo -ne '{
    "email": "todelete1@email.com",
