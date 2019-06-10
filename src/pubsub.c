@@ -88,46 +88,202 @@ errorexit:
    free (keys);
 }
 
-typedef enum endpoint_t endpoint_t;
-enum endpoint_t {
-   endpoint_ERROR = 0,
-   endpoint_LOGIN,
-   endpoint_LOGOUT,
+typedef bool (endpoint_func_t) (int *, int *);
 
-   endpoint_USER_NEW,
-   endpoint_USER_RM,
-   endpoint_USER_LIST,
-   endpoint_USER_MOD,
+static bool endpoint_ERROR (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
 
-   endpoint_GROUP_NEW,
-   endpoint_GROUP_RM,
-   endpoint_GROUP_MOD,
-   endpoint_GROUP_ADDUSER,
-   endpoint_GROUP_RMUSER,
-   endpoint_GROUP_LIST,
-   endpoint_GROUP_MEMBERS,
+static bool endpoint_LOGIN (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
 
-   endpoint_PERMS_GRANT_USER,
-   endpoint_PERMS_REVOKE_USER,
-   endpoint_PERMS_RESOURCE_USER,
-   endpoint_PERMS_GRANT_GROUP,
-   endpoint_PERMS_REVOKE_GROUP,
-   endpoint_PERMS_RESOURCE_GROUP,
+static bool endpoint_LOGOUT (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
 
-   endpoint_QUEUE_NEW,
-   endpoint_QUEUE_RM,
-   endpoint_QUEUE_MOD,
-   endpoint_QUEUE_PUT,
-   endpoint_QUEUE_GET,
-   endpoint_QUEUE_DEL,
-   endpoint_QUEUE_LIST,
-};
+static bool endpoint_USER_NEW (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
 
-static endpoint_t endpoint_parse (const char *srcstr)
+static bool endpoint_USER_RM (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_USER_LIST (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_USER_MOD (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_GROUP_NEW (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_GROUP_RM (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_GROUP_MOD (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_GROUP_ADDUSER (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_GROUP_RMUSER (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_GROUP_LIST (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_GROUP_MEMBERS (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_PERMS_GRANT_USER (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_PERMS_REVOKE_USER (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_PERMS_RESOURCE_USER (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_PERMS_GRANT_GROUP (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_PERMS_REVOKE_GROUP (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_PERMS_RESOURCE_GROUP (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_QUEUE_NEW (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_QUEUE_RM (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_QUEUE_MOD (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_QUEUE_PUT (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_QUEUE_GET (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_QUEUE_DEL (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static bool endpoint_QUEUE_LIST (int *error_code, int *status_code)
+{
+   error_code = error_code;
+   status_code = status_code;
+   return false;
+}
+
+static endpoint_func_t *endpoint_parse (const char *srcstr)
 {
    static const struct {
-      endpoint_t  code;
-      const char *str;
+      endpoint_func_t  *code;
+      const char       *str;
    } endpts[] = {
       {  endpoint_ERROR,                  ""                      },
       {  endpoint_LOGIN,                  "login"                 },
@@ -175,10 +331,15 @@ static endpoint_t endpoint_parse (const char *srcstr)
 int main (void)
 {
    int ret = EXIT_FAILURE;
+
    int errorCode = 0;
    const char *errorMessage = "Success";
+
+   int statusCode = 501;
+   const char *statusMessage = "Internal Server Error";
+
    ds_hmap_t *jfields = NULL;
-   endpoint_t endpoint = endpoint_ERROR;
+   endpoint_func_t *endpoint = endpoint_ERROR;
 
    if (!(jfields = ds_hmap_new (32))) {
       fprintf (stderr, "Failed to create hashmap for json fields\n");
@@ -199,9 +360,13 @@ int main (void)
 
    if (!(xcgi_HTTP_COOKIE[0]) && endpoint!=endpoint_LOGIN) {
       errorCode = EPUBSUB_AUTH;
-      // goto errorexit;
+      goto errorexit;
    }
 
+   if (!(endpoint (&errorCode, &statusCode)))
+      goto errorexit;
+
+   /*
    printf ("Path info [%zu]:\n", xcgi_path_info_count ());
    for (size_t i=0; xcgi_path_info[i]; i++) {
       printf ("   [%s]: %i\n", xcgi_path_info[i],
@@ -209,22 +374,19 @@ int main (void)
    }
    printf ("/Path info\n");
 
-   xcgi_headers_write ();
-
    while (!feof (xcgi_stdin) && !ferror (xcgi_stdin)) {
       int c = fgetc (xcgi_stdin);
       if (c!=EOF) {
          fputc (c, stdout);
       }
    }
+   */
 
    ret = EXIT_SUCCESS;
 
 errorexit:
 
-   if (errorCode) {
-      errorMessage = pubsub_error_msg (errorCode);
-   }
+   errorMessage = pubsub_error_msg (errorCode);
 
    if (!(set_ifield (jfields, "errorCode", errorCode))) {
       fprintf (stderr, "Failed setting the errorCode field\n");
@@ -235,6 +397,12 @@ errorexit:
       fprintf (stderr, "Failed setting the errorMessage field\n");
       return EXIT_FAILURE;
    }
+
+   statusMessage = xcgi_reason_phrase (statusCode);
+
+   printf ("HTTP/1.1 %i %s\r\n", statusCode, statusMessage);
+
+   xcgi_headers_write ();
 
    print_json (jfields);
    free_json (jfields);

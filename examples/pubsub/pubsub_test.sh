@@ -41,8 +41,6 @@ echo -ne '{
    "email": "example@email.com"
 }' | valgrind --leak-check=full ./pubsub.elf > results
 
-exit 1
-
 ###############################################
 
 export PATH_INFO=/user-new
@@ -51,6 +49,8 @@ echo -ne '{
    "nick": "Example1",
    "password": "12345"
 }' | valgrind --leak-check=full ./pubsub.elf > results
+
+exit 1
 
 echo -ne '{
    "email": "todelete1@email.com",

@@ -136,7 +136,7 @@ POST /user-rm
    "email":       "example@email.com"
 }
 ```
-RETURNS: HTTP status code only
+RETURNS: "errorCode" and "errorMessage" fields only.
 
 
 #### List users
@@ -170,7 +170,7 @@ POST /user-mod
    "password":    "cleartext password"    // optional
 }
 ```
-RETURNS: HTTP status code only
+RETURNS: "errorCode" and "errorMessage" fields only.
 
 
 #### New group
@@ -196,7 +196,7 @@ POST /group-rm
    "name":        "group name"
 }
 ```
-RETURNS: HTTP status code only
+RETURNS: "errorCode" and "errorMessage" fields only.
 
 
 #### Modify group
@@ -207,7 +207,7 @@ POST /group-mod
    "new-name":    "New group name"
 }
 ```
-RETURNS: HTTP status code only
+RETURNS: "errorCode" and "errorMessage" fields only.
 
 
 #### Add to group
@@ -218,7 +218,7 @@ POST /group-adduser
    "email":       "email of user to add"
 }
 ```
-RETURNS: HTTP status code only
+RETURNS: "errorCode" and "errorMessage" fields only.
 
 
 #### Remove from group
@@ -229,7 +229,7 @@ POST /group-rmuser
    "email":       "email of user to remove"
 }
 ```
-RETURNS: HTTP status code only
+RETURNS: "errorCode" and "errorMessage" fields only.
 
 
 #### List groups
@@ -274,7 +274,7 @@ POST /perms-grant-user
    "resource":    "A queue, user or group"
 }
 ```
-RETURNS: HTTP status code only
+RETURNS: "errorCode" and "errorMessage" fields only.
 
 
 #### Revoke perms to a user
@@ -286,7 +286,7 @@ POST /perms-revoke-user
    "resource":    "A queue, user or group"
 }
 ```
-RETURNS: HTTP status code only
+RETURNS: "errorCode" and "errorMessage" fields only.
 
 
 #### List user's perms on resource
@@ -316,7 +316,7 @@ POST /perms-grant-group
    "resource":    "A queue, user or group"
 }
 ```
-RETURNS: HTTP status code only
+RETURNS: "errorCode" and "errorMessage" fields only.
 
 
 #### Revoke perms to a group
@@ -328,7 +328,7 @@ POST /perms-revoke-group
    "resource":    "A queue, user or group"
 }
 ```
-RETURNS: HTTP status code only
+RETURNS: "errorCode" and "errorMessage" fields only.
 
 
 #### List groups's perms on resource
@@ -371,7 +371,7 @@ POST /queue-rm
    "queue-id":        "queue ID",
 }
 ```
-RETURNS: HTTP status code only
+RETURNS: "errorCode" and "errorMessage" fields only.
 
 
 #### Modify queue
@@ -382,7 +382,7 @@ POST /queue-mod
    ...   // Still haven't decided what properties go into a queue
 }
 ```
-RETURNS: HTTP status code only
+RETURNS: "errorCode" and "errorMessage" fields only.
 
 
 #### Putting a message into a queue
@@ -399,7 +399,7 @@ RETURNS:
 #### Getting a message from a queue
 `GET /queue-get/queue-id/message-id`
 
-RETURNS:
+RETURNS: HTTP status code and raw data only
 ```javascript
 <binary data/octet-stream>
 ```
@@ -407,7 +407,7 @@ RETURNS:
 
 #### Removing a message from a queue
 `DELETE /queue-del/queue-id`
-RETURNS: HTTP status code only
+RETURNS: "errorCode" and "errorMessage" fields only.
 
 
 #### Listing messages in a queue
