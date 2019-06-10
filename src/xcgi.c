@@ -47,6 +47,7 @@ const char *xcgi_SERVER_SOFTWARE;
 FILE *xcgi_stdin;
 
 const char **xcgi_path_info;
+const char **xcgi_cookies;
 const char **xcgi_qstrings_content_types;
 const char ***xcgi_qstrings;
 const char **xcgi_response_headers;
@@ -385,6 +386,42 @@ static void path_info_shutdown (void)
 
 /* ************************************************************************
  */
+static bool parse_cookies (void)
+{
+   if (!(xcgi_cookies = (const char **)ds_array_new ()))
+      return false;
+
+   char *tmp = ds_str_dup (xcgi_HTTP_COOKIE);
+   if (!tmp)
+      return true;
+
+   char *cookie = strtok (tmp, ";");
+   while (cookie) {
+      if (cookie[-1]=='\\')
+         continue;
+      char *e = ds_str_dup (cookie);
+      if (!e || !ds_array_ins_tail ((void ***)&xcgi_cookies, e)) {
+         free (tmp);
+         return false;
+      }
+      cookie = strtok (NULL, ";");
+   }
+   free (tmp);
+
+   return true;
+}
+
+static void cookies_shutdown (void)
+{
+   for (size_t i=0; xcgi_cookies && xcgi_cookies[i]; i++) {
+      free ((void *)xcgi_cookies[i]);
+   }
+   ds_array_del ((void **)xcgi_cookies);
+   xcgi_cookies = NULL;
+}
+
+/* ************************************************************************
+ */
 static bool response_headers_init (void)
 {
    if (!(cookielist_init ()))
@@ -496,6 +533,12 @@ bool xcgi_init (void)
       goto errorexit;
    }
 
+   if (!(parse_cookies ())) {
+      fprintf (stderr, "Failed to parse the cookies [%s]\n",
+               xcgi_HTTP_COOKIE);
+      goto errorexit;
+   }
+
    if (!(response_headers_init ())) {
       fprintf (stderr, "Failed to allocate storage for response headers\n");
       goto errorexit;
@@ -520,6 +563,7 @@ void xcgi_shutdown (void)
    qstrings_shutdown ();
    qs_content_types_shutdown ();
    path_info_shutdown ();
+   cookies_shutdown ();
    response_headers_shutdown ();
 }
 

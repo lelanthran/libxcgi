@@ -189,6 +189,9 @@ extern "C" {
    //////////////////////////////////////////////////////////////////
    // Misc functions
 
+   // Returns the number of strings in the xcgi_cookies array.
+   size_t xcgi_cookies_count (void);
+
    // Returns the number of strings in the xcgi_path_info array.
    size_t xcgi_path_info_count (void);
 
@@ -250,6 +253,14 @@ extern FILE *xcgi_stdin;
 // script via PATH_INFO. Use the function xcgi_path_info_count() to get
 // the number of strings in the array for iteration purposes.
 extern const char **xcgi_path_info;
+
+// Available after xcgi_init(). Contains an array of strings, terminated
+// with a NULL, that consists of each of the cookies found in the
+// xcgi_HTTP_COOKIE environment variable. Use the function
+// xcg_cookies_count() to get the number of cookies found.
+//
+// Each cookie is stored as a single string of name=value.
+extern const char **xcgi_cookies;
 
 // Available after xcgi_qstrings_parse(). Contains an array of the
 // content-types that will be checked to determine if POST data must be
