@@ -996,7 +996,7 @@ size_t xcgi_headers_count (void)
    return ds_array_length ((void **)xcgi_response_headers);
 }
 
-const char *xcgi_get_reason_phrase (int status_code)
+const char *xcgi_reason_phrase (int status_code)
 {
    static char ret[55];
    static const struct {

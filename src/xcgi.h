@@ -201,7 +201,7 @@ extern "C" {
    // Returns the reason phrase for the specified http status code. If the
    // code is unknown then the string "Internal Server Error" with the
    // code embedded into it is returned.
-   const char *xcgi_get_reason_phrase (int status_code);
+   const char *xcgi_reason_phrase (int status_code);
 
 #ifdef __cplusplus
 };
