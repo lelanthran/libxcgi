@@ -1,5 +1,10 @@
 # Generic PubSub Implementation
 
+(TODO: Ensure that all the fields have unique names across all endpoints.
+This makes it easier to parse in the program (for example, 'group-name'
+must always contain the group-name, instead of using 'name' for the group
+name in one endpoint and 'gname' for the group name in another endpoint).
+
 ## Authentication
 Initially I had intended to rely on user authentication via the http spec,
 now I am reconsidering doing the auth in the program itself.
@@ -188,7 +193,18 @@ RETURNS:
 ```javascript
 POST /group-rm
 {
-   "name":        "group name",
+   "name":        "group name"
+}
+```
+RETURNS: HTTP status code only
+
+
+#### Modify group
+```javascript
+POST /group-mod
+{
+   "old-name":    "Current group name",
+   "new-name":    "New group name"
 }
 ```
 RETURNS: HTTP status code only
@@ -333,9 +349,9 @@ RETURNS:
 ```
 
 ### Queue creation, enqueuing and deleting
-#### Queue creation
+#### Add queue
 ```javascript
-POST /queue-create
+POST /queue-new
 {
    "name":        "name",
    "description": "A description of the queue",
@@ -348,16 +364,26 @@ RETURNS:
 }
 ```
 
-#### Listing messages in a queue
-Retrieves all message ids starting at the specified id
-`GET /queue-list/queue-id/message-id`
-
-RETURNS:
+#### Remove queue
 ```javascript
-   {
-      "message-ids":    [message-id, ...]
-   }
+POST /queue-rm
+{
+   "queue-id":        "queue ID",
+}
 ```
+RETURNS: HTTP status code only
+
+
+#### Modify queue
+```javascript
+POST /queue-mod
+{
+   "queue-id":    "ID of queue to modify",
+   ...   // Still haven't decided what properties go into a queue
+}
+```
+RETURNS: HTTP status code only
+
 
 #### Putting a message into a queue
 `PUT /queue-put/queue-id`
@@ -383,6 +409,17 @@ RETURNS:
 `DELETE /queue-del/queue-id`
 RETURNS: HTTP status code only
 
+
+#### Listing messages in a queue
+Retrieves all message ids starting at the specified id
+`GET /queue-list/queue-id/message-id`
+
+RETURNS:
+```javascript
+   {
+      "message-ids":    [message-id, ...]
+   }
+```
 
 
 ## Implementation in brief
