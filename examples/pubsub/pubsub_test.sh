@@ -42,83 +42,72 @@ function call_cgi () {
    echo $3 | valgrind --leak-check=full ./pubsub.elf > $2
 }
 
+###############################################
+
 call_cgi /login login.results '{
    "email":    "example@email.com",
    "password": "123456"
 }'
 
-exit 1
-
-export PATH_INFO=/login
-export INPUT='{
-   "email":    "example@email.com",
-   "password": "123456"
-}'
-echo $CONTENT_LENGTH
-echo $INPUT | valgrind --leak-check=full ./pubsub.elf > results
-
 ###############################################
 
-export PATH_INFO=/user-new
-echo -ne '{
+call_cgi /user-new user-new.results '{
    "email": "example@email.com",
    "nick": "Example1",
    "password": "12345"
-}' | valgrind --leak-check=full ./pubsub.elf > results
+}'
 
-exit 1
-
-echo -ne '{
+call_cgi /user-new user-new-1.results '{
    "email": "todelete1@email.com",
    "nick": "ToDelete1",
    "password": "12345"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+
+call_cgi /user-new user-new-2.results '{
    "email": "todelete2@email.com",
    "nick": "ToDelete2",
    "password": "12345"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /user-new user-new-3.results '{
    "email": "todelete3@email.com",
    "nick": "ToDelete3",
    "password": "12345"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/user-mod
-echo -ne '{
+call_cgi /user-mod user-mod.results '{
    "old-email":   "todelete2@email.com",
    "new-email":   "todelete4@email.com",
    "nick":        "Nickname to use",
    "password":    "cleartext password"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/user-list
-echo -ne '{
+call_cgi /user-list user-list.results '{
    "emailPattern":      "*",
    "nickPattern":       "*",
    "idPattern":         "*"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/group-new
-echo -ne '{
+call_cgi /group-new group-new-1.results '{
    "name": "Group1",
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /group-new group-new-2.results '{
    "name": "Group2",
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /group-new group-new-3.results '{
    "name": "Group3",
-}' | valgrind ./pubsub.elf > results
+}'
+
+exit 1
 
 ###############################################
 
