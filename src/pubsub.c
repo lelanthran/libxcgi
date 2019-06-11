@@ -673,21 +673,6 @@ int main (void)
    if (!(endpoint (jfields, &errorCode, &statusCode)))
       goto errorexit;
 
-   /*
-   printf ("Path info [%zu]:\n", xcgi_path_info_count ());
-   for (size_t i=0; xcgi_path_info[i]; i++) {
-      printf ("   [%s]: %i\n", xcgi_path_info[i],
-                               endpoint_parse (xcgi_path_info[i]));
-   }
-   printf ("/Path info\n");
-
-   while (!feof (xcgi_stdin) && !ferror (xcgi_stdin)) {
-      int c = fgetc (xcgi_stdin);
-      if (c!=EOF) {
-         fputc (c, stdout);
-      }
-   }
-   */
 
    ret = EXIT_SUCCESS;
 
@@ -704,6 +689,8 @@ errorexit:
       fprintf (stderr, "Failed setting the errorMessage field\n");
       return EXIT_FAILURE;
    }
+
+   xcgi_headers_value_set ("CONTENT_TYPE", "application/json");
 
    statusMessage = xcgi_reason_phrase (statusCode);
 

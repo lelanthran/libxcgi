@@ -152,7 +152,7 @@ extern "C" {
    // or xcgi_header_Accept(), etc.
    //
    // Prior to transmission, headers can be examined by iterating over
-   // them using the xcgi_response_headers array. This includes the
+   // them using the xcgi_response_headers array. This excludes the
    // headers set by calling specific response-header functions such as
    // xcgi_header_SetCookie(), xcgi_header_Accept(), etc.
    //

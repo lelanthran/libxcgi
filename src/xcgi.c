@@ -943,7 +943,7 @@ bool xcgi_headers_value_set (const char *header, const char *value)
 
    if (index == (size_t)-1) {
 
-      if (!(ds_str_printf (&tmp, "%s:%s", header, value)))
+      if (!(ds_str_printf (&tmp, "%s: %s", header, value)))
          return false;
 
       bool ret = ds_array_ins_tail ((void ***)&xcgi_response_headers, tmp);
@@ -982,6 +982,8 @@ bool xcgi_headers_write (void)
    for (size_t i=0; xcgi_response_headers[i]; i++) {
       fprintf (stdout, "%s\r\n", xcgi_response_headers[i]);
    }
+
+   fprintf (stdout, "\r\n\r\n");
 
    return true;
 }
