@@ -1,10 +1,5 @@
 # Generic PubSub Implementation
 
-(TODO: Ensure that all the fields have unique names across all endpoints.
-This makes it easier to parse in the program (for example, 'group-name'
-must always contain the group-name, instead of using 'name' for the group
-name in one endpoint and 'gname' for the group name in another endpoint).
-
 ## Authentication
 Initially I had intended to rely on user authentication via the http spec,
 now I am reconsidering doing the auth in the program itself.
@@ -143,18 +138,18 @@ RETURNS: "errorCode" and "errorMessage" fields only.
 ```javascript
 POST /user-list
 {
-   "emailPattern":      "Pattern to find for for emails",
-   "nickPattern":       "Pattern to find for for nicks",
-   "idPattern":         "Pattern to find for for IDs",
+   "email-pattern":     "Pattern to find for for emails",
+   "nick-pattern":      "Pattern to find for for nicks",
+   "id-pattern":        "Pattern to find for for IDs",
 }
 ```
 RETURNS:
 ```javascript
 {
-   "emailPattern":      "Pattern matched against email address",
-   "nickPattern":       "Pattern matched against nicknames",
-   "idPattern":         "Pattern matched against IDs",
-   "resultsetCount":    64,               // Number of users in the results
+   "email-pattern":     "Pattern matched against email address",
+   "nick-pattern":      "Pattern matched against nicknames",
+   "id-pattern":        "Pattern matched against IDs",
+   "resultset-count":   64,               // Number of users in the results
    "resultset":         [email1, ...]
 }
 ```
@@ -177,8 +172,8 @@ RETURNS: "errorCode" and "errorMessage" fields only.
 ```javascript
 POST /group-new
 {
-   "name":        "group name",
-   "description": "A description of the group",
+   "group-name":        "group name",
+   "group-description": "A description of the group",
 }
 ```
 RETURNS:
@@ -193,7 +188,7 @@ RETURNS:
 ```javascript
 POST /group-rm
 {
-   "name":        "group name"
+   "group-name":        "group name"
 }
 ```
 RETURNS: "errorCode" and "errorMessage" fields only.
@@ -203,8 +198,8 @@ RETURNS: "errorCode" and "errorMessage" fields only.
 ```javascript
 POST /group-mod
 {
-   "old-name":    "Current group name",
-   "new-name":    "New group name"
+   "old-group-name":    "Current group name",
+   "new-group-name":    "New group name"
 }
 ```
 RETURNS: "errorCode" and "errorMessage" fields only.
@@ -214,7 +209,7 @@ RETURNS: "errorCode" and "errorMessage" fields only.
 ```javascript
 POST /group-adduser
 {
-   "name":        "group name",
+   "group-name":  "group name",
    "email":       "email of user to add"
 }
 ```
@@ -225,7 +220,7 @@ RETURNS: "errorCode" and "errorMessage" fields only.
 ```javascript
 POST /group-rmuser
 {
-   "name":        "group name",
+   "group-name":  "group name",
    "email":       "email of user to remove"
 }
 ```
@@ -236,14 +231,14 @@ RETURNS: "errorCode" and "errorMessage" fields only.
 ```javascript
 POST /group-list
 {
-   "pattern":      "Pattern to find",
+   "group-pattern":      "Pattern to find",
 }
 ```
 RETURNS:
 ```javascript
 {
-   "pattern":           "Pattern used for matching",
-   "resultsetCount":    64,               // Number of groups in the results
+   "group-pattern":     "Pattern used for matching",
+   "resultset-count":   64,               // Number of groups in the results
    "resultset":         [group1, ...]
 }
 ```
@@ -252,14 +247,14 @@ RETURNS:
 ```javascript
 POST /group-members
 {
-   "name":     "Name of group"
+   "group-name":     "Name of group"
 }
 ```
 RETURNS:
 ```javascript
 {
-   "name":              "Name of group",
-   "resultsetCount":    64,               // Number of groups in the results
+   "group-name":        "Name of group",
+   "resultset-count":   64,               // Number of groups in the results
    "resultset":         [group1, ...]
 }
 ```
@@ -301,7 +296,7 @@ RETURNS:
 ```javascript
 {
    "email":             "email@example.com",
-   "resultsetCount":    64,               // Number of results
+   "resultset-count":   64,               // Number of results
    "resultset":         [email1-perms, ...]
 }
 ```
@@ -311,7 +306,7 @@ RETURNS:
 ```javascript
 POST /perms-grant-group
 {
-   "name":        "group name",
+   "group-name":  "group name",
    "perms":       "See list of perms allowed",
    "resource":    "A queue, user or group"
 }
@@ -323,7 +318,7 @@ RETURNS: "errorCode" and "errorMessage" fields only.
 ```javascript
 POST /perms-revoke-group
 {
-   "name":        "group name",
+   "group-name":  "group name",
    "perms":       "See list of perms allowed",
    "resource":    "A queue, user or group"
 }
@@ -335,15 +330,15 @@ RETURNS: "errorCode" and "errorMessage" fields only.
 ```javascript
 POST /perms-resource-group
 {
-   "name":      "Name of group",
-   "resource":  "Resource to be examined"
+   "group-name":  "Name of group",
+   "resource":    "Resource to be examined"
 }
 ```
 RETURNS:
 ```javascript
 {
-   "name":              "Name of group being examined",
-   "resultsetCount":    64,               // Number of results
+   "group-name":        "Name of group being examined",
+   "resultset-count":   64,               // Number of results
    "resultset":         [group1-perms, ...]
 }
 ```
@@ -353,8 +348,8 @@ RETURNS:
 ```javascript
 POST /queue-new
 {
-   "name":        "name",
-   "description": "A description of the queue",
+   "queue-name":        "name",
+   "queue-description": "A description of the queue",
 }
 ```
 RETURNS:
@@ -416,9 +411,9 @@ Retrieves all message ids starting at the specified id
 
 RETURNS:
 ```javascript
-   {
-      "message-ids":    [message-id, ...]
-   }
+{
+   "message-ids":    [message-id, ...]
+}
 ```
 
 
