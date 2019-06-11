@@ -11,34 +11,93 @@
 
 
 /* ******************************************************************
- * The field names as defined in the API spec document.
+ * The field names as defined in the API spec document. When adding
+ * elements to these lists ensure that the index (IDX) #define matches the
+ * entry in the array g_incoming below it.
  */
-#define FIELD_EMAIL                 ("email")
-#define FIELD_PASSWORD              ("password")
-#define FIELD_SESSION               ("session")
-#define FIELD_NICK                  ("nick")
-#define FIELD_USER_ID               ("user-id")
-#define FIELD_EMAIL_PATTERN         ("email-pattern")
-#define FIELD_NICK_PATTERN          ("nick-pattern")
-#define FIELD_ID_PATTERN            ("id-pattern")
-#define FIELD_RESULTSET_COUNT       ("resultset-count")
-#define FIELD_RESULTSET             ("resultset")
-#define FIELD_OLD_EMAIL             ("old-email")
-#define FIELD_NEW_EMAIL             ("new-email")
-#define FIELD_GROUP_NAME            ("group-name")
-#define FIELD_GROUP_DESCRIPTION     ("group-description")
-#define FIELD_GROUP_ID              ("group-id")
-#define FIELD_OLD_GROUP_NAME        ("old-group-name")
-#define FIELD_NEW_GROUP_NAME        ("new-group-name")
-#define FIELD_GROUP_PATTERN         ("group-pattern")
-#define FIELD_PERMS                 ("perms")
-#define FIELD_RESOURCE              ("resource")
-#define FIELD_QUEUE_NAME            ("queue-name")
-#define FIELD_QUEUE_DESCRIPTION     ("queue-description")
-#define FIELD_QUEUE_ID              ("queue-id")
-#define FIELD_MESSAGE_ID            ("message-id")
-#define FIELD_MESSAGE_IDS           ("message-ids")
+#define FIELD_STR_EMAIL                 ("email")
+#define FIELD_STR_PASSWORD              ("password")
+#define FIELD_STR_SESSION               ("session")
+#define FIELD_STR_NICK                  ("nick")
+#define FIELD_STR_USER_ID               ("user-id")
+#define FIELD_STR_EMAIL_PATTERN         ("email-pattern")
+#define FIELD_STR_NICK_PATTERN          ("nick-pattern")
+#define FIELD_STR_ID_PATTERN            ("id-pattern")
+#define FIELD_STR_RESULTSET_COUNT       ("resultset-count")
+#define FIELD_STR_RESULTSET             ("resultset")
+#define FIELD_STR_OLD_EMAIL             ("old-email")
+#define FIELD_STR_NEW_EMAIL             ("new-email")
+#define FIELD_STR_GROUP_NAME            ("group-name")
+#define FIELD_STR_GROUP_DESCRIPTION     ("group-description")
+#define FIELD_STR_GROUP_ID              ("group-id")
+#define FIELD_STR_OLD_GROUP_NAME        ("old-group-name")
+#define FIELD_STR_NEW_GROUP_NAME        ("new-group-name")
+#define FIELD_STR_GROUP_PATTERN         ("group-pattern")
+#define FIELD_STR_PERMS                 ("perms")
+#define FIELD_STR_RESOURCE              ("resource")
+#define FIELD_STR_QUEUE_NAME            ("queue-name")
+#define FIELD_STR_QUEUE_DESCRIPTION     ("queue-description")
+#define FIELD_STR_QUEUE_ID              ("queue-id")
+#define FIELD_STR_MESSAGE_ID            ("message-id")
+#define FIELD_STR_MESSAGE_IDS           ("message-ids")
 
+#define FIELD_IDX_EMAIL                 0
+#define FIELD_IDX_PASSWORD              1
+#define FIELD_IDX_SESSION               2
+#define FIELD_IDX_NICK                  3
+#define FIELD_IDX_USER_ID               4
+#define FIELD_IDX_EMAIL_PATTERN         5
+#define FIELD_IDX_NICK_PATTERN          6
+#define FIELD_IDX_ID_PATTERN            7
+#define FIELD_IDX_RESULTSET_COUNT       8
+#define FIELD_IDX_RESULTSET             9
+#define FIELD_IDX_OLD_EMAIL             10
+#define FIELD_IDX_NEW_EMAIL             11
+#define FIELD_IDX_GROUP_NAME            12
+#define FIELD_IDX_GROUP_DESCRIPTION     13
+#define FIELD_IDX_GROUP_ID              14
+#define FIELD_IDX_OLD_GROUP_NAME        15
+#define FIELD_IDX_NEW_GROUP_NAME        16
+#define FIELD_IDX_GROUP_PATTERN         17
+#define FIELD_IDX_PERMS                 18
+#define FIELD_IDX_RESOURCE              19
+#define FIELD_IDX_QUEUE_NAME            20
+#define FIELD_IDX_QUEUE_DESCRIPTION     21
+#define FIELD_IDX_QUEUE_ID              22
+#define FIELD_IDX_MESSAGE_ID            23
+#define FIELD_IDX_MESSAGE_IDS           24
+
+static struct {
+   const char *name;
+   const char *value;
+   size_t      len;
+} g_incoming[] = {
+   { FIELD_STR_EMAIL,               NULL, 0 },
+   { FIELD_STR_PASSWORD,            NULL, 0 },
+   { FIELD_STR_SESSION,             NULL, 0 },
+   { FIELD_STR_NICK,                NULL, 0 },
+   { FIELD_STR_USER_ID,             NULL, 0 },
+   { FIELD_STR_EMAIL_PATTERN,       NULL, 0 },
+   { FIELD_STR_NICK_PATTERN,        NULL, 0 },
+   { FIELD_STR_ID_PATTERN,          NULL, 0 },
+   { FIELD_STR_RESULTSET_COUNT,     NULL, 0 },
+   { FIELD_STR_RESULTSET,           NULL, 0 },
+   { FIELD_STR_OLD_EMAIL,           NULL, 0 },
+   { FIELD_STR_NEW_EMAIL,           NULL, 0 },
+   { FIELD_STR_GROUP_NAME,          NULL, 0 },
+   { FIELD_STR_GROUP_DESCRIPTION,   NULL, 0 },
+   { FIELD_STR_GROUP_ID,            NULL, 0 },
+   { FIELD_STR_OLD_GROUP_NAME,      NULL, 0 },
+   { FIELD_STR_NEW_GROUP_NAME,      NULL, 0 },
+   { FIELD_STR_GROUP_PATTERN,       NULL, 0 },
+   { FIELD_STR_PERMS,               NULL, 0 },
+   { FIELD_STR_RESOURCE,            NULL, 0 },
+   { FIELD_STR_QUEUE_NAME,          NULL, 0 },
+   { FIELD_STR_QUEUE_DESCRIPTION,   NULL, 0 },
+   { FIELD_STR_QUEUE_ID,            NULL, 0 },
+   { FIELD_STR_MESSAGE_ID,          NULL, 0 },
+   { FIELD_STR_MESSAGE_IDS,         NULL, 0 },
+};
 /* ******************************************************************
  * Setting fields and generating the JSON for all the fields.
  */
@@ -138,7 +197,7 @@ static bool endpoint_ERROR (ds_hmap_t *jfields,
 static bool endpoint_LOGIN (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
-   if (!(set_sfield (jfields, FIELD_SESSION, "0123456789")))
+   if (!(set_sfield (jfields, FIELD_STR_SESSION, "0123456789")))
       return false;
 
    *error_code = 0;
