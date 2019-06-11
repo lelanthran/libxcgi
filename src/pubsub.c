@@ -98,6 +98,55 @@ static struct {
    { FIELD_STR_MESSAGE_ID,          NULL, 0 },
    { FIELD_STR_MESSAGE_IDS,         NULL, 0 },
 };
+
+static bool init_incoming (void)
+{
+   size_t content_length = 0;
+   char *input = NULL;
+
+   // We return true because having no POST data is not an error
+   if ((sscanf (xcgi_CONTENT_LENGTH, "%zu", &content_length))!=1)
+      return true;
+
+   // We return true because having POST which is not json is not an error
+   if (!(strstr (xcgi_CONTENT_TYPE, "application/json")))
+      return true;
+
+   if (!(input = malloc (content_length + 1)))
+      return false;
+
+   memset (input, 0, content_length + 1);
+
+   size_t nbytes = fread (input, 1, content_length, xcgi_stdin);
+   if (nbytes!=content_length) {
+      free (input);
+      return false;
+   }
+
+   bool error = false;
+   for (size_t i=0; i<sizeof g_incoming/sizeof g_incoming[0]; i++) {
+      const char *tmp = xcgi_json (input, g_incoming[i].name, NULL);
+      size_t len = xcgi_json_length (tmp);
+      if (!(g_incoming[i].value = malloc (len + 1))) {
+         error = true;
+         break;
+      }
+      strncpy (g_incoming[i].value, tmp, len);
+   }
+
+   free (input);
+
+   if (error) {
+      for (size_t i=0; i<sizeof g_incoming/sizeof g_incoming[0]; i++) {
+         free (g_incoming[i].value);
+         g_incoming[i].value = NULL;
+         g_incoming[i].len = 0;
+      }
+   }
+
+   return !error;
+}
+
 /* ******************************************************************
  * Setting fields and generating the JSON for all the fields.
  */
@@ -505,6 +554,11 @@ int main (void)
 
    if (!(xcgi_init ())) {
       fprintf (stderr, "Failed to initialise the library\n");
+      goto errorexit;
+   }
+
+   if (!(init_incoming ())) {
+      fprintf (stderr, "Failed to read incoming json fields\n");
       goto errorexit;
    }
 
