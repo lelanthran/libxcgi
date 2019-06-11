@@ -9,6 +9,39 @@
 #include "ds_hmap.h"
 #include "ds_str.h"
 
+
+/* ******************************************************************
+ * The field names as defined in the API spec document.
+ */
+#define FIELD_EMAIL                 ("email")
+#define FIELD_PASSWORD              ("password")
+#define FIELD_SESSION               ("session")
+#define FIELD_NICK                  ("nick")
+#define FIELD_USER_ID               ("user-id")
+#define FIELD_EMAIL_PATTERN         ("email-pattern")
+#define FIELD_NICK_PATTERN          ("nick-pattern")
+#define FIELD_ID_PATTERN            ("id-pattern")
+#define FIELD_RESULTSET_COUNT       ("resultset-count")
+#define FIELD_RESULTSET             ("resultset")
+#define FIELD_OLD_EMAIL             ("old-email")
+#define FIELD_NEW_EMAIL             ("new-email")
+#define FIELD_GROUP_NAME            ("group-name")
+#define FIELD_GROUP_DESCRIPTION     ("group-description")
+#define FIELD_GROUP_ID              ("group-id")
+#define FIELD_OLD_GROUP_NAME        ("old-group-name")
+#define FIELD_NEW_GROUP_NAME        ("new-group-name")
+#define FIELD_GROUP_PATTERN         ("group-pattern")
+#define FIELD_PERMS                 ("perms")
+#define FIELD_RESOURCE              ("resource")
+#define FIELD_QUEUE_NAME            ("queue-name")
+#define FIELD_QUEUE_DESCRIPTION     ("queue-description")
+#define FIELD_QUEUE_ID              ("queue-id")
+#define FIELD_MESSAGE_ID            ("message-id")
+#define FIELD_MESSAGE_IDS           ("message-ids")
+
+/* ******************************************************************
+ * Setting fields and generating the JSON for all the fields.
+ */
 #define TYPE_STRING        (1)
 #define TYPE_INT           (2)
 
@@ -88,192 +121,252 @@ errorexit:
    free (keys);
 }
 
-typedef bool (endpoint_func_t) (int *, int *);
+/* ******************************************************************
+ * All the endpoint handlers.
+ */
+typedef bool (endpoint_func_t) (ds_hmap_t *, int *, int *);
 
-static bool endpoint_ERROR (int *error_code, int *status_code)
+static bool endpoint_ERROR (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
+   *error_code = EPUBSUB_ENDPOINT;
+   *status_code = 200;
+   return true;
+}
+
+static bool endpoint_LOGIN (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
+{
+   if (!(set_sfield (jfields, FIELD_SESSION, "0123456789")))
+      return false;
+
+   *error_code = 0;
+   *status_code = 200;
+
+   return true;
+}
+
+static bool endpoint_LOGOUT (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
+{
+   jfields = jfields;
+   error_code = 0;
+   status_code = 200;
+   return true;
+}
+
+static bool endpoint_USER_NEW (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
+{
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_LOGIN (int *error_code, int *status_code)
+static bool endpoint_USER_RM (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_LOGOUT (int *error_code, int *status_code)
+static bool endpoint_USER_LIST (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_USER_NEW (int *error_code, int *status_code)
+static bool endpoint_USER_MOD (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_USER_RM (int *error_code, int *status_code)
+static bool endpoint_GROUP_NEW (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_USER_LIST (int *error_code, int *status_code)
+static bool endpoint_GROUP_RM (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_USER_MOD (int *error_code, int *status_code)
+static bool endpoint_GROUP_MOD (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_GROUP_NEW (int *error_code, int *status_code)
+static bool endpoint_GROUP_ADDUSER (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_GROUP_RM (int *error_code, int *status_code)
+static bool endpoint_GROUP_RMUSER (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_GROUP_MOD (int *error_code, int *status_code)
+static bool endpoint_GROUP_LIST (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_GROUP_ADDUSER (int *error_code, int *status_code)
+static bool endpoint_GROUP_MEMBERS (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_GROUP_RMUSER (int *error_code, int *status_code)
+static bool endpoint_PERMS_GRANT_USER (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_GROUP_LIST (int *error_code, int *status_code)
+static bool endpoint_PERMS_REVOKE_USER (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_GROUP_MEMBERS (int *error_code, int *status_code)
+static bool endpoint_PERMS_RESOURCE_USER (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_PERMS_GRANT_USER (int *error_code, int *status_code)
+static bool endpoint_PERMS_GRANT_GROUP (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_PERMS_REVOKE_USER (int *error_code, int *status_code)
+static bool endpoint_PERMS_REVOKE_GROUP (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_PERMS_RESOURCE_USER (int *error_code, int *status_code)
+static bool endpoint_PERMS_RESOURCE_GROUP (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_PERMS_GRANT_GROUP (int *error_code, int *status_code)
+static bool endpoint_QUEUE_NEW (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_PERMS_REVOKE_GROUP (int *error_code, int *status_code)
+static bool endpoint_QUEUE_RM (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_PERMS_RESOURCE_GROUP (int *error_code, int *status_code)
+static bool endpoint_QUEUE_MOD (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_QUEUE_NEW (int *error_code, int *status_code)
+static bool endpoint_QUEUE_PUT (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_QUEUE_RM (int *error_code, int *status_code)
+static bool endpoint_QUEUE_GET (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_QUEUE_MOD (int *error_code, int *status_code)
+static bool endpoint_QUEUE_DEL (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
 }
 
-static bool endpoint_QUEUE_PUT (int *error_code, int *status_code)
+static bool endpoint_QUEUE_LIST (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
-   error_code = error_code;
-   status_code = status_code;
-   return false;
-}
-
-static bool endpoint_QUEUE_GET (int *error_code, int *status_code)
-{
-   error_code = error_code;
-   status_code = status_code;
-   return false;
-}
-
-static bool endpoint_QUEUE_DEL (int *error_code, int *status_code)
-{
-   error_code = error_code;
-   status_code = status_code;
-   return false;
-}
-
-static bool endpoint_QUEUE_LIST (int *error_code, int *status_code)
-{
+   jfields = jfields;
    error_code = error_code;
    status_code = status_code;
    return false;
@@ -358,12 +451,13 @@ int main (void)
 
    endpoint = endpoint_parse (xcgi_path_info[0]);
 
-   if (!(xcgi_HTTP_COOKIE[0]) && endpoint!=endpoint_LOGIN) {
+   if (endpoint!=endpoint_LOGIN && !(xcgi_HTTP_COOKIE[0])) {
       errorCode = EPUBSUB_AUTH;
+      statusCode = 200;
       goto errorexit;
    }
 
-   if (!(endpoint (&errorCode, &statusCode)))
+   if (!(endpoint (jfields, &errorCode, &statusCode)))
       goto errorexit;
 
    /*
@@ -404,7 +498,9 @@ errorexit:
 
    xcgi_headers_write ();
 
-   print_json (jfields);
+   if (endpoint!=endpoint_QUEUE_GET) {
+      print_json (jfields);
+   }
    free_json (jfields);
 
    xcgi_shutdown ();

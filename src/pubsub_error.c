@@ -11,7 +11,8 @@ const char *pubsub_error_msg (int errorcode)
       int code;
       const char *msg;
    } errs[] = {
-      { EPUBSUB_AUTH, "Not authenticated" },
+      { EPUBSUB_ENDPOINT,  "Unknown endpoint" },
+      { EPUBSUB_AUTH,      "Not authenticated" },
    };
 
    for (size_t i=0; i<sizeof errs/sizeof errs[0]; i++) {
