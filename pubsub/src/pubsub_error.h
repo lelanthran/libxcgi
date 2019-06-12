@@ -3,9 +3,11 @@
 #define H_PUBSUB_ERROR
 
 #define EPUBSUB_SUCCESS          (0)
-#define EPUBSUB_ENDPOINT         (-1)
-#define EPUBSUB_AUTH             (-2)
-#define EPUBSUB_BAD_PARAMS       (-3)
+
+// The first eight bytes are reserved for specific errors
+#define EPUBSUB_ENDPOINT         (1 << 8)
+#define EPUBSUB_AUTH             (2 << 8)
+#define EPUBSUB_BAD_PARAMS       (3 << 8)
 
 #ifdef __cplusplus
 extern "C" {
