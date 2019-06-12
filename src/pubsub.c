@@ -638,11 +638,6 @@ int main (void)
       return EXIT_FAILURE;
    }
 
-   if (!errorMessage) {
-      fprintf (stderr, "Failed to allocate memory for error message\n");
-      goto errorexit;
-   }
-
    if (!(xcgi_init ())) {
       fprintf (stderr, "Failed to initialise the library\n");
       goto errorexit;
@@ -667,6 +662,8 @@ int main (void)
    if (!(endpoint_valid_params (endpoint))) {
       fprintf (stderr, "Endpoint [%s] missing required parameters\n",
                         xcgi_path_info[0]);
+      errorCode = EPUBSUB_BAD_PARAMS;
+      statusCode = 200;
       goto errorexit;
    }
 
