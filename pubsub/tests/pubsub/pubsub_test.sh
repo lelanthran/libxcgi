@@ -33,13 +33,13 @@ export SERVER_PROTOCOL=HTTP/1.1
 export SERVER_SIGNATURE=$'<address>Apache/2.4.29 (Ubuntu) Server at localhost Port 80</address>\n'
 export SERVER_SOFTWARE='Apache/2.4.29 (Ubuntu)'
 
-
 # For each of the endpoints we test we set PATH_INFO and call the cgi
 # program
 function call_cgi () {
    export PATH_INFO=$1
    export CONTENT_LENGTH=`echo -ne $3 | wc -c`
-   echo $3 | valgrind --leak-check=full ./pubsub.elf > $2
+   echo $3 > tmp.input
+   valgrind ./pubsub.elf < tmp.input >$2
 }
 
 ###############################################
@@ -107,386 +107,366 @@ call_cgi /group-new group-new-3.results '{
    "name": "Group3",
 }'
 
-exit 1
-
 ###############################################
 
-export PATH_INFO=/group-list
-echo -ne '{
+call_cgi /group-list group-list-1.results '{
    "pattern":         "*"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/group-adduser
-echo -ne '{
+call_cgi /group-adduser group-adduser-1.results '{
    "name":         "Group1",
    "email":        "todelete1@example.com"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /group-adduser group-adduser-2.results '{
    "name":         "Group2",
    "email":        "todelete2@example.com"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /group-adduser group-adduser-3.results '{
    "name":         "Group3",
    "email":        "todelete3@example.com"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /group-adduser group-adduser-4.results '{
    "name":         "Group1",
    "email":        "todelete2@example.com"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /group-adduser group-adduser-5.results '{
    "name":         "Group1",
    "email":        "todelete3@example.com"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/group-members
-echo -ne '{
+call_cgi /group-members group-members-1.results '{
    "name":         "Group1",
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /group-members group-members-2.results '{
    "name":         "Group2",
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /group-members group-members-3.results '{
    "name":         "Group3",
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/group-rmuser
-echo -ne '{
+call_cgi /group-rmuser '{
    "name":     "Group1",
    "email":    "todelete2@example.com"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/group-members
-echo -ne '{
+call_cgi /group-members '{
    "name":         "Group1",
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/perms-grant-user
-echo -ne '{
+call_cgi /perms-grant-user perms-grant-user-1.results '{
    "email":       "todelete1@example.com",
    "perms":       "put,get,list,del",
    "resource":    "Resource-1"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-grant-user perms-grant-user-2.results '{
    "email":       "todelete1@example.com",
    "perms":       "get,list,del",
    "resource":    "Resource-2"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-grant-user perms-grant-user-3.results '{
    "email":       "todelete1@example.com",
    "perms":       "put,list,del",
    "resource":    "Resource-3"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-grant-user perms-grant-user-4.results '{
    "email":       "todelete2@example.com",
    "perms":       "put,get,del",
    "resource":    "Resource-1"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-grant-user perms-grant-user-5.results '{
    "email":       "todelete2@example.com",
    "perms":       "put,get,list",
    "resource":    "Resource-2"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-grant-user perms-grant-user-6.results '{
    "email":       "todelete2@example.com",
    "perms":       "put,get,list",
    "resource":    "Resource-3"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-grant-user perms-grant-user-7.results '{
    "email":       "todelete3@example.com",
    "perms":       "get,list,del",
    "resource":    "Resource-1"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-grant-user perms-grant-user-8.results '{
    "email":       "todelete3@example.com",
    "perms":       "put,list,del",
    "resource":    "Resource-2"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-grant-user perms-grant-user-9.results '{
    "email":       "todelete3@example.com",
    "perms":       "put,get,del",
    "resource":    "Resource-3"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/perms-grant-group
-echo -ne '{
+call_cgi /perms-grant-group perms-grant-group-1.results '{
    "name":        "Group1",
    "perms":       "put,get,list,del",
    "resource":    "Resource-1"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-grant-group perms-grant-group-2.results '{
    "name":        "Group1",
    "perms":       "get,list,del",
    "resource":    "Resource-2"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-grant-group perms-grant-group-3.results '{
    "name":        "Group1",
    "perms":       "put,list,del",
    "resource":    "Resource-3"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-grant-group perms-grant-group-4.results '{
    "name":        "Group2",
    "perms":       "put,get,del",
    "resource":    "Resource-1"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-grant-group perms-grant-group-5.results '{
    "name":        "Group2",
    "perms":       "put,get,list",
    "resource":    "Resource-2"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-grant-group perms-grant-group-6.results '{
    "name":        "Group2",
    "perms":       "get,list,del",
    "resource":    "Resource-3"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-grant-group perms-grant-group-7.results '{
    "name":        "Group3",
    "perms":       "put,list,del",
    "resource":    "Resource-1"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-grant-group perms-grant-group-8.results '{
    "name":        "Group3",
    "perms":       "put,get,del",
    "resource":    "Resource-2"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-grant-group perms-grant-group-9.results '{
    "name":        "Group3",
    "perms":       "put,get,list",
    "resource":    "Resource-3"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/perms-resource-user
-echo -ne '{
+call_cgi /perms-resource-user perms-resource-user-1.results '{
    "email":       "todelete1@example.com",
    "resource":    "Resource-1"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-user perms-resource-user-2.results '{
    "email":       "todelete1@example.com",
    "resource":    "Resource-2"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-user perms-resource-user-3.results '{
    "email":       "todelete1@example.com",
    "resource":    "Resource-3"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-user perms-resource-user-4.results '{
    "email":       "todelete2@example.com",
    "resource":    "Resource-1"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-user perms-resource-user-5.results '{
    "email":       "todelete2@example.com",
    "resource":    "Resource-2"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-user perms-resource-user-6.results '{
    "email":       "todelete2@example.com",
    "resource":    "Resource-3"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-user perms-resource-user-7.results '{
    "email":       "todelete3@example.com",
    "resource":    "Resource-1"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-user perms-resource-user-8.results '{
    "email":       "todelete3@example.com",
    "resource":    "Resource-2"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-user perms-resource-user-9.results '{
    "email":       "todelete3@example.com",
    "resource":    "Resource-3"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/perms-resource-group
-echo -ne '{
+call_cgi /perms-resource-group perms-resource-group-1.results '{
    "name":        "Group1",
    "resource":    "Resource-1"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-group perms-resource-group-2.results '{
    "name":        "Group1",
    "resource":    "Resource-2"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-group perms-resource-group-3.results '{
    "name":        "Group1",
    "resource":    "Resource-3"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-group perms-resource-group-4.results '{
    "name":        "Group2",
    "resource":    "Resource-1"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-group perms-resource-group-5.results '{
    "name":        "Group2",
    "resource":    "Resource-2"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-group perms-resource-group-6.results '{
    "name":        "Group2",
    "resource":    "Resource-3"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-group perms-resource-group-7.results '{
    "name":        "Group3",
    "resource":    "Resource-1"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-group perms-resource-group-8.results '{
    "name":        "Group3",
    "resource":    "Resource-2"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-group perms-resource-group-9.results '{
    "name":        "Group3",
    "resource":    "Resource-3"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/perms-revoke-user
-echo -ne '{
+call_cgi /perms-revoke-user perms-revoke-user-1.results '{
    "email":       "todelete1@example.com",
    "perms":       "put",
    "resource":    "Resource-1"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-revoke-user perms-revoke-user-2.results '{
    "email":       "todelete2@example.com",
    "perms":       "get",
    "resource":    "Resource-2"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/perms-resource-user
-echo -ne '{
+call_cgi /perms-resource-user perms-resource-user-1.results '{
    "email":       "todelete1@example.com",
    "resource":    "Resource-1"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-user perms-resource-user-2.results '{
    "email":       "todelete2@example.com",
    "resource":    "Resource-2"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/perms-revoke-group
-echo -ne '{
+call_cgi /perms-revoke-group perms-revoke-group-1.results '{
    "name":        "Group1",
    "perms":       "put",
    "resource":    "Resource-1"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-revoke-group perms-revoke-group-2.results '{
    "name":        "Group2",
    "perms":       "get",
    "resource":    "Resource-2"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/perms-resource-group
-echo -ne '{
+call_cgi /perms-resource-group perms-resource-group-1.results '{
    "name":        "Group1",
    "resource":    "Resource-1"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /perms-resource-group perms-resource-group-2.results '{
    "name":        "Group2",
    "resource":    "Resource-2"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 ###############################################
 ###############################################
 
-export PATH_INFO=/group-rm
-echo -ne '{
+call_cgi /group-rm group-rm-1.results '{
    "name":    "Group2"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/user-rm
-echo -ne '{
+call_cgi /user-rm user-rm-1.results '{
    "email":    "ToDelete1"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /user-rm user-rm-2.results '{
    "email":    "ToDelete2"
-}' | valgrind ./pubsub.elf > results
+}'
 
-echo -ne '{
+call_cgi /user-rm user-rm-3.results '{
    "email":    "ToDelete3"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/group-mod
-echo -ne '{
+call_cgi /group-mod group-mod-1.results '{
    "old-name":         "Group1",
    "new-name":         "p1-Renamed"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/group-list
-echo -ne '{
+call_cgi /group-list group-list-1.results '{
    "pattern":         "*"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
-export PATH_INFO=/user-list
-echo -ne '{
+call_cgi /user-list user-list-1.results '{
    "emailPattern":      "*",
    "nickPattern":       "*",
    "idPattern":         "*"
-}' | valgrind ./pubsub.elf > results
+}'
 
 ###############################################
 
@@ -494,7 +474,7 @@ echo -ne '{
 
 
 # export PATH_INFO=/logout
-# echo -ne '{ }' | valgrind ./pubsub.elf > results
+# echo -ne '{ }'
 
 
 
