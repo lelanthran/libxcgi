@@ -72,8 +72,7 @@ OUTDIRS=$(OUTLIB) $(OUTBIN) $(OUTOBS)
 BINPROGS=\
 	$(OUTBIN)/xcgi_test$(EXE_EXT)\
 	$(OUTBIN)/xcgi_faker$(EXE_EXT)\
-	$(OUTBIN)/xcgi_gendata$(EXE_EXT)\
-	$(OUTBIN)/pubsub$(EXE_EXT)
+	$(OUTBIN)/xcgi_gendata$(EXE_EXT)
 
 DYNLIB=$(OUTLIB)/lib$(PROJNAME)-$(VERSION)$(LIB_EXT)
 STCLIB=$(OUTLIB)/lib$(PROJNAME)-$(VERSION).a
@@ -89,18 +88,16 @@ BINOBS=\
 	$(OUTOBS)/xcgi_test.o\
 	$(OUTOBS)/xcgi_faker.o\
 	$(OUTOBS)/xcgi_gendata.o\
-	$(OUTOBS)/pubsub.o
 
 
 OBS=\
 	$(OUTOBS)/xcgi.o\
-	$(OUTOBS)/xcgi_json.o\
-	$(OUTOBS)/pubsub_error.o
+	$(OUTOBS)/xcgi_json.o
 
 
 HEADERS=\
 	src/xcgi.h\
-	src/pubsub_error.h
+	src/xcgi_json.h
 
 
 # ######################################################################
@@ -129,7 +126,7 @@ AR=ar
 ARFLAGS= rcs
 
 
-.PHONY:	help real-help show real-show debug release veryclean
+.PHONY:	help real-help show real-show debug release clean-all
 
 # ######################################################################
 # All the conditional targets
@@ -157,7 +154,7 @@ real-help:
 	@echo "release:             Build release binaries."
 	@echo "clean-debug:         Clean a debug build (debug is ignored)."
 	@echo "clean-release:       Clean a release build (release is ignored)."
-	@echo "veryclean:           Clean everything."
+	@echo "clean-all:           Clean everything."
 
 real-all:	real-show  $(DYNLIB) $(STCLIB) $(BINPROGS)
 
