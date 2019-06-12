@@ -3,6 +3,9 @@
 # Exit on first error
 set -e
 
+# The library path I use while testing
+export LD_LIBRARY_PATH=/home/lelanthran/lib:/home/lelanthran/opensource/libxcgi/library/debug/lib/x86_64-pc-linux-gnu:/home/lelanthran/opensource/libxcgi/pubsub/debug/lib/x86_64-pc-linux-gnu
+
 # These variables cause the cgi program to think that it has been invoked
 # by a web server.
 export CONTEXT_DOCUMENT_ROOT=/home/lelanthran/public_html

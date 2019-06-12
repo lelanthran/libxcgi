@@ -8,6 +8,4 @@
    and responding to the API (even if responding with junk data) is
    enough.
 
-5. Move the directories around - the main libxcgi.so should not be
-   polluted with functions that are intended for the pubsub (and other)
-   example applications.
+5. Create the sql interface.
