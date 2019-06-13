@@ -23,11 +23,6 @@ Doing it in the program:
   cgi program needs to be updated (and will for a time allow old and new
   authentication schemes). This is more work.
 
-For now, using the web server's authentication.
-
-*(TODO: The cgi program must manually do the addition/removal of hashes in
-the password file being used by apache)*
-
 
 ## Access control
 Initially performed by the admin/installer who must set up an admin
@@ -41,19 +36,21 @@ users.
 ## API in brief
 
 ### Session maintenance
-All the endpoints below will check the cookie for session ID and generate
+All the endpoints below will check the cookie for a session ID and generate
 an error if the session ID is missing or present but invalid. The only
 exception is the Login (duh) which needs no session ID.
 
 The caller must perform the requisite authentication via the `Login`
-endpoint if the returned error indicates an invalid session
+endpoint if the returned error indicates an invalid session.
+
+The cookie name is `SessionID` (note case).
 
 ### Error handling
 All the responses except `queue-get` will include in the root of the reply
 two fields (note case):
 ```javascript
-."errorCode"      // An integer value containing a the error number
-."errorMessage"   // An english description of the error
+."error-code"      // An integer value containing a the error number
+."error-message"   // An english description of the error
 ```
 
 The `queue-get` indicates errors using http status codes only, as it does
@@ -131,7 +128,7 @@ POST /user-rm
    "email":       "example@email.com"
 }
 ```
-RETURNS: "errorCode" and "errorMessage" fields only.
+RETURNS: "error-code" and "error-message" fields only.
 
 
 #### List users
@@ -165,7 +162,7 @@ POST /user-mod
    "password":    "cleartext password"    // optional
 }
 ```
-RETURNS: "errorCode" and "errorMessage" fields only.
+RETURNS: "error-code" and "error-message" fields only.
 
 
 #### New group
@@ -191,7 +188,7 @@ POST /group-rm
    "group-name":        "group name"
 }
 ```
-RETURNS: "errorCode" and "errorMessage" fields only.
+RETURNS: "error-code" and "error-message" fields only.
 
 
 #### Modify group
@@ -202,7 +199,7 @@ POST /group-mod
    "new-group-name":    "New group name"
 }
 ```
-RETURNS: "errorCode" and "errorMessage" fields only.
+RETURNS: "error-code" and "error-message" fields only.
 
 
 #### Add to group
@@ -213,7 +210,7 @@ POST /group-adduser
    "email":       "email of user to add"
 }
 ```
-RETURNS: "errorCode" and "errorMessage" fields only.
+RETURNS: "error-code" and "error-message" fields only.
 
 
 #### Remove from group
@@ -224,7 +221,7 @@ POST /group-rmuser
    "email":       "email of user to remove"
 }
 ```
-RETURNS: "errorCode" and "errorMessage" fields only.
+RETURNS: "error-code" and "error-message" fields only.
 
 
 #### List groups
@@ -269,7 +266,7 @@ POST /perms-grant-user
    "resource":    "A queue, user or group"
 }
 ```
-RETURNS: "errorCode" and "errorMessage" fields only.
+RETURNS: "error-code" and "error-message" fields only.
 
 
 #### Revoke perms to a user
@@ -281,7 +278,7 @@ POST /perms-revoke-user
    "resource":    "A queue, user or group"
 }
 ```
-RETURNS: "errorCode" and "errorMessage" fields only.
+RETURNS: "error-code" and "error-message" fields only.
 
 
 #### List user's perms on resource
@@ -311,7 +308,7 @@ POST /perms-grant-group
    "resource":    "A queue, user or group"
 }
 ```
-RETURNS: "errorCode" and "errorMessage" fields only.
+RETURNS: "error-code" and "error-message" fields only.
 
 
 #### Revoke perms to a group
@@ -323,7 +320,7 @@ POST /perms-revoke-group
    "resource":    "A queue, user or group"
 }
 ```
-RETURNS: "errorCode" and "errorMessage" fields only.
+RETURNS: "error-code" and "error-message" fields only.
 
 
 #### List groups's perms on resource
@@ -366,7 +363,7 @@ POST /queue-rm
    "queue-id":        "queue ID",
 }
 ```
-RETURNS: "errorCode" and "errorMessage" fields only.
+RETURNS: "error-code" and "error-message" fields only.
 
 
 #### Modify queue
@@ -377,7 +374,7 @@ POST /queue-mod
    ...   // Still haven't decided what properties go into a queue
 }
 ```
-RETURNS: "errorCode" and "errorMessage" fields only.
+RETURNS: "error-code" and "error-message" fields only.
 
 
 #### Putting a message into a queue
@@ -402,7 +399,7 @@ RETURNS: HTTP status code and raw data only
 
 #### Removing a message from a queue
 `DELETE /queue-del/queue-id`
-RETURNS: "errorCode" and "errorMessage" fields only.
+RETURNS: "error-code" and "error-message" fields only.
 
 
 #### Listing messages in a queue
@@ -429,17 +426,17 @@ Unfortunately this means at least one more dependency: sqlite.
 
 ```SQL
    CREATE TABLE tuser (
-      cid:     INTEGER PRIMARY KEY,
-      cemail:  TEXT UNIQUE,
-      cnick:   TEXT,
-      session: TEXT,
-      salt:    TEXT,
-      hash:    TEXT);
+      cid:        INTEGER PRIMARY KEY,
+      cemail:     TEXT UNIQUE,
+      cnick:      TEXT,
+      csession:   TEXT,
+      csalt:      TEXT,
+      chash:      TEXT);
 
    CREATE TABLE tgroup (
-      cid:        INTEGER PRIMARY KEY,
-      cname:      TEXT UNIQUE,
-      description: TEXT);
+      cid:           INTEGER PRIMARY KEY,
+      cname:         TEXT UNIQUE,
+      cdescription:  TEXT);
 
    CREATE TABLE tgroup_membership (
       cuser:   INTEGER,

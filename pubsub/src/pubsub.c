@@ -628,8 +628,8 @@ int main (void)
 {
    int ret = EXIT_FAILURE;
 
-   int errorCode = 0;
-   const char *errorMessage = "Success";
+   int error_code = 0;
+   const char *error_message = "Success";
 
    int statusCode = 501;
    const char *statusMessage = "Internal Server Error";
@@ -658,7 +658,7 @@ int main (void)
    }
 
    if (endpoint!=endpoint_LOGIN && !(xcgi_HTTP_COOKIE[0])) {
-      errorCode = EPUBSUB_AUTH;
+      error_code = EPUBSUB_AUTH;
       statusCode = 200;
       goto errorexit;
    }
@@ -666,12 +666,12 @@ int main (void)
    if (!(endpoint_valid_params (endpoint))) {
       fprintf (stderr, "Endpoint [%s] missing required parameters\n",
                         xcgi_path_info[0]);
-      errorCode = EPUBSUB_BAD_PARAMS;
+      error_code = EPUBSUB_BAD_PARAMS;
       statusCode = 200;
       goto errorexit;
    }
 
-   if (!(endpoint (jfields, &errorCode, &statusCode)))
+   if (!(endpoint (jfields, &error_code, &statusCode)))
       goto errorexit;
 
 
@@ -679,15 +679,15 @@ int main (void)
 
 errorexit:
 
-   errorMessage = pubsub_error_msg (errorCode);
+   error_message = pubsub_error_msg (error_code);
 
-   if (!(set_ifield (jfields, "errorCode", errorCode))) {
-      fprintf (stderr, "Failed setting the errorCode field\n");
+   if (!(set_ifield (jfields, "error-code", error_code))) {
+      fprintf (stderr, "Failed setting the error-code field\n");
       return EXIT_FAILURE;
    }
 
-   if (!(set_sfield (jfields, "errorMessage", errorMessage))) {
-      fprintf (stderr, "Failed setting the errorMessage field\n");
+   if (!(set_sfield (jfields, "error-message", error_message))) {
+      fprintf (stderr, "Failed setting the error-message field\n");
       return EXIT_FAILURE;
    }
 
