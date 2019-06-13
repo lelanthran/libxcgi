@@ -340,7 +340,7 @@ static bool endpoint_LOGOUT (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   *error_code = 0;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    *status_code = 200;
    return true;
 }
@@ -349,7 +349,7 @@ static bool endpoint_USER_NEW (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -358,7 +358,7 @@ static bool endpoint_USER_RM (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -367,7 +367,7 @@ static bool endpoint_USER_LIST (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -376,7 +376,7 @@ static bool endpoint_USER_MOD (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -385,7 +385,7 @@ static bool endpoint_GROUP_NEW (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -394,7 +394,7 @@ static bool endpoint_GROUP_RM (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -403,7 +403,7 @@ static bool endpoint_GROUP_MOD (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -412,7 +412,7 @@ static bool endpoint_GROUP_ADDUSER (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -421,7 +421,7 @@ static bool endpoint_GROUP_RMUSER (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -430,7 +430,7 @@ static bool endpoint_GROUP_LIST (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -439,7 +439,7 @@ static bool endpoint_GROUP_MEMBERS (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -448,7 +448,7 @@ static bool endpoint_PERMS_GRANT_USER (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -457,7 +457,7 @@ static bool endpoint_PERMS_REVOKE_USER (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -466,7 +466,7 @@ static bool endpoint_PERMS_RESOURCE_USER (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -475,7 +475,7 @@ static bool endpoint_PERMS_GRANT_GROUP (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -484,7 +484,7 @@ static bool endpoint_PERMS_REVOKE_GROUP (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -493,7 +493,7 @@ static bool endpoint_PERMS_RESOURCE_GROUP (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -502,7 +502,7 @@ static bool endpoint_QUEUE_NEW (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -511,7 +511,7 @@ static bool endpoint_QUEUE_RM (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -520,7 +520,7 @@ static bool endpoint_QUEUE_MOD (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -529,7 +529,7 @@ static bool endpoint_QUEUE_PUT (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -538,7 +538,7 @@ static bool endpoint_QUEUE_GET (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -547,7 +547,7 @@ static bool endpoint_QUEUE_DEL (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
@@ -556,7 +556,7 @@ static bool endpoint_QUEUE_LIST (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   error_code = error_code;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
 }
