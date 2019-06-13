@@ -326,6 +326,10 @@ static bool endpoint_LOGIN (ds_hmap_t *jfields,
    if (!(set_sfield (jfields, FIELD_STR_SESSION, "0123456789")))
       return false;
 
+   xcgi_header_cookie_clear ("SessionID");
+   if (!(xcgi_header_cookie_set ("SessionID", "0123456789", 0, 0)))
+      return false;
+
    *error_code = 0;
    *status_code = 200;
 

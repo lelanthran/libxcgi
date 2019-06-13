@@ -9,6 +9,7 @@ export LD_LIBRARY_PATH=/home/lelanthran/lib:/home/lelanthran/opensource/libxcgi/
 # These variables cause the cgi program to think that it has been invoked
 # by a web server.
 export CONTEXT_DOCUMENT_ROOT=/home/lelanthran/public_html
+export CONTENT_TYPE=application/json
 export DOCUMENT_ROOT=/var/www/html
 export GATEWAY_INTERFACE=CGI/1.1
 export HOSTNAME=lelanthran-desktop
@@ -42,7 +43,7 @@ function call_cgi () {
    export PATH_INFO=$1
    export CONTENT_LENGTH=`echo -ne $3 | wc -c`
    echo $3 > tmp.input
-   valgrind ./pubsub.elf < tmp.input >$2
+   valgrind --leak-check=full  ./pubsub.elf < tmp.input >$2
 }
 
 ###############################################
@@ -52,6 +53,7 @@ call_cgi /login login.results '{
    "password": "123456"
 }'
 
+export HTTP_COOKIE="SessionID=0123456789"
 ###############################################
 
 call_cgi /user-new user-new.results '{

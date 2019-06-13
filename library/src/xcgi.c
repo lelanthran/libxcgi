@@ -135,8 +135,9 @@ static cookie_t *cookie_new (const char *name, const char *value,
 
    memset (ret, 0, sizeof *ret);
 
-   name = ds_str_dup (name);
-   value = ds_str_dup (value);
+   ret->name = ds_str_dup (name);
+   ret->value = ds_str_dup (value);
+
    ret->expires = expires;
    ret->flags = flags;
 
@@ -396,9 +397,12 @@ static bool parse_cookies (void)
       return true;
 
    char *cookie = strtok (tmp, ";");
+   bool firstchar = true;
    while (cookie) {
-      if (cookie[-1]=='\\')
+      if (!firstchar && cookie[-1]=='\\') {
+         firstchar = false;
          continue;
+      }
       char *e = ds_str_dup (cookie);
       if (!e || !ds_array_ins_tail ((void ***)&xcgi_cookies, e)) {
          free (tmp);
