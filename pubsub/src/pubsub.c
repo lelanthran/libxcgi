@@ -19,7 +19,7 @@
  */
 #define FIELD_STR_EMAIL                 ("email")
 #define FIELD_STR_PASSWORD              ("password")
-#define FIELD_STR_SESSION               ("session")
+#define FIELD_STR_SESSION               ("session-id")
 #define FIELD_STR_NICK                  ("nick")
 #define FIELD_STR_USER_ID               ("user-id")
 #define FIELD_STR_EMAIL_PATTERN         ("email-pattern")
@@ -326,8 +326,8 @@ static bool endpoint_LOGIN (ds_hmap_t *jfields,
    if (!(set_sfield (jfields, FIELD_STR_SESSION, "0123456789")))
       return false;
 
-   xcgi_header_cookie_clear ("SessionID");
-   if (!(xcgi_header_cookie_set ("SessionID", "0123456789", 0, 0)))
+   xcgi_header_cookie_clear (FIELD_STR_SESSION);
+   if (!(xcgi_header_cookie_set (FIELD_STR_SESSION, "0123456789", 0, 0)))
       return false;
 
    *error_code = 0;

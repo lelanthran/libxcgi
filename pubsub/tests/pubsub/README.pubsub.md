@@ -35,6 +35,13 @@ users.
 
 ## API in brief
 
+### Overview
+All responses package the response data into JSON trees and set the
+Content-type header to 'application/json'.
+
+All json fields specified herein are case-sensitive, for both request and
+response fields.
+
 ### Session maintenance
 All the endpoints below will check the cookie for a session ID and generate
 an error if the session ID is missing or present but invalid. The only
@@ -43,7 +50,7 @@ exception is the Login (duh) which needs no session ID.
 The caller must perform the requisite authentication via the `Login`
 endpoint if the returned error indicates an invalid session.
 
-The cookie name is `SessionID` (note case).
+The cookie name is `session-id` (note case).
 
 ### Error handling
 All the responses except `queue-get` will include in the root of the reply
@@ -70,7 +77,7 @@ POST /login
 RETURNS:
 ```javascript
 {
-   "session":     "session ID"      // Also in cookie
+   "session-id":  "session ID"      // Also in cookie
 }
 ```
 
@@ -84,7 +91,7 @@ POST /logout
 RETURNS:
 ```javascript
 {
-   "session":     "0000000000000000"  // Also in cookie
+   "session-id":     "0000000000000000"  // Also in cookie
 }
 ```
 
