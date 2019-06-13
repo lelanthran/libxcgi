@@ -37,9 +37,9 @@ users.
 
 ### Overview
 All responses package the response data into JSON trees and set the
-Content-type header to 'application/json'.
+Content-type header to `application/json`.
 
-All json fields specified herein are case-sensitive, for both request and
+All JSON fields specified herein are case-sensitive, for both request and
 response fields.
 
 ### Session maintenance
