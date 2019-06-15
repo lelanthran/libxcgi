@@ -92,12 +92,14 @@ BINOBS=\
 
 OBS=\
 	$(OUTOBS)/xcgi.o\
-	$(OUTOBS)/xcgi_json.o
+	$(OUTOBS)/xcgi_json.o\
+	$(OUTOBS)/xcgi_db.o
 
 
 HEADERS=\
 	src/xcgi.h\
-	src/xcgi_json.h
+	src/xcgi_json.h\
+	src/xcgi_db.h
 
 
 # ######################################################################
@@ -121,7 +123,7 @@ COMMONFLAGS=\
 CFLAGS=$(COMMONFLAGS) -std=c99
 CXXFLAGS=$(COMMONFLAGS) -std=c++x11
 LD=$(GCC)
-LDFLAGS= -L$(HOME)/lib -lm $(PLATFORM_LDFLAGS)
+LDFLAGS= -L$(HOME)/lib -lm $(PLATFORM_LDFLAGS) -lsqlite3 -lpq
 AR=ar
 ARFLAGS= rcs
 
