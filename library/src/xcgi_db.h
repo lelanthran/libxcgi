@@ -77,8 +77,9 @@ extern "C" {
    uint32_t xcgi_db_res_num_columns (xcgi_db_res_t *res);
 
    // Get the column name in this result-set. The return value is an array
-   // of strings (char pointers) terminated with a NULL pointer that the
-   // caller must free. The caller must also free the array itself.
+   // of strings (char pointers) terminated with a NULL pointer, each of
+   // which the caller must free. The caller must also free the array
+   // itself.
    //
    // On error NULL is returned.
    char **xcgi_db_res_column_names (xcgi_db_res_t *res);
