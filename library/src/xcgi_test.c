@@ -60,7 +60,7 @@ int main (void)
 
    static const size_t nvars = sizeof vars / sizeof vars[0];
 
-   printf ("Test: libxcgi v%s\n", XCGI_VERSION);
+   fprintf (stderr, "Test: libxcgi v%s\n", XCGI_VERSION);
 
    for (size_t i=0; i<nvars; i++) {
       vars[i].value = (*vars[i].variable);
@@ -85,7 +85,7 @@ int main (void)
    }
 
    for (size_t i=0; xcgi_qstrings_content_types[i]; i++) {
-      printf ("Accepting POST content-type: [%s]\n",
+      fprintf (stderr, "Accepting POST content-type: [%s]\n",
                xcgi_qstrings_content_types[i]);
    }
 
@@ -95,7 +95,7 @@ int main (void)
    }
 
    for (size_t i=0; xcgi_qstrings_content_types[i]; i++) {
-      printf ("Final POST content-type: [%s]\n",
+      fprintf (stderr, "Final POST content-type: [%s]\n",
                xcgi_qstrings_content_types[i]);
    }
 
@@ -116,19 +116,19 @@ int main (void)
    }
 
    for (size_t i=0; xcgi_qstrings[i]; i++) {
-      printf ("qs [%s:%s]\n", xcgi_qstrings[i][0], xcgi_qstrings[i][1]);
+      fprintf (stderr, "qs [%s:%s]\n", xcgi_qstrings[i][0], xcgi_qstrings[i][1]);
    }
 
-   printf ("Path-ID [%s]\n", xcgi_path_id);
+   fprintf (stderr, "Path-ID [%s]\n", xcgi_path_id);
    for (size_t i=0; xcgi_path_info[i]; i++) {
       fprintf (stderr, "Path[%zu] [%s]\n", i, xcgi_path_info[i]);
    }
 
-   printf ("Path info [%zu]:\n", xcgi_path_info_count ());
+   fprintf (stderr, "Path info [%zu]:\n", xcgi_path_info_count ());
    for (size_t i=0; xcgi_path_info[i]; i++) {
-      printf ("Path[%zu] [%s]\n", i, xcgi_path_info[i]);
+      fprintf (stderr, "Path[%zu] [%s]\n", i, xcgi_path_info[i]);
    }
-   printf ("/Path info\n");
+   fprintf (stderr, "/Path info\n");
 
    if (!(xcgi_headers_value_set ("HEADer-1", "My Value; With options"))) {
       fprintf (stderr, "Failed to set header 1\n");
@@ -145,18 +145,18 @@ int main (void)
       goto errorexit;
    }
 
-   printf ("Headers [%zu]:\n", xcgi_headers_count ());
+   fprintf (stderr, "Headers [%zu]:\n", xcgi_headers_count ());
    for (size_t i=0; xcgi_response_headers[i]; i++) {
-      printf ("   [%s]\n", xcgi_response_headers[i]);
+      fprintf (stderr, "   [%s]\n", xcgi_response_headers[i]);
    }
-   printf ("/Headers\n");
+   fprintf (stderr, "/Headers\n");
 
    xcgi_headers_clear ("Header-2");
-   printf ("Headers [%zu]:\n", xcgi_headers_count ());
+   fprintf (stderr, "Headers [%zu]:\n", xcgi_headers_count ());
    for (size_t i=0; xcgi_response_headers[i]; i++) {
-      printf ("   [%s]\n", xcgi_response_headers[i]);
+      fprintf (stderr, "   [%s]\n", xcgi_response_headers[i]);
    }
-   printf ("/Headers\n");
+   fprintf (stderr, "/Headers\n");
 
    xcgi_headers_write ();
 
@@ -167,7 +167,9 @@ int main (void)
          fputc (c, stdout);
       }
    }
-   printf ("--\n");
+   fprintf (stderr, "--\n");
+
+   fprintf (stderr, "[%s] [%s]\n", getenv ("PWD"), get_current_dir_name ());
 
    ret = EXIT_SUCCESS;
 
