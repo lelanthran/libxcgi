@@ -18,6 +18,7 @@ int main (int argc, char ** argv)
    static char input[1024 * 16];
    FILE *childf = NULL;
    char *child_cmd = NULL;
+   bool xcgi_active = false;
 
    printf ("Fake a cgi execution.\n");
 
@@ -35,6 +36,7 @@ int main (int argc, char ** argv)
 
    if (!(xcgi_init())) {
       fprintf (stderr, "Failed to initialise the xcgi library\n");
+      xcgi_active = true;
       goto errorexit;
    }
 
@@ -74,7 +76,8 @@ errorexit:
 
    free (child_cmd);
 
-   xcgi_shutdown ();
+   if (xcgi_active)
+      xcgi_shutdown ();
 
    if (childf)
       pclose (childf);

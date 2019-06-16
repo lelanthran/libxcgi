@@ -257,7 +257,19 @@ extern FILE *xcgi_stdin;
 // with a NULL, that consists of each of the path elements passed to this
 // script via PATH_INFO. Use the function xcgi_path_info_count() to get
 // the number of strings in the array for iteration purposes.
+//
+// Note that the first element is reserved (see below, xcgi_path_id) and
+// will not appear in this list of paths.
 extern const char **xcgi_path_info;
+
+// Avilable after xcgi_init(). Contains the first path element found in
+// PATH_INFO. The first path element is used as an identifier for the
+// host's directory which contains the persistent files xcgi uses
+// (database, created files/dirs, etc).
+//
+// This allows the xcgi program to reside in the cgi-bin directory while
+// serving content out of multiple different directories.
+extern const char **xcgi_path_id;
 
 // Available after xcgi_init(). Contains an array of strings, terminated
 // with a NULL, that consists of each of the cookies found in the

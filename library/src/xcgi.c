@@ -47,6 +47,7 @@ const char *xcgi_SERVER_SOFTWARE;
 FILE *xcgi_stdin;
 
 const char **xcgi_path_info;
+const char **xcgi_path_id;
 const char **xcgi_cookies;
 const char **xcgi_qstrings_content_types;
 const char ***xcgi_qstrings;
@@ -373,11 +374,15 @@ static bool parse_path_info (void)
    }
    free (tmp);
 
+   xcgi_path_id = xcgi_path_info[0];
+   xcgi_path_info++;
+
    return true;
 }
 
 static void path_info_shutdown (void)
 {
+   xcgi_path_info--;
    for (size_t i=0; xcgi_path_info && xcgi_path_info[i]; i++) {
       free ((void *)xcgi_path_info[i]);
    }

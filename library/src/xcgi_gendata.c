@@ -33,6 +33,7 @@ int main (void)
       { "http_user_agent",          &xcgi_HTTP_USER_AGENT,        NULL},
       { "https",                    &xcgi_HTTPS,                  NULL},
       { "path",                     &xcgi_PATH,                   NULL},
+      { "path_info",                  &xcgi_PATH_INFO,              NULL},
       { "pwd",                      &xcgi_PWD,                    NULL},
       { "query_string",             &xcgi_QUERY_STRING,           NULL},
       { "remote_addr",              &xcgi_REMOTE_ADDR,            NULL},
@@ -67,6 +68,11 @@ int main (void)
    if (!(xcgi_save ("test-vars.dat"))) {
       fprintf (stderr, "Failed to save the vars to file\n");
       goto errorexit;
+   }
+
+   fprintf (stderr, "Path-ID [%s]\n", xcgi_path_id);
+   for (size_t i=0; xcgi_path_info[i]; i++) {
+      fprintf (stderr, "Path[%zu] [%s]\n", i, xcgi_path_info[i]);
    }
 
    ret = EXIT_SUCCESS;

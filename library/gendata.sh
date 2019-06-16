@@ -26,7 +26,6 @@ export HTTP_USER_AGENT=curl/7.58.0
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 export PATH_INFO=/one/two/three/four
 export PWD=/home/lelanthran/public_html/cgi-bin
-export QUERY_STRING="name1=value1&name%202=value%201two%41"
 export REMOTE_ADDR=127.0.0.1
 export REMOTE_HOST=anywhere.com
 export REMOTE_USER=test_user
