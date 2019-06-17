@@ -4,10 +4,15 @@
 #include <string.h>
 #include <ctype.h>
 
+#include <unistd.h>
+
 #include "xcgi.h"
+#include "xcgi_cfg.h"
 
 #include "ds_array.h"
 #include "ds_str.h"
+
+#define XCGI_PATHS_INI         ("xcgi_paths.ini")
 
 const char *xcgi_CONTENT_LENGTH;
 const char *xcgi_CONTENT_TYPE;
@@ -47,11 +52,14 @@ const char *xcgi_SERVER_SOFTWARE;
 FILE *xcgi_stdin;
 
 const char **xcgi_path_info;
-const char **xcgi_path_id;
+const char *xcgi_path_id;
 const char **xcgi_cookies;
 const char **xcgi_qstrings_content_types;
 const char ***xcgi_qstrings;
 const char **xcgi_response_headers;
+
+
+char **xcgi_config;
 
 /* ************************************************************************
  * All the cookie-related storage. This is all private to this module.
@@ -390,6 +398,51 @@ static void path_info_shutdown (void)
    xcgi_path_info = NULL;
 }
 
+static bool load_path (const char *path_id)
+{
+   bool error = true;
+   const char *pwd = getenv ("PWD"); // PORTABILITY: Windows is different
+   const char *path_name = NULL;
+   char **cfg = NULL;
+
+   if (!path_id || !path_id[0]) {
+      fprintf (stderr, "No path ID specified, ignoring\n");
+      return true;
+   }
+
+   if (!(cfg = xcgi_cfg_load (XCGI_PATHS_INI, NULL))) {
+      fprintf (stderr, "Failed to load configuration [%s]\n", XCGI_PATHS_INI);
+      goto errorexit;
+   }
+
+   if (!(path_name = xcgi_cfg_get (cfg, path_id))) {
+      fprintf (stderr, "Path ID [%s] does not appear in [%s]\n",
+                        path_id, path_name);
+      goto errorexit;
+   }
+
+   if ((chdir (path_name))!=0) {
+      fprintf (stderr, "Failed to change directory to [%s]\n", path_name);
+      goto errorexit;
+   }
+
+   if (!(xcgi_config = xcgi_cfg_load (path_name, "/xcgi.ini", NULL))) {
+      fprintf (stderr, "Unable to load [%s/xcgi.ini]\n", path_name);
+      goto errorexit;
+   }
+
+   error = false;
+
+errorexit:
+
+   xcgi_cfg_del (cfg);
+   if (error) {
+      chdir (pwd);
+   }
+
+   return !error;
+}
+
 /* ************************************************************************
  */
 static bool parse_cookies (void)
@@ -553,6 +606,10 @@ bool xcgi_init (void)
       goto errorexit;
    }
 
+   if (!(load_path (xcgi_path_id))) {
+      fprintf (stderr, "Could not load path_id for [%s]\n", xcgi_path_id);
+   }
+
    error = false;
 
 errorexit:
@@ -574,6 +631,7 @@ void xcgi_shutdown (void)
    path_info_shutdown ();
    cookies_shutdown ();
    response_headers_shutdown ();
+   xcgi_cfg_del (xcgi_config);
 }
 
 #define MARKER_EOV      ("MARKER-END-OF-VARS")

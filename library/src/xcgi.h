@@ -7,11 +7,36 @@
 #include <time.h>
 #include <stdint.h>
 
+// Overview
 // This is a global non-thread-safe library. A CGI program runs once and
 // then exits. Memory used by this module is potentially never freed. The
 // caller MUST call xcgi_init() before calling any other function. Before
 // program return the caller can call xcgi_shutdown() to ensure that all
 // files are closed, although this is not necessary.
+//
+//
+// Single binary/Multiple instances
+// The first element in the PATH_INFO is *always* interpreted as an
+// application name. For example, calling your xcgi program with
+// PATH_INFO=/path1/path2/path3 results in path1 being stored as the
+// xcgi_path_id variable, path2 and path3 being stored as elements of the
+// xcgi_path_info variable.
+//
+// The path_id is simply a name that you can use to differentiate multiple
+// instances of your script even if you only install a single binary. For
+// example, you can use the url "[...]/script/v1/.../.../..." and
+// "[...]/script/v2/.../..." to serve different content using the saem
+// executable "script".
+//
+// On startup the xcgi library looks for a file called xcgi_paths.ini in
+// its current directory. This file contains name=value pairs mapping each
+// path_id to a point on the filesystem:
+//    v1=/home/script-user/apps/v1
+//    v2=/home/script-user/apps/v2
+// After resolving the path_id to a full filesystem path, xcgi switches
+// the current working directory to that path and then attempts to load a
+// configuration file in that path which also has name=value pairs. The
+// contents of this file is up to you.
 
 #define XCGI_COOKIE_SECURE             (1 << 0)
 #define XCGI_COOKIE_HTTPONLY           (1 << 1)
@@ -246,7 +271,7 @@ extern const char *xcgi_SERVER_SIGNATURE;
 extern const char *xcgi_SERVER_SOFTWARE;
 
 // All output must be read from this stream, because stdin is not
-// guaranteed to the the source of POST data.
+// guaranteed to be the the source of POST data.
 extern FILE *xcgi_stdin;
 
 // These variables are all available after certain parsing is performed
@@ -262,14 +287,14 @@ extern FILE *xcgi_stdin;
 // will not appear in this list of paths.
 extern const char **xcgi_path_info;
 
-// Avilable after xcgi_init(). Contains the first path element found in
+// Available after xcgi_init(). Contains the first path element found in
 // PATH_INFO. The first path element is used as an identifier for the
 // host's directory which contains the persistent files xcgi uses
 // (database, created files/dirs, etc).
 //
 // This allows the xcgi program to reside in the cgi-bin directory while
 // serving content out of multiple different directories.
-extern const char **xcgi_path_id;
+extern const char *xcgi_path_id;
 
 // Available after xcgi_init(). Contains an array of strings, terminated
 // with a NULL, that consists of each of the cookies found in the

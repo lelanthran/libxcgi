@@ -10,6 +10,7 @@
 int main (void)
 {
    int ret = EXIT_FAILURE;
+   char *tmp = NULL;
 
    size_t nqstrings = 0;
 
@@ -169,12 +170,14 @@ int main (void)
    }
    fprintf (stderr, "--\n");
 
-   fprintf (stderr, "[%s] [%s]\n", getenv ("PWD"), get_current_dir_name ());
+   tmp = get_current_dir_name ();
+   fprintf (stderr, "[%s] [%s]\n", getenv ("PWD"), tmp);
 
    ret = EXIT_SUCCESS;
 
 errorexit:
 
+   free (tmp);
    xcgi_shutdown ();
 
    return ret;

@@ -93,13 +93,15 @@ BINOBS=\
 OBS=\
 	$(OUTOBS)/xcgi.o\
 	$(OUTOBS)/xcgi_json.o\
-	$(OUTOBS)/xcgi_db.o
+	$(OUTOBS)/xcgi_db.o\
+	$(OUTOBS)/xcgi_cfg.o
 
 
 HEADERS=\
 	src/xcgi.h\
 	src/xcgi_json.h\
-	src/xcgi_db.h
+	src/xcgi_db.h\
+	src/xcgi_cfg.h
 
 
 # ######################################################################
