@@ -98,7 +98,6 @@ char **xcgi_cfg_fread (FILE *inf)
       while (*value && isspace (*value))
         value++;
 
-      fprintf (stderr, "Reading [%s]:[%s]\n", name, value);
       if (!(xcgi_cfg_set (&ret, name, value)))
          goto errorexit;
    }

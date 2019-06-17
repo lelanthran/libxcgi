@@ -12,6 +12,21 @@
 #include "ds_array.h"
 #include "ds_str.h"
 
+#define EPRINTF(...)     eprintf (__func__, __VA_ARGS__)
+static void eprintf (const char *func, ...)
+{
+   va_list ap;
+
+   va_start (ap, func);
+
+   fprintf (stderr, "%s: ", func);
+   char *fmts = va_arg (ap, char *);
+   vfprintf (stderr, fmts, ap);
+   fprintf (stderr, "\n");
+
+   va_end (ap);
+}
+
 #define XCGI_PATHS_INI         ("xcgi_paths.ini")
 
 const char *xcgi_CONTENT_LENGTH;
@@ -406,28 +421,28 @@ static bool load_path (const char *path_id)
    char **cfg = NULL;
 
    if (!path_id || !path_id[0]) {
-      fprintf (stderr, "No path ID specified, ignoring\n");
+      EPRINTF ("No path ID specified, ignoring\n");
       return true;
    }
 
    if (!(cfg = xcgi_cfg_load (XCGI_PATHS_INI, NULL))) {
-      fprintf (stderr, "Failed to load configuration [%s]\n", XCGI_PATHS_INI);
+      EPRINTF ("Failed to load configuration [%s]\n", XCGI_PATHS_INI);
       goto errorexit;
    }
 
    if (!(path_name = xcgi_cfg_get (cfg, path_id))) {
-      fprintf (stderr, "Path ID [%s] does not appear in [%s]\n",
+      EPRINTF ("Path ID [%s] does not appear in [%s]\n",
                         path_id, path_name);
       goto errorexit;
    }
 
    if ((chdir (path_name))!=0) {
-      fprintf (stderr, "Failed to change directory to [%s]\n", path_name);
+      EPRINTF ("Failed to change directory to [%s]\n", path_name);
       goto errorexit;
    }
 
    if (!(xcgi_config = xcgi_cfg_load (path_name, "/xcgi.ini", NULL))) {
-      fprintf (stderr, "Unable to load [%s/xcgi.ini]\n", path_name);
+      EPRINTF ("Unable to load [%s/xcgi.ini]\n", path_name);
       goto errorexit;
    }
 
@@ -580,34 +595,34 @@ bool xcgi_init (void)
    xcgi_stdin = stdin;
 
    if (!(qstrings_init ())) {
-      fprintf (stderr, "Failed to allocate storage for the qstrings\n");
+      EPRINTF ("Failed to allocate storage for the qstrings\n");
       goto errorexit;
    }
 
    if (!(qs_content_types_init ())) {
-      fprintf (stderr, "Failed to allocate storage for the content types\n");
+      EPRINTF ("Failed to allocate storage for the content types\n");
       goto errorexit;
    }
 
    if (!(parse_path_info ())) {
-      fprintf (stderr, "Failed to parse the path info [%s]\n",
+      EPRINTF ("Failed to parse the path info [%s]\n",
                xcgi_PATH_INFO);
       goto errorexit;
    }
 
    if (!(parse_cookies ())) {
-      fprintf (stderr, "Failed to parse the cookies [%s]\n",
+      EPRINTF ("Failed to parse the cookies [%s]\n",
                xcgi_HTTP_COOKIE);
       goto errorexit;
    }
 
    if (!(response_headers_init ())) {
-      fprintf (stderr, "Failed to allocate storage for response headers\n");
+      EPRINTF ("Failed to allocate storage for response headers\n");
       goto errorexit;
    }
 
    if (!(load_path (xcgi_path_id))) {
-      fprintf (stderr, "Could not load path_id for [%s]\n", xcgi_path_id);
+      EPRINTF ("Could not load path_id for [%s]\n", xcgi_path_id);
    }
 
    error = false;
@@ -645,7 +660,7 @@ bool xcgi_save (const char *fname)
    size_t clen = 0;
 
    if (!(outf = fopen (fname, "w"))) {
-      fprintf (stderr, "Failed to open [%s] for writing: %m\n", fname);
+      EPRINTF ("Failed to open [%s] for writing: %m\n", fname);
       goto errorexit;
    }
 
@@ -663,7 +678,7 @@ bool xcgi_save (const char *fname)
          size_t nbytes = fread (g_line, 1, must_read, stdin);
          size_t written = fwrite (g_line, 1, nbytes, outf);
          if (written != nbytes) {
-            fprintf (stderr, "Wrote only [%zu/%zu] bytes to file\n",
+            EPRINTF ("Wrote only [%zu/%zu] bytes to file\n",
                      written, nbytes);
             goto errorexit;
          }
@@ -690,7 +705,7 @@ bool xcgi_load (const char *fname)
    size_t clen = 0;
 
    if (!(inf = fopen (fname, "r"))) {
-      fprintf (stderr, "Failed to open [%s] for reading: %m\n", fname);
+      EPRINTF ("Failed to open [%s] for reading: %m\n", fname);
       goto errorexit;
    }
 
@@ -711,14 +726,14 @@ bool xcgi_load (const char *fname)
 
       tmp = strchr (g_line, 0x01);
       if (!tmp) {
-         fprintf (stderr, "%zu Failed parsing variable [%s]. Aborting\n",
+         EPRINTF ("%zu Failed parsing variable [%s]. Aborting\n",
                            nlines, g_line);
          goto errorexit;
       }
       *tmp++ = 0;
 
       if (!(ltmp = xcgi_string_unescape (tmp))) {
-         fprintf (stderr, "Failed to unescape string, aborting\n");
+         EPRINTF ("Failed to unescape string, aborting\n");
          goto errorexit;
       }
 
@@ -744,7 +759,7 @@ bool xcgi_load (const char *fname)
       *tmp = 0;
 
    if ((strcmp (xcgi_getenv ("CONTENT_LENGTH"), g_line))!=0) {
-      fprintf (stderr, "Content length differs: [%s:%s]\n",
+      EPRINTF ("Content length differs: [%s:%s]\n",
                   xcgi_getenv ("CONTENT_LENGTH"), g_line);
       goto errorexit;
    }
@@ -798,7 +813,7 @@ char *xcgi_string_escape (const char *src)
    }
 
    if (!(ret = malloc (dst_size + 1))) {
-      fprintf (stderr, "OOM error allocating escaped string\n");
+      EPRINTF ("OOM error allocating escaped string\n");
       goto errorexit;
    }
 
@@ -852,7 +867,7 @@ char *xcgi_string_unescape (const char *src)
       char c;
       i++;
       if ((sscanf (&src[i], "%02x", &tmp))!=1) {
-         fprintf (stderr, "Failed to scan escaped character at %s\n",
+         EPRINTF ("Failed to scan escaped character at %s\n",
                   &src[i]);
          goto errorexit;
       }
@@ -896,12 +911,12 @@ static bool xcgi_parse_query_string (void)
    while (pair) {
       char *sep = strchr (pair, '=');
       if (!sep) {
-         fprintf (stderr, "Failed to find delimiter in [%s]\n", pair);
+         EPRINTF ("Failed to find delimiter in [%s]\n", pair);
          goto errorexit;
       }
       *sep = 0;
       if (!(qstrings_add (pair, &sep[1]))) {
-         fprintf (stderr, "Failed to add qstrings [%s:%s]\n", pair, sep);
+         EPRINTF ("Failed to add qstrings [%s:%s]\n", pair, sep);
          goto errorexit;
       }
       *sep = '=';
@@ -930,7 +945,7 @@ static char *read_next_pair (FILE *inf)
          break;
 
       if (!(ds_str_append (&ret, tmp, NULL))) {
-         fprintf (stderr, "OOM error reading POST pairs\n");
+         EPRINTF ("OOM error reading POST pairs\n");
          goto errorexit;
       }
    }
@@ -958,14 +973,14 @@ static bool xcgi_parse_POST_query_string (void)
 
       char *sep = strchr (tmp, '=');
       if (!sep) {
-         fprintf (stderr, "Failed to find delimiter in [%s]\n", tmp);
+         EPRINTF ("Failed to find delimiter in [%s]\n", tmp);
          goto errorexit;
       }
 
       *sep++ = 0;
 
       if (!(qstrings_add (tmp, sep))) {
-         fprintf (stderr, "Failed to add qstrings [%s:%s]\n", tmp, sep);
+         EPRINTF ("Failed to add qstrings [%s:%s]\n", tmp, sep);
          goto errorexit;
       }
 
