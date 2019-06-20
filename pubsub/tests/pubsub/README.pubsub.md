@@ -432,36 +432,36 @@ Unfortunately this means at least one more dependency: sqlite.
 [**NOTE**: All the unique columns should be indexed]
 
 ```SQL
-   CREATE TABLE tuser (
-      cid:        INTEGER PRIMARY KEY,
-      cemail:     TEXT UNIQUE,
-      cnick:      TEXT,
-      csession:   TEXT,
-      csalt:      TEXT,
-      chash:      TEXT);
+   CREATE TABLE t_user (
+      c_id:        INTEGER PRIMARY KEY,
+      c_email:     TEXT UNIQUE,
+      c_nick:      TEXT,
+      c_session:   TEXT,
+      c_salt:      TEXT,
+      c_hash:      TEXT);
 
-   CREATE TABLE tgroup (
-      cid:           INTEGER PRIMARY KEY,
-      cname:         TEXT UNIQUE,
-      cdescription:  TEXT);
+   CREATE TABLE t_group (
+      c_id:           INTEGER PRIMARY KEY,
+      c_name:         TEXT UNIQUE,
+      c_description:  TEXT);
 
-   CREATE TABLE tgroup_membership (
-      cuser:   INTEGER,
-      cgroup:  INTEGER,
-         FOREIGN KEY (cuser) REFERENCES (tuser.cid),
-         FOREIGN KEY (cgroup) REFERENCES (tgroup.cid));
+   CREATE TABLE t_group_membership (
+      c_user:   INTEGER,
+      c_group:  INTEGER,
+         FOREIGN KEY (c_user) REFERENCES (t_user.c_id),
+         FOREIGN KEY (c_group) REFERENCES (t_group.c_id));
 
-   CREATE TABLE tuser_perm (
-      cuser:      INTEGER,
-      cperms:     INTEGER,
-      cresource:  TEXT,
-         FOREIGN KEY (cuser) REFERENCES (tuser.cid));
+   CREATE TABLE t_user_perm (
+      c_user:      INTEGER,
+      c_perms:     INTEGER,
+      c_resource:  TEXT,
+         FOREIGN KEY (c_user) REFERENCES (t_user.c_id));
 
-   CREATE TABLE tgroup_perm (
-      cgroup:     INTEGER,
-      cperms:     INTEGER,
-      cresource:  TEXT,
-         FOREIGN KEY (cgroup) REFERENCES (tgroup.cid));
+   CREATE TABLE t_group_perm (
+      c_group:     INTEGER,
+      c_perms:     INTEGER,
+      c_resource:  TEXT,
+         FOREIGN KEY (c_group) REFERENCES (t_group.c_id));
 
 ```
 
