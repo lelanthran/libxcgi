@@ -711,6 +711,7 @@ void xcgi_shutdown (void)
    cookies_shutdown ();
    response_headers_shutdown ();
    xcgi_cfg_del (xcgi_config);
+   xcgi_config = NULL;
 }
 
 #define MARKER_EOV      ("MARKER-END-OF-VARS")

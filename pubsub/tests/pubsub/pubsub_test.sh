@@ -40,7 +40,7 @@ export SERVER_SOFTWARE='Apache/2.4.29 (Ubuntu)'
 # For each of the endpoints we test we set PATH_INFO and call the cgi
 # program
 function call_cgi () {
-   export PATH_INFO=$1
+   export PATH_INFO=/one/$1
    export CONTENT_LENGTH=`echo -ne $3 | wc -c`
    echo $3 > tmp.input
    valgrind --leak-check=full  ./pubsub.elf < tmp.input >$2
