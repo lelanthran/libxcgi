@@ -7,6 +7,8 @@
 #include <time.h>
 #include <stdint.h>
 
+#include "xcgi_db.h"
+
 // Overview
 // This is a global non-thread-safe library. A CGI program runs once and
 // then exits. Memory used by this module is potentially never freed. The
@@ -25,7 +27,7 @@
 // The path_id is simply a name that you can use to differentiate multiple
 // instances of your script even if you only install a single binary. For
 // example, you can use the url "[...]/script/v1/.../.../..." and
-// "[...]/script/v2/.../..." to serve different content using the saem
+// "[...]/script/v2/.../.../..." to serve different content using the same
 // executable "script".
 //
 // On startup the xcgi library looks for a file called xcgi_paths.ini in
@@ -36,7 +38,18 @@
 // After resolving the path_id to a full filesystem path, xcgi switches
 // the current working directory to that path and then attempts to load a
 // configuration file in that path which also has name=value pairs. The
-// contents of this file is up to you.
+// contents of this file is *mostly* up to you; some of the modules
+// included with libxcgi, such as the database access module, rely on an
+// entry in this file to establish a connection to the database.
+//
+// As a rule, do not attempt to use or reuse any name in the name=value
+// record that starts with 'xcgi-'. These are reserved for libxcgi itself.
+//
+// To read/write name/value pairs, open xcgi_cfg.h, and see the functions:
+//    xcgi_cfg_set()
+//    xcgi_cfg_get()
+//    xcgi_cfg_get_int()
+//    xcgi_cfg_get_flt()
 
 #define XCGI_COOKIE_SECURE             (1 << 0)
 #define XCGI_COOKIE_HTTPONLY           (1 << 1)
@@ -325,6 +338,24 @@ extern const char ***xcgi_qstrings;
 extern const char **xcgi_response_headers;
 
 
+/* The following variables are all non-const and may be modified by the
+ * caller as specified.
+ */
+
+// Available after xcgi_init(). Must be used to get/set name/value
+// pairs used for program configuration. See the functions in xcgi_cfg.h
+// for more information.
+extern char **xcgi_config;
+
+// Available after xcgi_init(). This is the default database, if it
+// exists. To specify the database and the credentials see the explanation
+// of the 'xcgi_paths.ini' file and the related 'xcgi.ini' file at the
+// beginning of this file.
+//
+// This database handle is intended to be used with all the functions in
+// list in xcgi_db.h; the caller *MUST* *NOT* close this handle, it will
+// be automatically closed when xcgi_shutdown() is called.
+extern xcgi_db_t *xcgi_db;
 
 #endif
 

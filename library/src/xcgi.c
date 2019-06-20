@@ -75,6 +75,62 @@ const char **xcgi_response_headers;
 
 
 char **xcgi_config;
+xcgi_db_t   *xcgi_db;
+
+
+
+/* ************************************************************************
+ * The database management. Note that the caller is free to open multiple
+ * database handles to other databases (how they retrieve the info at
+ * runtime may be similar to how it is done for the main instance: use a
+ * name/value pair in the configuration file xcgi.ini).
+ */
+
+#define CFG_DBTYPE         ("xcgi_dbtype")
+#define CFG_DBSTRING       ("xcgi_dbstring")
+
+static bool xcgi_dbms_init (void)
+{
+   bool error = true;
+   const char *dbstring = xcgi_cfg_get (xcgi_config, CFG_DBSTRING),
+              *dbtype = xcgi_cfg_get (xcgi_config, CFG_DBTYPE);
+   xcgi_db_dbtype_t type = xcgi_db_UNKNOWN;
+
+   if (!dbstring || !dbtype) {
+      EPRINTF ("Failed to load value for [%s] and/or [%s] from [%s]\n",
+                  CFG_DBSTRING, CFG_DBTYPE, "xcgi.ini");
+      error = false;
+      goto errorexit;
+   }
+
+   if ((strcmp (dbtype, "sqlite"))==0)
+      type = xcgi_db_SQLITE;
+
+   if ((strcmp (dbtype, "postgres"))==0)
+      type = xcgi_db_POSTGRES;
+
+   if (type==xcgi_db_UNKNOWN) {
+      EPRINTF ("Database type (dbtype) unsupported [%s]\n", dbtype);
+      goto errorexit;
+   }
+
+   if (!(xcgi_db = xcgi_db_open (dbstring, type)))
+      goto errorexit;
+
+   error = false;
+
+errorexit:
+
+   return !error;
+}
+
+static void xcgi_dbms_shutdown (void)
+{
+   xcgi_db_close (xcgi_db);
+   xcgi_db = NULL;
+}
+
+
 
 /* ************************************************************************
  * All the cookie-related storage. This is all private to this module.
@@ -180,7 +236,7 @@ errorexit:
 }
 static void cookielist_shutdown (void)
 {
-   for (size_t i=0; xcgi_cookielist[i]; i++) {
+   for (size_t i=0; xcgi_cookielist && xcgi_cookielist[i]; i++) {
       cookie_del (xcgi_cookielist[i]);
    }
    ds_array_del ((void **)xcgi_cookielist);
@@ -405,7 +461,9 @@ static bool parse_path_info (void)
 
 static void path_info_shutdown (void)
 {
-   xcgi_path_info--;
+   if (xcgi_path_info)
+      xcgi_path_info--;
+
    for (size_t i=0; xcgi_path_info && xcgi_path_info[i]; i++) {
       free ((void *)xcgi_path_info[i]);
    }
@@ -622,7 +680,12 @@ bool xcgi_init (void)
    }
 
    if (!(load_path (xcgi_path_id))) {
-      EPRINTF ("Could not load path_id for [%s]\n", xcgi_path_id);
+      EPRINTF ("Could not load path_id for [%s], ignoring.\n", xcgi_path_id);
+   }
+
+   if (!(xcgi_dbms_init ())) {
+      EPRINTF ("Could not connect to db for [%s], aborting.\n", xcgi_path_id);
+      goto errorexit;
    }
 
    error = false;
@@ -641,6 +704,7 @@ void xcgi_shutdown (void)
    if (xcgi_stdin)
       fclose (xcgi_stdin);
 
+   xcgi_dbms_shutdown ();
    qstrings_shutdown ();
    qs_content_types_shutdown ();
    path_info_shutdown ();
