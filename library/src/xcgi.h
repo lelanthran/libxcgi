@@ -355,6 +355,9 @@ extern char **xcgi_config;
 // This database handle is intended to be used with all the functions in
 // list in xcgi_db.h; the caller *MUST* *NOT* close this handle, it will
 // be automatically closed when xcgi_shutdown() is called.
+//
+// The caller may pass this handle to all of the xcgi_auth module's
+// functions.
 extern xcgi_db_t *xcgi_db;
 
 #endif

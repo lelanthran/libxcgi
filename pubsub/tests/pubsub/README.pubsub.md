@@ -434,9 +434,10 @@ Unfortunately this means at least one more dependency: sqlite.
 ```SQL
    CREATE TABLE t_user (
       c_id:        INTEGER PRIMARY KEY,
+      c_session:   TEXT UNIQUE,
+      c_expiry:    INTEGER,
       c_email:     TEXT UNIQUE,
       c_nick:      TEXT,
-      c_session:   TEXT,
       c_salt:      TEXT,
       c_hash:      TEXT);
 
