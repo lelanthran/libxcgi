@@ -48,35 +48,41 @@ extern "C" {
    // regardless of the return value. This function will first free the
    // strings stored at that location before populating them with new
    // values.
-   bool xcgi_auth_user_session (const char   session_id[65],
+   bool xcgi_auth_user_session (xcgi_db_t *db,
+                                const char   session_id[65],
                                 char       **email_dst,
                                 char       **nick_dst,
                                 uint64_t    *id_dst);
 
    // Creates a new session, returns the session ID in the sess_id_dst
    // array. Returns true on success and false on error.
-   bool xcgi_auth_user_login (const char *email, const char *password,
+   bool xcgi_auth_user_login (xcgi_db_t *db,
+                              const char *email, const char *password,
                               char sess_id_dst[65]);
 
    // Invalidates the session for user specified by email.
-   void xcgi_auth_user_logout (const char *email);
+   void xcgi_auth_user_logout (xcgi_db_t *db,
+                               const char *email);
 
    ///////////////////////////////////////////////////////////////////////
 
    // Create a new user, returns the user ID.
-   uint64_t xcgi_auth_user_create (const char *email,
+   uint64_t xcgi_auth_user_create (xcgi_db_t *db,
+                                   const char *email,
                                    const char *nick,
                                    const char *password);
 
    // Removes a user from the database.
-   bool xcgi_auth_user_rm (const char *email);
+   bool xcgi_auth_user_rm (xcgi_db_t *db,
+         const char *email);
 
    // Gets the user account information for the specified user. Returns
    // true on success and false on failure. The string destinations nick
    // and session must be freed by the caller regardless of the return
    // value. If they are not-NULL on entry to this function, this function
    // will free them before allocation storage for the output parameters.
-   bool xcgi_auth_user_info (const char *email,
+   bool xcgi_auth_user_info (xcgi_db_t *db,
+                             const char *email,
                              uint64_t   *id_dst,
                              char      **nick_dst,
                              char      session_dst[65]);
@@ -84,7 +90,8 @@ extern "C" {
    // Updates the non-NULL parameters in the database. Returns true on
    // success and false on error. Uses the old_email parameter to find the
    // record to update.
-   bool xcgi_auth_user_mod (const char *old_email,
+   bool xcgi_auth_user_mod (xcgi_db_t *db,
+                            const char *old_email,
                             const char *new_email,
                             const char *nick,
                             const char *password);
@@ -93,36 +100,42 @@ extern "C" {
    ///////////////////////////////////////////////////////////////////////
 
    // Create a new group, returns the group ID.
-   uint64_t xcgi_auth_group_create (const char *name,
+   uint64_t xcgi_auth_group_create (xcgi_db_t *db,
+                                    const char *name,
                                     const char *description);
 
    // Removes a group from the database.
-   bool xcgi_auth_group_rm (const char *name);
+   bool xcgi_auth_group_rm (xcgi_db_t *db,
+                            const char *name);
 
    // Gets the group account information for the specified group. Returns
    // true on success and false on failure. The string destination
    // 'description' must be freed by the caller regardless of the return
    // value. If it is not NULL on entry to this function, this function will
    // free it before allocation storage for the description.
-   bool xcgi_auth_group_info (const char *name,
+   bool xcgi_auth_group_info (xcgi_db_t *db,
+                              const char *name,
                               uint64_t   *id_dst,
                               char      **description);
 
    // Updates the non-NULL parameters in the database. Returns true on
    // success and false on error. Uses the name parameter to find the
    // record to update.
-   bool xcgi_auth_group_mod (const char *name,
+   bool xcgi_auth_group_mod (xcgi_db_t *db,
+                             const char *name,
                              const char *description);
 
    ///////////////////////////////////////////////////////////////////////
 
    // Add the specified user to the specified group. Returns true on
    // success and false on failure.
-   bool xcgi_auth_group_adduser (const char *name, const char *email);
+   bool xcgi_auth_group_adduser (xcgi_db_t *db,
+                                 const char *name, const char *email);
 
    // Remove the specified user from the specified group. Returns true on
    // success and false on failure.
-   bool xcgi_auth_group_rmuser (const char *name, const char *email);
+   bool xcgi_auth_group_rmuser (xcgi_db_t *db,
+                                const char *name, const char *email);
 
 
    ///////////////////////////////////////////////////////////////////////
@@ -144,7 +157,8 @@ extern "C" {
    //
    // The ids array stores each ID and the entire array (but not each
    // element) must be freed by the caller.
-   bool xcgi_auth_user_find (const char *email_pattern,
+   bool xcgi_auth_user_find (xcgi_db_t *db,
+                             const char *email_pattern,
                              const char *nick_pattern,
                              uint64_t   *nitems,
                              char     ***emails,
@@ -168,7 +182,8 @@ extern "C" {
    //
    // The ids array stores each ID and the entire array (but not each
    // element) must be freed by the caller.
-   bool xcgi_auth_group_find (const char *name_pattern,
+   bool xcgi_auth_group_find (xcgi_db_t *db,
+                              const char *name_pattern,
                               uint64_t   *nitems,
                               char     ***names,
                               char     ***descriptions,
@@ -190,7 +205,8 @@ extern "C" {
    //
    // The ids array stores each ID and the entire array (but not each
    // element) must be freed by the caller.
-   bool xcgi_auth_group_members (const char *name,
+   bool xcgi_auth_group_members (xcgi_db_t *db,
+                                 const char *name,
                                  uint64_t   *nitems,
                                  char     ***emails,
                                  char     ***nicks,
@@ -200,23 +216,27 @@ extern "C" {
 
    // Grant the specified permissions to the specified user for the
    // specified resource. Returns true on success and false on failure.
-   bool xcgi_auth_perms_grant_user (uint64_t perms, const char *resource,
-                                                    const char *email);
+   bool xcgi_auth_perms_grant_user (xcgi_db_t *db,
+                                    uint64_t perms, const char *resource,
+                                    const char *email);
 
    // Revoke the specified permissions to the specified user for the
    // specified resource. Returns true on success and false on failure.
-   bool xcgi_auth_perms_revoke_user (uint64_t perms, const char *resource,
-                                                     const char *email);
+   bool xcgi_auth_perms_revoke_user (xcgi_db_t *db,
+                                    uint64_t perms, const char *resource,
+                                    const char *email);
 
    // Retrieve the group's permissions for the specified resource and
    // stores in in 'perms'. Returns true on success and false on failure.
-   bool xcgi_auth_perms_get_group (uint64_t *perms, const char *resource,
-                                                    const char *name);
+   bool xcgi_auth_perms_get_group (xcgi_db_t *db,
+                                   uint64_t *perms, const char *resource,
+                                   const char *name);
 
    // Retrieve the user's permissions for the specified resource and
    // stores in in 'perms'. Returns true on success and false on failure.
-   bool xcgi_auth_perms_get_user (uint64_t *perms, const char *resource,
-                                                   const char *email);
+   bool xcgi_auth_perms_get_user (xcgi_db_t *db,
+                                  uint64_t *perms, const char *resource,
+                                  const char *email);
 
    // Retrieve the effective permissions of the specified user for the
    // specified resource and stores it in 'perms'. Returns true on success
@@ -225,8 +245,9 @@ extern "C" {
    // The effective permissions is the bitwise 'OR' of all the permission
    // bits of the user as well as all of the groups that the user belongs
    // to.
-   bool xcgi_auth_perms_get_all (uint64_t *perms, const char *resource,
-                                                  const char *email);
+   bool xcgi_auth_perms_get_all (xcgi_db_t *db,
+                                 uint64_t *perms, const char *resource,
+                                 const char *email);
 #ifdef __cplusplus
 };
 #endif
