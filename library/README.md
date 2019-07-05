@@ -30,7 +30,7 @@
    for libraries so it is sufficient to place the `libsqldb.so` libraries
    in these folders.
 
-   **NOTE**: `libsqldb` uses `libpq` at runtime, so ensure that libpq.so
+   **NOTE**: `libsqldb` uses `libpq` at runtime, so ensure that `libpq.so`
    is in the path for any `libxcgi` program.
 
 6. Ensure that the **libsqldb** headers are in an include path. By default
