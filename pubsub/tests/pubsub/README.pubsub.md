@@ -2,7 +2,7 @@
 
 ## Authentication
 Initially I had intended to rely on user authentication via the http spec,
-now I am reconsidering doing the auth in the program itself.
+now I am considering doing the auth in the program itself.
 
 Doing http-auth:
 + The web server does all the work of authentication, denial, approval,
@@ -44,7 +44,7 @@ response fields.
 
 ### Session maintenance
 All the endpoints below will check the cookie for a session ID and generate
-an error if the session ID is missing or present but invalid. The only
+an error if the session ID is missing, or present but invalid. The only
 exception is the Login (duh) which needs no session ID.
 
 The caller must perform the requisite authentication via the `Login`
@@ -427,42 +427,9 @@ RETURNS:
 Once the subscriber list grows to any appreciable size doing just the
 permissions lookups will take time unless a dedicated indexed storage is used.
 
-Unfortunately this means at least one more dependency: sqlite.
+Unfortunately this means at least one more dependency: a RDBMS. To this
+end the dependency is [libsqldb](https://github.com/lelanthran/libsqldb),
+with a minimum version of v0.1.4.
 
-[**NOTE**: All the unique columns should be indexed]
 
-```SQL
-   CREATE TABLE t_user (
-      c_id:        INTEGER PRIMARY KEY,
-      c_session:   TEXT UNIQUE,
-      c_expiry:    INTEGER,
-      c_email:     TEXT UNIQUE,
-      c_nick:      TEXT,
-      c_salt:      TEXT,
-      c_hash:      TEXT);
-
-   CREATE TABLE t_group (
-      c_id:           INTEGER PRIMARY KEY,
-      c_name:         TEXT UNIQUE,
-      c_description:  TEXT);
-
-   CREATE TABLE t_group_membership (
-      c_user:   INTEGER,
-      c_group:  INTEGER,
-         FOREIGN KEY (c_user) REFERENCES (t_user.c_id),
-         FOREIGN KEY (c_group) REFERENCES (t_group.c_id));
-
-   CREATE TABLE t_user_perm (
-      c_user:      INTEGER,
-      c_perms:     INTEGER,
-      c_resource:  TEXT,
-         FOREIGN KEY (c_user) REFERENCES (t_user.c_id));
-
-   CREATE TABLE t_group_perm (
-      c_group:     INTEGER,
-      c_perms:     INTEGER,
-      c_resource:  TEXT,
-         FOREIGN KEY (c_group) REFERENCES (t_group.c_id));
-
-```
 
