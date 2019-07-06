@@ -29,7 +29,7 @@ endif
 	PLATFORM=Windows
 	EXE_EXT=.exe
 	LIB_EXT=.dll
-	PLATFORM_LDFLAGS=-lmingw32 -lws2_32 -lmsvcrt -lgcc -lds
+	PLATFORM_LDFLAGS=-lmingw32 -lws2_32 -lmsvcrt -lgcc
 	HOME=$(HOMEDRIVE)/$(HOMEPATH)
 endif
 
@@ -39,7 +39,7 @@ ifeq ($(PLATFORM),)
 	PLATFORM=POSIX
 	EXE_EXT=.elf
 	LIB_EXT=.so
-	PLATFORM_LDFLAGS= -lds
+	PLATFORM_LDFLAGS=
 endif
 
 
@@ -92,7 +92,6 @@ BINOBS=\
 
 OBS=\
 	$(OUTOBS)/xcgi.o\
-	$(OUTOBS)/xcgi_auth.o\
 	$(OUTOBS)/xcgi_json.o\
 	$(OUTOBS)/xcgi_db.o\
 	$(OUTOBS)/xcgi_cfg.o
@@ -100,7 +99,6 @@ OBS=\
 
 HEADERS=\
 	src/xcgi.h\
-	src/xcgi_auth.h\
 	src/xcgi_json.h\
 	src/xcgi_db.h\
 	src/xcgi_cfg.h
@@ -127,7 +125,7 @@ COMMONFLAGS=\
 CFLAGS=$(COMMONFLAGS) -std=c99
 CXXFLAGS=$(COMMONFLAGS) -std=c++x11
 LD=$(GCC)
-LDFLAGS= -L$(HOME)/lib -lm $(PLATFORM_LDFLAGS) -lsqlite3 -lpq
+LDFLAGS= -L$(HOME)/lib -lm $(PLATFORM_LDFLAGS) -lds -lsqldb -lsqlite3 -lpq
 AR=ar
 ARFLAGS= rcs
 
