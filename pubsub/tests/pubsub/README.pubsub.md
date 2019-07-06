@@ -431,5 +431,27 @@ Unfortunately this means at least one more dependency: a RDBMS. To this
 end the dependency is [libsqldb](https://github.com/lelanthran/libsqldb),
 with a minimum version of v0.1.4.
 
+### Queues
+Queues will be implemented using a combination of the database and the
+filesystem - the metadata and a filename is written to the database, the
+queue contents is written to the file. The use of files is to enable very
+large messages to be processed/stored.
 
+"Listening" on a queue must result in a SSE GET request (not yet in the
+spec above), while the usual requests will be used for examining the queue,
+removing items from a queue, etc.
 
+Metadata for a queue must include, at a minimum:
+1. Queue name.
+2. Queue description.
+3. An expiry based on inactivity for the queue.
+4. An expiry for messages (expired items expunged).
+5. A maximum queue length (older items expunged).
+6. An optional password for posting to a queue.
+7. An optional password for reading from a queue.
+
+Arbitrary metadata (set by callers) in the form name/value pairs must be
+supported.
+
+There must be a few default queues (for example, a queue that will email the
+contents. Useful for notifying users of actions).
