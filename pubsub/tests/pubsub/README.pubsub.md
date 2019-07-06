@@ -449,9 +449,23 @@ Metadata for a queue must include, at a minimum:
 5. A maximum queue length (older items expunged).
 6. An optional password for posting to a queue.
 7. An optional password for reading from a queue.
+8. List of listeners.
 
 Arbitrary metadata (set by callers) in the form name/value pairs must be
 supported.
 
 There must be a few default queues (for example, a queue that will email the
 contents. Useful for notifying users of actions).
+
+
+### Sample usage
+1. Client #1: create queue "ChessName1", metadata parameters (rndcolor=b)
+2. Client #1: post "notify-user: email, ChessName1" to /sendmail/
+3. Client #1: listen sse to /ChessName1
+4. Client #2: post "joined" to /ChessName1
+5. Client #2: listen sse to /ChessName1
+6. Client #1: reads "ready"
+7. Client #1: listen sse for move
+8. Client #2: post "1. move#" to /ChessName1
+9. Client #1: reads "1. move#"
+9. Client #2: post "2. move#" to /ChessName1
