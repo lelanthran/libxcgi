@@ -12,14 +12,14 @@
 #include "ds_array.h"
 #include "ds_str.h"
 
-#define EPRINTF(...)     eprintf (__func__, __VA_ARGS__)
-static void eprintf (const char *func, ...)
+#define EPRINTF(...)     eprintf (__FILE__, __LINE__, __func__, __VA_ARGS__)
+static void eprintf (const char *file, size_t line, const char *func, ...)
 {
    va_list ap;
 
    va_start (ap, func);
 
-   fprintf (stderr, "%s: ", func);
+   fprintf (stderr, "%s:%zu:%s: ", file, line, func);
    char *fmts = va_arg (ap, char *);
    vfprintf (stderr, fmts, ap);
    fprintf (stderr, "\n");
@@ -684,8 +684,7 @@ bool xcgi_init (void)
    }
 
    if (!(xcgi_dbms_init ())) {
-      EPRINTF ("Could not connect to db for [%s], aborting.\n", xcgi_path_id);
-      goto errorexit;
+      EPRINTF ("Could not connect to db for [%s], ignoring.\n", xcgi_path_id);
    }
 
    error = false;
