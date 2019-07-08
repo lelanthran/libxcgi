@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# The first thing to do is to install the executables for libsqldb into
+# your path. When this is done, create and initialise a database for the
+# test as follows:
+#     $ sqldb_auth_cli create ./localdb.sqlite
+#     $ sqldb_auth_cli init sqlite ./localdb.sqlite
+#
 # The library path I use while testing
 export LD_LIBRARY_PATH=/home/lelanthran/lib:/home/lelanthran/opensource/libxcgi/library/debug/lib/x86_64-pc-linux-gnu:/home/lelanthran/opensource/libxcgi/pubsub/debug/lib/x86_64-pc-linux-gnu
 

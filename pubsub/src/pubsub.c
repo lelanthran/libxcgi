@@ -11,6 +11,11 @@
 #include "ds_hmap.h"
 #include "ds_str.h"
 
+#define PROG_ERR(...)      do {\
+      fprintf (stderr, "%s:%d: Fatal error: ", __FILE__, __LINE__);\
+      fprintf (stderr, __VA_ARGS__);\
+      fprintf (stderr, " [Aborting]\n");\
+} while (0)
 
 /* ******************************************************************
  * The field names as defined in the API spec document. When adding
@@ -275,7 +280,7 @@ static void print_json (ds_hmap_t *hm)
    for (size_t i=0; i<nkeys; i++) {
       char *value = NULL;
       if (!(ds_hmap_get_str_str (hm, keys[i], &value))) {
-         fprintf (stderr, "Failed to retrieve key [%s]\n", keys[i]);
+         PROG_ERR ("Failed to retrieve key [%s]\n", keys[i]);
          goto errorexit;
       }
       printf ("%s\n\"%s\": %s", i ? "," : "", keys[i], value);
@@ -294,7 +299,7 @@ static void free_json (ds_hmap_t *hm)
    for (size_t i=0; i<nkeys; i++) {
       char *value = NULL;
       if (!(ds_hmap_get_str_str (hm, keys[i], &value))) {
-         fprintf (stderr, "Failed to retrieve key [%s]\n", keys[i]);
+         PROG_ERR ("Failed to retrieve key [%s]\n", keys[i]);
          goto errorexit;
       }
       free (value);
@@ -629,12 +634,14 @@ static void print_help (void)
    static const char *msg[] = {
 "Pubsub must be started as a cgi program from the webserver.",
 "",
-"1. Set the environment variable PUBSUB_WORKING_DIR (not case) to point to",
+"1. Set the environment variable PUBSUB_WORKING_DIR (note case) to point to",
 "   the directory that must be used as the working directory.",
-"2. Update the {PUBSUB_WORKING_DIR}/xcgi.ini file with the relevant",
+"2. Update the $PUBSUB_WORKING_DIR/xcgi.ini file with the relevant",
 "   information (database connection string, credentials, etc).",
 "3. Use the sqldb_auth_cli program to initialise a database for use (storing",
-"   the credentials and connection strings in the xcgi.ini file).",
+"   the credentials and connection strings in the xcgi.ini file). When",
+"   using sqlite as the database, the sqlite database file must be specified",
+"   relative to $PUBSUB_WORKING_DIR.",
 "",
    };
 
@@ -664,30 +671,34 @@ int main (int argc, char **argv)
       return EXIT_FAILURE;
    }
 
-   if (!wdir) {
-      fprintf (stderr, "Environment variable [%s] is not set, aborting.\n",
-                        WORKING_DIR);
+   if (!wdir || !wdir[0]) {
+      PROG_ERR ("Environment variable [%s] is not set.\n",
+                 WORKING_DIR);
       return EXIT_FAILURE;
    }
 
    if (!(jfields = ds_hmap_new (32))) {
-      fprintf (stderr, "Failed to create hashmap for json fields\n");
+      PROG_ERR ("Failed to create hashmap for json fields\n");
       return EXIT_FAILURE;
    }
 
    if (!(xcgi_init (wdir))) {
-      fprintf (stderr, "Failed to initialise the library\n");
+      PROG_ERR ("Failed to initialise the xcgi library\n");
+      goto errorexit;
+   }
+
+   if (!xcgi_db) {
+      PROG_ERR ("No database available\n");
       goto errorexit;
    }
 
    if (!(incoming_init ())) {
-      fprintf (stderr, "Failed to read incoming json fields\n");
+      PROG_ERR ("Failed to read incoming json fields\n");
       goto errorexit;
    }
 
    if ((endpoint = endpoint_parse (xcgi_path_info[0]))==endpoint_ERROR) {
-      fprintf (stderr, "Warning: endpoint [%s] not found\n",
-                        xcgi_path_info[0]);
+      PROG_ERR ("Warning: endpoint [%s] not found\n", xcgi_path_info[0]);
    }
 
    if (endpoint!=endpoint_LOGIN && !(xcgi_HTTP_COOKIE[0])) {
@@ -697,8 +708,8 @@ int main (int argc, char **argv)
    }
 
    if (!(endpoint_valid_params (endpoint))) {
-      fprintf (stderr, "Endpoint [%s] missing required parameters\n",
-                        xcgi_path_info[0]);
+      PROG_ERR ("Endpoint [%s] missing required parameters\n",
+                xcgi_path_info[0]);
       error_code = EPUBSUB_BAD_PARAMS;
       statusCode = 200;
       goto errorexit;
@@ -715,12 +726,12 @@ errorexit:
    error_message = pubsub_error_msg (error_code);
 
    if (!(set_ifield (jfields, "error-code", error_code))) {
-      fprintf (stderr, "Failed setting the error-code field\n");
+      PROG_ERR ("Failed setting the error-code field\n");
       return EXIT_FAILURE;
    }
 
    if (!(set_sfield (jfields, "error-message", error_message))) {
-      fprintf (stderr, "Failed setting the error-message field\n");
+      PROG_ERR ("Failed setting the error-message field\n");
       return EXIT_FAILURE;
    }
 
