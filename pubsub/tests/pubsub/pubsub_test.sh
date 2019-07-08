@@ -6,7 +6,9 @@
 #     $ sqldb_auth_cli create ./localdb.sqlite
 #     $ sqldb_auth_cli init sqlite ./localdb.sqlite
 #
-# The library path I use while testing
+
+# The library path I use while testing. This should probably be cleaned
+# up for different targets.
 export LD_LIBRARY_PATH=/home/lelanthran/lib:/home/lelanthran/opensource/libxcgi/library/debug/lib/x86_64-pc-linux-gnu:/home/lelanthran/opensource/libxcgi/pubsub/debug/lib/x86_64-pc-linux-gnu
 
 # These variables cause the cgi program to think that it has been invoked
@@ -49,6 +51,7 @@ function call_cgi () {
    export CONTENT_LENGTH=`echo -ne $3 | wc -c`
    echo $3 > tmp.input
    echo "Calling '$PATH_INFO'"
+# I uncomment this snippet when I need to debug a particular test.
 #  if [ "$2" == "user-new.results" ]; then
 #     gdb pubsub.elf
 #     exit 0;
