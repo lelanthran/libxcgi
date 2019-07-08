@@ -5,7 +5,8 @@
 # test as follows:
 #     $ sqldb_auth_cli create ./localdb.sqlite
 #     $ sqldb_auth_cli init sqlite ./localdb.sqlite
-#
+#     $ sqldb_auth_cli user_create one@example.com user-ONE 123456\
+#                      --database=./localdb.sqlite  --database-type=sqlite
 
 # The library path I use while testing. This should probably be cleaned
 # up for different targets.
@@ -68,7 +69,7 @@ function call_cgi () {
 ###############################################
 
 call_cgi /login login.results '{
-   "email":    "example@email.com",
+   "email":    "one@example.com",
    "password": "123456"
 }'
 
