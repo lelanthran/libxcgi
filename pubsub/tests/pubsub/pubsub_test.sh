@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Exit on first error
-set -e
-
 # The library path I use while testing
 export LD_LIBRARY_PATH=/home/lelanthran/lib:/home/lelanthran/opensource/libxcgi/library/debug/lib/x86_64-pc-linux-gnu:/home/lelanthran/opensource/libxcgi/pubsub/debug/lib/x86_64-pc-linux-gnu
 
@@ -40,10 +37,17 @@ export SERVER_SOFTWARE='Apache/2.4.29 (Ubuntu)'
 # For each of the endpoints we test we set PATH_INFO and call the cgi
 # program
 function call_cgi () {
-   export PATH_INFO=/one/$1
+   export PATH_INFO=$1
    export CONTENT_LENGTH=`echo -ne $3 | wc -c`
    echo $3 > tmp.input
-   valgrind --leak-check=full  ./pubsub.elf < tmp.input >$2
+   echo "Calling '$PATH_INFO'"
+   valgrind  --error-exitcode=127 --leak-check=full \
+      ./pubsub.elf < tmp.input >$2
+   if [ "$?" -ne 0 ]; then
+      echo "Error calling '$PATH_INFO', executable returned: "
+      cat $2
+      exit 127
+   fi
 }
 
 ###############################################
