@@ -465,7 +465,7 @@ static void path_info_shutdown (void)
 static bool load_path (const char *path)
 {
    if (!path || !path[0]) {
-      EPRINTF ("No path ID specified, ignoring\n");
+      EPRINTF ("No path specified, ignoring\n");
       return true;
    }
 
@@ -611,6 +611,11 @@ bool xcgi_init (const char *path)
 {
    bool error = true;
 
+   if (!(load_path (path))) {
+      EPRINTF ("Could not load path for [%s], aborting.\n", path);
+      goto errorexit;
+   }
+
    for (size_t i=0; i<sizeof g_vars/sizeof g_vars[0]; i++) {
       char *tmp = getenv (g_vars[i].name);
       *(g_vars[i].variable) = tmp ? tmp : "";
@@ -644,13 +649,8 @@ bool xcgi_init (const char *path)
       goto errorexit;
    }
 
-   if (!(load_path (path))) {
-      EPRINTF ("Could not load path for [%s], aborting.\n", path);
-      goto errorexit;
-   }
-
    if (!(xcgi_dbms_init ())) {
-      EPRINTF ("Could not connect to db for [%s], aborting.\n", path);
+      EPRINTF ("Could not connect to db for [%s], ignoring.\n", path);
       // Optional, so don't return error
    }
 

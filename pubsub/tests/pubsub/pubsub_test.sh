@@ -34,6 +34,8 @@ export SERVER_PROTOCOL=HTTP/1.1
 export SERVER_SIGNATURE=$'<address>Apache/2.4.29 (Ubuntu) Server at localhost Port 80</address>\n'
 export SERVER_SOFTWARE='Apache/2.4.29 (Ubuntu)'
 
+export PUBSUB_WORKING_DIR="./"
+
 # For each of the endpoints we test we set PATH_INFO and call the cgi
 # program
 function call_cgi () {
@@ -41,6 +43,10 @@ function call_cgi () {
    export CONTENT_LENGTH=`echo -ne $3 | wc -c`
    echo $3 > tmp.input
    echo "Calling '$PATH_INFO'"
+#  if [ "$2" == "user-new.results" ]; then
+#     gdb pubsub.elf
+#     exit 0;
+#  fi
    valgrind  --error-exitcode=127 --leak-check=full \
       ./pubsub.elf < tmp.input >$2
    if [ "$?" -ne 0 ]; then

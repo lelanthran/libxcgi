@@ -624,77 +624,17 @@ static bool endpoint_valid_params (endpoint_func_t *fptr)
    return false;
 }
 
-/* *********************************************************************
- * See:
- *    https://gist.github.com/lelanthran/4d50105c2d0594b5c15aeaeed72f84c3
- */
-static const char *cline_getopt (int argc, char **argv,
-                                 const char *longopt,
-                                 char shortopt)
-{
-   for (int i=1; i<argc; i++) {
-      if (argv[i][0]!='-')
-         continue;
-
-      if ((memcmp (argv[i], "--", 3))==0)
-         return NULL;
-
-      char *value = NULL;
-
-      if (argv[i][1]=='-' && longopt) {
-         char *name = &argv[i][2];
-         if ((memcmp (name, longopt, strlen (longopt)))==0) {
-            argv[i][0] = 0;
-            value = strchr (name, '=');
-            if (!value)
-               return "";
-            *value++ = 0;
-            return value;
-         }
-      }
-
-      if (!shortopt || argv[i][1]=='-')
-         continue;
-
-      for (size_t j=1; argv[i][j]; j++) {
-         if (argv[i][j] == shortopt) {
-            memmove (&argv[i][j], &argv[i][j+1], strlen (&argv[i][j+1])+1);
-            if (argv[i][j] == 0) {
-               return argv[i+1] ? argv[i+1] : "";
-            } else {
-               return &argv[i][j];
-            }
-         }
-      }
-   }
-   return NULL;
-}
-
 static void print_help (void)
 {
    static const char *msg[] = {
-"Pubsub must be one of the following forms:",
-"  pubsub --help",
-"  pubsub --init=<path> --database-type=<type> --database=<database>",
-"  pubsub --path=<path> --username=<username> --set-password=<password>",
+"Pubsub must be started as a cgi program from the webserver.",
 "",
-"OPTIONS",
-"  pubsub --user=<user> --pass=<password>",
-"",
-"--help",
-"     This message.",
-"",
-"--init=<path> --database-type=<type> --database=<database>",
-"     Initialise a new pubsub at <path> if and only if path does not exist.",
-"     The database-type <type> must be either 'sqlite' or 'postgres'. When',
-"     <type> is sqlite then the <database> value is ignored. When <type> is",
-"     postgres then the <database> value must be the connection-string for",
-"     a postgres database.",
-"",
-"--username=<username> --set-password=<password>",
-"     Reset the password for the <username> to <password> using the pubsub",
-"     instance found at <path>",
-"",
+"1. Set the environment variable PUBSUB_WORKING_DIR (not case) to point to",
+"   the directory that must be used as the working directory.",
+"2. Update the {PUBSUB_WORKING_DIR}/xcgi.ini file with the relevant",
+"   information (database connection string, credentials, etc).",
+"3. Use the sqldb_auth_cli program to initialise a database for use (storing",
+"   the credentials and connection strings in the xcgi.ini file).",
 "",
    };
 
@@ -703,30 +643,7 @@ static void print_help (void)
    }
 }
 
-static int init_path (const char *path)
-{
-   printf ("Initialising a new instance of pub/sub at [%s]\n", path);
-   return EXIT_SUCCESS;
-}
-
-static int admin_function (int argc, char **argv)
-{
-   const char *opt_help = cline_getopt (argc, argv, "help", 0),
-              *opt_init = cline_getopt (argc, argv, "init", 0);
-
-   printf ("[%s] Started from the command-line, not running as CGI script.\n",
-            argv[0]);
-
-   if (opt_help) {
-      print_help ();
-      return EXIT_SUCCESS;
-   }
-
-   if (opt_init)
-      return init_path (opt_init);
-
-   return EXIT_SUCCESS;
-}
+#define WORKING_DIR     ("PUBSUB_WORKING_DIR")
 
 int main (int argc, char **argv)
 {
@@ -734,6 +651,7 @@ int main (int argc, char **argv)
 
    int error_code = 0;
    const char *error_message = "Success";
+   const char *wdir = getenv (WORKING_DIR);
 
    int statusCode = 501;
    const char *statusMessage = "Internal Server Error";
@@ -741,8 +659,15 @@ int main (int argc, char **argv)
    ds_hmap_t *jfields = NULL;
    endpoint_func_t *endpoint = endpoint_ERROR;
 
-   if (argc>1) {
-      return admin_function (argc, argv);
+   if (argc>1 || argv[1]) {
+      print_help ();
+      return EXIT_FAILURE;
+   }
+
+   if (!wdir) {
+      fprintf (stderr, "Environment variable [%s] is not set, aborting.\n",
+                        WORKING_DIR);
+      return EXIT_FAILURE;
    }
 
    if (!(jfields = ds_hmap_new (32))) {
@@ -750,7 +675,7 @@ int main (int argc, char **argv)
       return EXIT_FAILURE;
    }
 
-   if (!(xcgi_init ())) {
+   if (!(xcgi_init (wdir))) {
       fprintf (stderr, "Failed to initialise the library\n");
       goto errorexit;
    }
