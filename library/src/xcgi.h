@@ -7,7 +7,7 @@
 #include <time.h>
 #include <stdint.h>
 
-#include "xcgi_db.h"
+#include "sqldb.h"
 
 // Overview
 // This is a global non-thread-safe library. A CGI program runs once and
@@ -16,34 +16,21 @@
 // program return the caller can call xcgi_shutdown() to ensure that all
 // files are closed, although this is not necessary.
 //
+// On startup the xcgi library attempts to switch to a directory specified
+// by the caller. Failure to switch directory is fatal. All data storage
+// and filesystem access will be relative to this directory.
 //
-// Single binary/Multiple instances
-// The first element in the PATH_INFO is *always* interpreted as an
-// application name. For example, calling your xcgi program with
-// PATH_INFO=/path1/path2/path3 results in path1 being stored as the
-// xcgi_path_id variable, path2 and path3 being stored as elements of the
-// xcgi_path_info variable.
+// The 'xcgi.ini' file is a file in the new direcotry containing name=value
+// pairs that serve as the configuration for the application. The contents
+// of this file is *mostly* up to the caller; some of the modules included
+// with libxcgi, such as the database access module, rely on an entry in
+// this file to establish a connection to the database.
 //
-// The path_id is simply a name that you can use to differentiate multiple
-// instances of your script even if you only install a single binary. For
-// example, you can use the url "[...]/script/v1/.../.../..." and
-// "[...]/script/v2/.../.../..." to serve different content using the same
-// executable "script".
-//
-// On startup the xcgi library looks for a file called xcgi_paths.ini in
-// its current directory. This file contains name=value pairs mapping each
-// path_id to a point on the filesystem:
-//    v1=/home/script-user/apps/v1
-//    v2=/home/script-user/apps/v2
-// After resolving the path_id to a full filesystem path, xcgi switches
-// the current working directory to that path and then attempts to load a
-// configuration file in that path which also has name=value pairs. The
-// contents of this file is *mostly* up to you; some of the modules
-// included with libxcgi, such as the database access module, rely on an
-// entry in this file to establish a connection to the database.
+// Failure to open 'xcgi.ini' is not fatal; in this case the configuration
+// and database modules used and provided by xcgi will be unavailable.
 //
 // As a rule, do not attempt to use or reuse any name in the name=value
-// record that starts with 'xcgi-'. These are reserved for libxcgi itself.
+// record that starts with 'xcgi-'; These are reserved for libxcgi itself.
 //
 // To read/write name/value pairs, open xcgi_cfg.h, and see the functions:
 //    xcgi_cfg_set()
@@ -65,6 +52,10 @@ extern "C" {
    // Initialisation/shutdown functions
 
    // Initialises the cgi variables. Returns true on success, false on error.
+   // The specified path must exist and is used as the working directory:
+   // xcgi_init() will switch to the specified directory.
+   //
+   // See the explanation of the 'xcgi.ini' above.
    //
    // NOTE: This function does not load the query strings nor does it read
    // any POST data. For that the caller must explicitly call
@@ -77,7 +68,7 @@ extern "C" {
    // If we unconditionally consume all of the stdin input trying to find
    // query strings then we won't later be able to read it when we
    // discover that the POST data was not query strings.
-   bool xcgi_init (void);
+   bool xcgi_init (const char *path);
 
    // Frees and/or closes all resources allocated or opened during the
    // course of execution of this library.
@@ -88,7 +79,7 @@ extern "C" {
    // Environment functions
 
    // Load/save the cgi environment for later playback.
-   bool xcgi_load (const char *fname);
+   bool xcgi_load (const char *path, const char *fname);
    bool xcgi_save (const char *fname);
 
    // Return the value of the http variable specified, never NULL. Caller
@@ -296,18 +287,7 @@ extern FILE *xcgi_stdin;
 // script via PATH_INFO. Use the function xcgi_path_info_count() to get
 // the number of strings in the array for iteration purposes.
 //
-// Note that the first element is reserved (see below, xcgi_path_id) and
-// will not appear in this list of paths.
 extern const char **xcgi_path_info;
-
-// Available after xcgi_init(). Contains the first path element found in
-// PATH_INFO. The first path element is used as an identifier for the
-// host's directory which contains the persistent files xcgi uses
-// (database, created files/dirs, etc).
-//
-// This allows the xcgi program to reside in the cgi-bin directory while
-// serving content out of multiple different directories.
-extern const char *xcgi_path_id;
 
 // Available after xcgi_init(). Contains an array of strings, terminated
 // with a NULL, that consists of each of the cookies found in the
@@ -349,8 +329,7 @@ extern char **xcgi_config;
 
 // Available after xcgi_init(). This is the default database, if it
 // exists. To specify the database and the credentials see the explanation
-// of the 'xcgi_paths.ini' file and the related 'xcgi.ini' file at the
-// beginning of this file.
+// of the 'xcgi.ini' file at the beginning of this file.
 //
 // This database handle is intended to be used with all the functions in
 // list in xcgi_db.h; the caller *MUST* *NOT* close this handle, it will
@@ -358,7 +337,7 @@ extern char **xcgi_config;
 //
 // The caller may pass this handle to all of the xcgi_auth module's
 // functions.
-extern xcgi_db_t *xcgi_db;
+extern sqldb_t *xcgi_db;
 
 #endif
 

@@ -8,7 +8,7 @@ int main (void)
 {
    int ret = EXIT_FAILURE;
 
-   if (!(xcgi_init ())) {
+   if (!(xcgi_init ("./"))) {
       fprintf (stderr, "Failed to initialise the library\n");
       goto errorexit;
    }
@@ -68,11 +68,6 @@ int main (void)
    if (!(xcgi_save ("test-vars.dat"))) {
       fprintf (stderr, "Failed to save the vars to file\n");
       goto errorexit;
-   }
-
-   fprintf (stderr, "Path-ID [%s]\n", xcgi_path_id);
-   for (size_t i=0; xcgi_path_info[i]; i++) {
-      fprintf (stderr, "Path[%zu] [%s]\n", i, xcgi_path_info[i]);
    }
 
    ret = EXIT_SUCCESS;

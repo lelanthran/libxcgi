@@ -14,7 +14,7 @@ int main (void)
 
    size_t nqstrings = 0;
 
-   if (!(xcgi_init ())) {
+   if (!(xcgi_init ("./"))) {
       fprintf (stderr, "Failed to initialise the library\n");
       goto errorexit;
    }
@@ -118,11 +118,6 @@ int main (void)
 
    for (size_t i=0; xcgi_qstrings[i]; i++) {
       fprintf (stderr, "qs [%s:%s]\n", xcgi_qstrings[i][0], xcgi_qstrings[i][1]);
-   }
-
-   fprintf (stderr, "Path-ID [%s]\n", xcgi_path_id);
-   for (size_t i=0; xcgi_path_info[i]; i++) {
-      fprintf (stderr, "Path[%zu] [%s]\n", i, xcgi_path_info[i]);
    }
 
    fprintf (stderr, "Path info [%zu]:\n", xcgi_path_info_count ());

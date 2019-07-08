@@ -27,8 +27,6 @@ static void eprintf (const char *file, size_t line, const char *func, ...)
    va_end (ap);
 }
 
-#define XCGI_PATHS_INI         ("xcgi_paths.ini")
-
 const char *xcgi_CONTENT_LENGTH;
 const char *xcgi_CONTENT_TYPE;
 const char *xcgi_CONTEXT_DOCUMENT_ROOT;
@@ -67,7 +65,6 @@ const char *xcgi_SERVER_SOFTWARE;
 FILE *xcgi_stdin;
 
 const char **xcgi_path_info;
-const char *xcgi_path_id;
 const char **xcgi_cookies;
 const char **xcgi_qstrings_content_types;
 const char ***xcgi_qstrings;
@@ -75,7 +72,7 @@ const char **xcgi_response_headers;
 
 
 char **xcgi_config;
-xcgi_db_t   *xcgi_db;
+sqldb_t   *xcgi_db;
 
 
 
@@ -94,7 +91,7 @@ static bool xcgi_dbms_init (void)
    bool error = true;
    const char *dbstring = xcgi_cfg_get (xcgi_config, CFG_DBSTRING),
               *dbtype = xcgi_cfg_get (xcgi_config, CFG_DBTYPE);
-   xcgi_db_dbtype_t type = xcgi_db_UNKNOWN;
+   sqldb_dbtype_t type = sqldb_UNKNOWN;
 
    if (!dbstring || !dbtype) {
       EPRINTF ("Failed to load value for [%s] and/or [%s] from [%s]\n",
@@ -104,17 +101,17 @@ static bool xcgi_dbms_init (void)
    }
 
    if ((strcmp (dbtype, "sqlite"))==0)
-      type = xcgi_db_SQLITE;
+      type = sqldb_SQLITE;
 
    if ((strcmp (dbtype, "postgres"))==0)
-      type = xcgi_db_POSTGRES;
+      type = sqldb_POSTGRES;
 
-   if (type==xcgi_db_UNKNOWN) {
+   if (type==sqldb_UNKNOWN) {
       EPRINTF ("Database type (dbtype) unsupported [%s]\n", dbtype);
       goto errorexit;
    }
 
-   if (!(xcgi_db = xcgi_db_open (dbstring, type)))
+   if (!(xcgi_db = sqldb_open (dbstring, type)))
       goto errorexit;
 
    error = false;
@@ -126,7 +123,7 @@ errorexit:
 
 static void xcgi_dbms_shutdown (void)
 {
-   xcgi_db_close (xcgi_db);
+   sqldb_close (xcgi_db);
    xcgi_db = NULL;
 }
 
@@ -453,17 +450,11 @@ static bool parse_path_info (void)
    }
    free (tmp);
 
-   xcgi_path_id = xcgi_path_info[0];
-   xcgi_path_info++;
-
    return true;
 }
 
 static void path_info_shutdown (void)
 {
-   if (xcgi_path_info)
-      xcgi_path_info--;
-
    for (size_t i=0; xcgi_path_info && xcgi_path_info[i]; i++) {
       free ((void *)xcgi_path_info[i]);
    }
@@ -471,49 +462,23 @@ static void path_info_shutdown (void)
    xcgi_path_info = NULL;
 }
 
-static bool load_path (const char *path_id)
+static bool load_path (const char *path)
 {
-   bool error = true;
-   const char *pwd = getenv ("PWD"); // PORTABILITY: Windows is different
-   const char *path_name = NULL;
-   char **cfg = NULL;
-
-   if (!path_id || !path_id[0]) {
+   if (!path || !path[0]) {
       EPRINTF ("No path ID specified, ignoring\n");
       return true;
    }
 
-   if (!(cfg = xcgi_cfg_load (XCGI_PATHS_INI, NULL))) {
-      EPRINTF ("Failed to load configuration [%s]\n", XCGI_PATHS_INI);
-      goto errorexit;
+   if ((chdir (path))!=0) {
+      EPRINTF ("Failed to change directory to [%s]\n", path);
+      return false;
    }
 
-   if (!(path_name = xcgi_cfg_get (cfg, path_id))) {
-      EPRINTF ("Path ID [%s] does not appear in [%s]\n",
-                        path_id, path_name);
-      goto errorexit;
+   if (!(xcgi_config = xcgi_cfg_load ("xcgi.ini", NULL))) {
+      EPRINTF ("Unable to load [%s/xcgi.ini]\n", path);
    }
 
-   if ((chdir (path_name))!=0) {
-      EPRINTF ("Failed to change directory to [%s]\n", path_name);
-      goto errorexit;
-   }
-
-   if (!(xcgi_config = xcgi_cfg_load (path_name, "/xcgi.ini", NULL))) {
-      EPRINTF ("Unable to load [%s/xcgi.ini]\n", path_name);
-      goto errorexit;
-   }
-
-   error = false;
-
-errorexit:
-
-   xcgi_cfg_del (cfg);
-   if (error) {
-      chdir (pwd);
-   }
-
-   return !error;
+   return true;
 }
 
 /* ************************************************************************
@@ -642,7 +607,7 @@ struct {
       { "SERVER_SOFTWARE",          &xcgi_SERVER_SOFTWARE         },
 };
 
-bool xcgi_init (void)
+bool xcgi_init (const char *path)
 {
    bool error = true;
 
@@ -679,12 +644,14 @@ bool xcgi_init (void)
       goto errorexit;
    }
 
-   if (!(load_path (xcgi_path_id))) {
-      EPRINTF ("Could not load path_id for [%s], ignoring.\n", xcgi_path_id);
+   if (!(load_path (path))) {
+      EPRINTF ("Could not load path for [%s], aborting.\n", path);
+      goto errorexit;
    }
 
    if (!(xcgi_dbms_init ())) {
-      EPRINTF ("Could not connect to db for [%s], ignoring.\n", xcgi_path_id);
+      EPRINTF ("Could not connect to db for [%s], aborting.\n", path);
+      // Optional, so don't return error
    }
 
    error = false;
@@ -760,7 +727,7 @@ errorexit:
    return !error;
 }
 
-bool xcgi_load (const char *fname)
+bool xcgi_load (const char *path, const char *fname)
 {
    bool error = true;
    FILE *inf = NULL;
@@ -811,7 +778,7 @@ bool xcgi_load (const char *fname)
    path_info_shutdown ();
    response_headers_shutdown ();
 
-   xcgi_init ();
+   xcgi_init (path);
 
    if (!(fgets (g_line, sizeof g_line - 1, inf))) {
       error = false;

@@ -34,13 +34,13 @@ int main (int argc, char ** argv)
       goto errorexit;
    }
 
-   if (!(xcgi_init())) {
+   if (!(xcgi_init ("./"))) {
       fprintf (stderr, "Failed to initialise the xcgi library\n");
       xcgi_active = true;
       goto errorexit;
    }
 
-   if (!(xcgi_load (argv[1]))) {
+   if (!(xcgi_load ("./", argv[1]))) {
       fprintf (stderr, "Failed to load cgi environment from [%s]\n", argv[1]);
       goto errorexit;
    }
