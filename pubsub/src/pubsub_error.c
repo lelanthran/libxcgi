@@ -12,10 +12,13 @@ const char *pubsub_error_msg (int errorcode)
       const char *msg;
    } errs[] = {
       { EPUBSUB_SUCCESS,         "Success"                     },
-      { EPUBSUB_ENDPOINT,        "Unknown endpoint"            },
-      { EPUBSUB_AUTH,            "Not authenticated"           },
-      { EPUBSUB_BAD_PARAMS,      "Bad or missing parameters"   },
       { EPUBSUB_UNIMPLEMENTED,   "Function not implemented"    },
+      { EPUBSUB_INTERNAL_ERROR,  "Internal program error"      },
+      { EPUBSUB_ENDPOINT,        "Unknown endpoint"            },
+      { EPUBSUB_MISSING_PARAMS,  "Missing parameters"          },
+      { EPUBSUB_BAD_PARAMS,      "Bad parameters"              },
+      { EPUBSUB_NOT_AUTH,        "Not authenticated"           },
+      { EPUBSUB_AUTH_FAILURE,    "Authentication failure"      },
    };
 
    for (size_t i=0; i<sizeof errs/sizeof errs[0]; i++) {

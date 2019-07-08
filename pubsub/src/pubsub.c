@@ -6,6 +6,9 @@
 #include "xcgi.h"
 #include "xcgi_json.h"
 
+#include "sqldb.h"
+#include "sqldb_auth.h"
+
 #include "pubsub_error.h"
 
 #include "ds_hmap.h"
@@ -133,11 +136,17 @@
 #define P_QUEUE_DEL              0
 #define P_QUEUE_LIST             0
 
-static struct {
+
+/* ******************************************************************
+ * Setting the incoming data fields, and functions that search the
+ * incoming data fields.
+ */
+struct incoming_value_t {
    const char *name;
    char       *value;
    size_t      len;
-} g_incoming[] = {
+};
+static struct incoming_value_t g_incoming[] = {
    { FIELD_STR_EMAIL,               NULL, 0 },
    { FIELD_STR_PASSWORD,            NULL, 0 },
    { FIELD_STR_SESSION,             NULL, 0 },
@@ -164,6 +173,15 @@ static struct {
    { FIELD_STR_MESSAGE_ID,          NULL, 0 },
    { FIELD_STR_MESSAGE_IDS,         NULL, 0 },
 };
+
+static const char *incoming_find (const char *name)
+{
+   for (size_t i=0; i<sizeof g_incoming/sizeof g_incoming[0]; i++) {
+      if ((strcmp (g_incoming[i].name, name))==0)
+         return g_incoming[i].value;
+   }
+   return NULL;
+}
 
 static void incoming_shutdown (void)
 {
@@ -218,6 +236,7 @@ static bool incoming_init (void)
          break;
       }
       strncpy (g_incoming[i].value, tmp, len);
+      g_incoming[i].value[len] = 0;
    }
 
    free (input);
@@ -328,16 +347,37 @@ static bool endpoint_ERROR (ds_hmap_t *jfields,
 static bool endpoint_LOGIN (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
-   if (!(set_sfield (jfields, FIELD_STR_SESSION, "0123456789")))
+   char session[65];
+
+   // No need to check for NULL, already checked in endpoint_valid_params()
+   const char *in_email = incoming_find (FIELD_STR_EMAIL),
+              *in_passwd = incoming_find (FIELD_STR_PASSWORD);
+
+   memset (session, 0, sizeof session);
+
+   if (!(sqldb_auth_session_authenticate (xcgi_db, in_email, in_passwd,
+                                          session))) {
+      *error_code = EPUBSUB_AUTH_FAILURE;
+      *status_code = 200;
       return false;
+   }
+
+   if (!(set_sfield (jfields, FIELD_STR_SESSION, session))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      *status_code = 501;
+      return false;
+   }
 
    xcgi_header_cookie_clear (FIELD_STR_SESSION);
-   if (!(xcgi_header_cookie_set (FIELD_STR_SESSION, "0123456789", 0, 0)))
+   if (!(xcgi_header_cookie_set (FIELD_STR_SESSION, session, 0, 0))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      *status_code = 501;
       return false;
+   }
+
 
    *error_code = 0;
    *status_code = 200;
-
    return true;
 }
 
@@ -702,7 +742,7 @@ int main (int argc, char **argv)
    }
 
    if (endpoint!=endpoint_LOGIN && !(xcgi_HTTP_COOKIE[0])) {
-      error_code = EPUBSUB_AUTH;
+      error_code = EPUBSUB_NOT_AUTH;
       statusCode = 200;
       goto errorexit;
    }
@@ -710,7 +750,7 @@ int main (int argc, char **argv)
    if (!(endpoint_valid_params (endpoint))) {
       PROG_ERR ("Endpoint [%s] missing required parameters\n",
                 xcgi_path_info[0]);
-      error_code = EPUBSUB_BAD_PARAMS;
+      error_code = EPUBSUB_MISSING_PARAMS;
       statusCode = 200;
       goto errorexit;
    }
