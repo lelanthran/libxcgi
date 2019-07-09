@@ -1101,6 +1101,19 @@ bool xcgi_headers_write (void)
    return true;
 }
 
+size_t xcgi_cookies_count (void)
+{
+   size_t ret = 0;
+
+   if (!xcgi_cookies)
+      return 0;
+
+   for (size_t i=0; xcgi_cookies[i]; i++)
+      ret++;
+
+   return ret;
+}
+
 size_t xcgi_path_info_count (void)
 {
    return ds_array_length ((void **)xcgi_path_info);

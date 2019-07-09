@@ -292,7 +292,7 @@ extern const char **xcgi_path_info;
 // Available after xcgi_init(). Contains an array of strings, terminated
 // with a NULL, that consists of each of the cookies found in the
 // xcgi_HTTP_COOKIE environment variable. Use the function
-// xcg_cookies_count() to get the number of cookies found.
+// xcgi_cookies_count() to get the number of cookies found.
 //
 // Each cookie is stored as a single string of name=value.
 extern const char **xcgi_cookies;
