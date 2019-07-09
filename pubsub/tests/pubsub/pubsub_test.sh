@@ -45,6 +45,12 @@ export SERVER_SOFTWARE='Apache/2.4.29 (Ubuntu)'
 
 export PUBSUB_WORKING_DIR="./"
 
+function display_file () {
+   cat $2 | while read LINE; do
+      echo $1 $LINE
+   done
+}
+
 # For each of the endpoints we test we set PATH_INFO and call the cgi
 # program
 function call_cgi () {
@@ -53,7 +59,7 @@ function call_cgi () {
    echo $3 > tmp.input
    echo "Calling '$PATH_INFO'"
 # I uncomment this snippet when I need to debug a particular test.
-#  if [ "$2" == "user-new.results" ]; then
+#  if [ "$2" == "login.results" ]; then
 #     gdb pubsub.elf
 #     exit 0;
 #  fi
@@ -61,8 +67,11 @@ function call_cgi () {
       ./pubsub.elf < tmp.input >$2
    if [ "$?" -ne 0 ]; then
       echo "Error calling '$PATH_INFO', executable returned: "
-      cat $2
+      display_file "✘" $2
       exit 127
+   else
+      echo "Success calling '$PATH_INFO', executable returned: "
+      display_file "✔" $2
    fi
 }
 

@@ -14,6 +14,11 @@
 #include "ds_hmap.h"
 #include "ds_str.h"
 
+// Used to marshall json fields.
+#define TYPE_STRING        (1)
+#define TYPE_INT           (2)
+
+
 #define PROG_ERR(...)      do {\
       fprintf (stderr, "%s:%d: Fatal error: ", __FILE__, __LINE__);\
       fprintf (stderr, __VA_ARGS__);\
@@ -143,35 +148,36 @@
  */
 struct incoming_value_t {
    const char *name;
+   uint8_t     type;
    char       *value;
    size_t      len;
 };
 static struct incoming_value_t g_incoming[] = {
-   { FIELD_STR_EMAIL,               NULL, 0 },
-   { FIELD_STR_PASSWORD,            NULL, 0 },
-   { FIELD_STR_SESSION,             NULL, 0 },
-   { FIELD_STR_NICK,                NULL, 0 },
-   { FIELD_STR_USER_ID,             NULL, 0 },
-   { FIELD_STR_EMAIL_PATTERN,       NULL, 0 },
-   { FIELD_STR_NICK_PATTERN,        NULL, 0 },
-   { FIELD_STR_ID_PATTERN,          NULL, 0 },
-   { FIELD_STR_RESULTSET_COUNT,     NULL, 0 },
-   { FIELD_STR_RESULTSET,           NULL, 0 },
-   { FIELD_STR_OLD_EMAIL,           NULL, 0 },
-   { FIELD_STR_NEW_EMAIL,           NULL, 0 },
-   { FIELD_STR_GROUP_NAME,          NULL, 0 },
-   { FIELD_STR_GROUP_DESCRIPTION,   NULL, 0 },
-   { FIELD_STR_GROUP_ID,            NULL, 0 },
-   { FIELD_STR_OLD_GROUP_NAME,      NULL, 0 },
-   { FIELD_STR_NEW_GROUP_NAME,      NULL, 0 },
-   { FIELD_STR_GROUP_PATTERN,       NULL, 0 },
-   { FIELD_STR_PERMS,               NULL, 0 },
-   { FIELD_STR_RESOURCE,            NULL, 0 },
-   { FIELD_STR_QUEUE_NAME,          NULL, 0 },
-   { FIELD_STR_QUEUE_DESCRIPTION,   NULL, 0 },
-   { FIELD_STR_QUEUE_ID,            NULL, 0 },
-   { FIELD_STR_MESSAGE_ID,          NULL, 0 },
-   { FIELD_STR_MESSAGE_IDS,         NULL, 0 },
+   { FIELD_STR_EMAIL,               TYPE_STRING, NULL, 0 },
+   { FIELD_STR_PASSWORD,            TYPE_STRING, NULL, 0 },
+   { FIELD_STR_SESSION,             TYPE_STRING, NULL, 0 },
+   { FIELD_STR_NICK,                TYPE_STRING, NULL, 0 },
+   { FIELD_STR_USER_ID,             TYPE_STRING, NULL, 0 },
+   { FIELD_STR_EMAIL_PATTERN,       TYPE_STRING, NULL, 0 },
+   { FIELD_STR_NICK_PATTERN,        TYPE_STRING, NULL, 0 },
+   { FIELD_STR_ID_PATTERN,          TYPE_STRING, NULL, 0 },
+   { FIELD_STR_RESULTSET_COUNT,     TYPE_STRING, NULL, 0 },
+   { FIELD_STR_RESULTSET,           TYPE_STRING, NULL, 0 },
+   { FIELD_STR_OLD_EMAIL,           TYPE_STRING, NULL, 0 },
+   { FIELD_STR_NEW_EMAIL,           TYPE_STRING, NULL, 0 },
+   { FIELD_STR_GROUP_NAME,          TYPE_STRING, NULL, 0 },
+   { FIELD_STR_GROUP_DESCRIPTION,   TYPE_STRING, NULL, 0 },
+   { FIELD_STR_GROUP_ID,            TYPE_STRING, NULL, 0 },
+   { FIELD_STR_OLD_GROUP_NAME,      TYPE_STRING, NULL, 0 },
+   { FIELD_STR_NEW_GROUP_NAME,      TYPE_STRING, NULL, 0 },
+   { FIELD_STR_GROUP_PATTERN,       TYPE_STRING, NULL, 0 },
+   { FIELD_STR_PERMS,               TYPE_STRING, NULL, 0 },
+   { FIELD_STR_RESOURCE,            TYPE_STRING, NULL, 0 },
+   { FIELD_STR_QUEUE_NAME,          TYPE_STRING, NULL, 0 },
+   { FIELD_STR_QUEUE_DESCRIPTION,   TYPE_STRING, NULL, 0 },
+   { FIELD_STR_QUEUE_ID,            TYPE_STRING, NULL, 0 },
+   { FIELD_STR_MESSAGE_ID,          TYPE_STRING, NULL, 0 },
+   { FIELD_STR_MESSAGE_IDS,         TYPE_STRING, NULL, 0 },
 };
 
 static const char *incoming_find (const char *name)
@@ -237,6 +243,11 @@ static bool incoming_init (void)
       }
       strncpy (g_incoming[i].value, tmp, len);
       g_incoming[i].value[len] = 0;
+
+      if (g_incoming[i].value[0]=='"') {
+         memmove (&g_incoming[i].value[0], &g_incoming[i].value[1], len);
+         g_incoming[i].value[len-2] = 0;
+      }
    }
 
    free (input);
@@ -251,9 +262,6 @@ static bool incoming_init (void)
 /* ******************************************************************
  * Setting fields and generating the JSON for all the fields.
  */
-#define TYPE_STRING        (1)
-#define TYPE_INT           (2)
-
 static bool set_field (ds_hmap_t *hm, const char *name, const void *value,
                        int type)
 {
