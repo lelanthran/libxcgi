@@ -46,8 +46,8 @@ sqldb_auth_cli.elf init sqlite $DBFILE
 sqldb_auth_cli.elf $DBARGS user_create admin@example.com admin 123456
 
 for X in $ENDPOINTS; do
-   echo Granting all permissions for $X
-   sqldb_auth_cli.elf $DBARGS grant_user admin $X $FPERMS
+   echo Granting all permissions for $X to admin@example.com
+   sqldb_auth_cli.elf $DBARGS grant_user admin@example.com $X $FPERMS
 done
 
 

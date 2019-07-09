@@ -13,6 +13,7 @@
 #define EPUBSUB_NOT_AUTH         (6 << 8)
 #define EPUBSUB_AUTH_FAILURE     (7 << 8)
 #define EPUBSUB_PERM_DENIED      (8 << 8)
+#define EPUBSUB_RESOURCE_EXISTS  (9 << 8)
 
 #ifdef __cplusplus
 extern "C" {

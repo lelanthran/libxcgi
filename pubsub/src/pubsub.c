@@ -443,15 +443,10 @@ static bool endpoint_USER_NEW (ds_hmap_t *jfields,
               *nick = incoming_find (FIELD_STR_NICK),
               *password = incoming_find (FIELD_STR_PASSWORD);
 
-   // TODO: Use the logged in user/email
-   if (!(perms_get (g_session_id, "RSC_USERS") & PRM_CREATE_USER)) {
-      *error_code = EPUBSUB_PERM_DENIED;
-      *status_code = 200;
-      return false;
-   }
+   uint64_t new_id = sqldb_auth_user_create (xcgi_db, email, nick, password);
 
-   if (!(sqldb_auth_user_create (xcgi_db, email, nick, password))) {
-      *error_code = EPUBSUB_INTERNAL_ERROR;
+   if (new_id==(uint64_t)-1) {
+      *error_code = EPUBSUB_RESOURCE_EXISTS;
       *status_code = 200;
       return false;
    }
@@ -459,7 +454,7 @@ static bool endpoint_USER_NEW (ds_hmap_t *jfields,
    jfields = jfields;
    *error_code = EPUBSUB_SUCCESS;
    *status_code = 200;
-   return false;
+   return true;
 }
 
 static bool endpoint_USER_RM (ds_hmap_t *jfields,
@@ -900,6 +895,9 @@ errorexit:
 
    xcgi_shutdown ();
    incoming_shutdown ();
+
+   free (g_email);
+   free (g_nick);
 
    return ret;
 }

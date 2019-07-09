@@ -61,7 +61,7 @@ function call_cgi () {
 #     gdb pubsub.elf
 #     exit 0;
 #  fi
-   valgrind  --error-exitcode=127 --leak-check=full \
+   valgrind --show-leak-kinds=all --error-exitcode=127 --leak-check=full \
       ./pubsub.elf < tmp.input >$2
    if [ "$?" -ne 0 ]; then
       echo "Error calling '$PATH_INFO', executable returned: "
