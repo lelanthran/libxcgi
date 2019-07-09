@@ -7,5 +7,4 @@
 4. Create the skeleton pubsub.cgi application. For now simply accepting
    and responding to the API (even if responding with junk data) is
    enough.
-
-5. Create the sql interface.
+   - Need to perform the session retrieval in the main function.

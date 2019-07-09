@@ -101,16 +101,18 @@ The list of permissions that can be granted/revoked is:
 ```javascript
    create-queue      // Create a new message queue
    remove-queue      // Remove an existing message queue
-   put               // Put a new message into a message queue
-   get               // Retrieve a message from a message queue
-   list              // List messages in a message queue
-   del               // Remove a message from the message queue
+   put-queue         // Put a new message into a message queue
+   get-queue         // Retrieve a message from a message queue
+   list-queue        // List messages in a message queue
+   del-queue         // Remove a message from the message queue
    grant             // Grant a permission to a resource
    revoke            // Revoke a permission from a resource
    create-user       // Create a new user
    create-group      // Create a new group
    mod-user          // Modify a user
    mod-group         // Modify a group
+   del-user          // Delete a user
+   del-group         // Delete a group
 ```
 #### New user
 ```javascript
