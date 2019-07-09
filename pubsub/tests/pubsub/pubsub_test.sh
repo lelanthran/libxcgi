@@ -2,11 +2,9 @@
 
 # The first thing to do is to install the executables for libsqldb into
 # your path. When this is done, create and initialise a database for the
-# test as follows:
-#     $ sqldb_auth_cli create ./localdb.sqlite
-#     $ sqldb_auth_cli init sqlite ./localdb.sqlite
-#     $ sqldb_auth_cli user_create one@example.com user-ONE 123456\
-#                      --database=./localdb.sqlite  --database-type=sqlite
+# test using the create_testdb.sh script in this directory.
+
+
 
 # The library path I use while testing. This should probably be cleaned
 # up for different targets.

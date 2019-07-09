@@ -19,11 +19,18 @@
 #define TYPE_INT           (2)
 
 
+// ErrorReportingMadeEasy(tm)
 #define PROG_ERR(...)      do {\
       fprintf (stderr, "%s:%d: Fatal error: ", __FILE__, __LINE__);\
       fprintf (stderr, __VA_ARGS__);\
       fprintf (stderr, " [Aborting]\n");\
 } while (0)
+
+/* ******************************************************************
+ * Globals. Ugly but necessary.
+ */
+const char *g_session_id = NULL;
+uint64_t g_perms = 0;
 
 /* ******************************************************************
  * The field names as defined in the API spec document. When adding
@@ -109,6 +116,9 @@
 #define BIT_MESSAGE_IDS          ((uint64_t)(1 << FIELD_IDX_MESSAGE_IDS))
 
 
+// These are the constraints for each endpoint. It's a bitmask of which
+// fields need to appear in the JSON we get from the client for each
+// endpoint.
 #define ARG_ERROR                  (0)
 #define ARG_LOGIN                  (BIT_EMAIL | BIT_PASSWORD)
 #define ARG_LOGOUT                 (0)
@@ -354,7 +364,7 @@ errorexit:
 #define PRM_DELETE_USER       (1 << 4)
 #define PRM_DELETE_GROUP      (1 << 5)
 
-uint64_t perms_get (const char *email, const char *resource)
+static uint64_t perms_get (const char *email, const char *resource)
 {
    uint64_t ret = 0;
    if ((sqldb_auth_perms_get_all (xcgi_db, &ret, email, resource)))
@@ -430,7 +440,7 @@ static bool endpoint_USER_NEW (ds_hmap_t *jfields,
               *password = incoming_find (FIELD_STR_PASSWORD);
 
    // TODO: Use the logged in user/email
-   if (!(perms_get (email, "RSC_USERS") & PRM_CREATE_USER)) {
+   if (!(perms_get (g_session_id, "RSC_USERS") & PRM_CREATE_USER)) {
       *error_code = EPUBSUB_PERM_DENIED;
       *status_code = 200;
       return false;
@@ -776,6 +786,25 @@ int main (int argc, char **argv)
       goto errorexit;
    }
 
+   {
+#define SESSIONID_COOKIE_STRING     ("SessionID")
+      size_t ncookies = xcgi_cookies_count ();
+      size_t slen = strlen (SESSIONID_COOKIE_STRING);
+
+      g_session_id = "";
+
+      for (size_t i=0; xcgi_cookies[i] && i<ncookies; i++) {
+         if ((strncmp (SESSIONID_COOKIE_STRING, xcgi_cookies[i], slen))==0) {
+            g_session_id = strchr (xcgi_cookies[i], '=');
+            if (g_session_id)
+               g_session_id++;
+            break;
+         }
+      }
+
+#undef SESSIONID_COOKIE_STRING
+   }
+
    if (!xcgi_db) {
       PROG_ERR ("No database available\n");
       goto errorexit;
@@ -790,7 +819,7 @@ int main (int argc, char **argv)
       PROG_ERR ("Warning: endpoint [%s] not found\n", xcgi_path_info[0]);
    }
 
-   if (endpoint!=endpoint_LOGIN && !(xcgi_HTTP_COOKIE[0])) {
+   if (endpoint!=endpoint_LOGIN && !g_session_id) {
       error_code = EPUBSUB_NOT_AUTH;
       statusCode = 200;
       goto errorexit;
