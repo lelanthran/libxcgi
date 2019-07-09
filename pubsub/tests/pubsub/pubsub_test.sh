@@ -76,11 +76,12 @@ function call_cgi () {
 ###############################################
 
 call_cgi /login login.results '{
-   "email":    "one@example.com",
+   "email":    "admin@example.com",
    "password": "123456"
 }'
 
-export HTTP_COOKIE="SessionID=0123456789"
+export HTTP_COOKIE=`cat login.results | grep Set-Cookie | grep session-id | cut -f 2 -d \  `
+
 ###############################################
 
 call_cgi /user-new user-new.results '{

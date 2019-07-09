@@ -29,8 +29,12 @@
 /* ******************************************************************
  * Globals. Ugly but necessary.
  */
-const char *g_session_id = NULL;
-uint64_t g_perms = 0;
+char       *g_session_id = NULL;
+char       *g_email = NULL;
+char       *g_nick = NULL;
+uint64_t    g_flags = 0;
+uint64_t    g_id = 0;
+uint64_t    g_perms = 0;
 
 /* ******************************************************************
  * The field names as defined in the API spec document. When adding
@@ -749,7 +753,7 @@ static void print_help (void)
    }
 }
 
-#define WORKING_DIR     ("PUBSUB_WORKING_DIR")
+#define WORKING_DIR                 ("PUBSUB_WORKING_DIR")
 
 int main (int argc, char **argv)
 {
@@ -787,22 +791,19 @@ int main (int argc, char **argv)
    }
 
    {
-#define SESSIONID_COOKIE_STRING     ("SessionID")
       size_t ncookies = xcgi_cookies_count ();
-      size_t slen = strlen (SESSIONID_COOKIE_STRING);
+      size_t slen = strlen (FIELD_STR_SESSION);
 
       g_session_id = "";
 
       for (size_t i=0; xcgi_cookies[i] && i<ncookies; i++) {
-         if ((strncmp (SESSIONID_COOKIE_STRING, xcgi_cookies[i], slen))==0) {
+         if ((strncmp (FIELD_STR_SESSION, xcgi_cookies[i], slen))==0) {
             g_session_id = strchr (xcgi_cookies[i], '=');
             if (g_session_id)
                g_session_id++;
             break;
          }
       }
-
-#undef SESSIONID_COOKIE_STRING
    }
 
    if (!xcgi_db) {
@@ -823,6 +824,37 @@ int main (int argc, char **argv)
       error_code = EPUBSUB_NOT_AUTH;
       statusCode = 200;
       goto errorexit;
+   }
+
+   if (endpoint==endpoint_LOGIN || endpoint==endpoint_LOGOUT) {
+      xcgi_header_cookie_clear (FIELD_STR_SESSION);
+      xcgi_header_cookie_set (FIELD_STR_SESSION, "", 0, 0);
+      g_perms = 0xffffffffffffffff;
+   } else {
+      char session_id[65];
+      strncpy (session_id, g_session_id, sizeof session_id);
+      session_id[sizeof session_id - 1] = 0;
+      if (!(sqldb_auth_session_valid (xcgi_db, session_id,
+                                               &g_email,
+                                               &g_nick,
+                                               &g_flags,
+                                               &g_id))) {
+         PROG_ERR ("Failed to find a session for [%s]\n", g_session_id);
+         xcgi_header_cookie_clear (FIELD_STR_SESSION);
+         xcgi_header_cookie_set (FIELD_STR_SESSION, "", 0, 0);
+         error_code = EPUBSUB_NOT_AUTH;
+         statusCode = 200;
+         goto errorexit;
+      }
+      if (!g_email || !g_nick) {
+         PROG_ERR ("Corrupt session for [%s]\n", g_session_id);
+         xcgi_header_cookie_clear (FIELD_STR_SESSION);
+         xcgi_header_cookie_set (FIELD_STR_SESSION, "", 0, 0);
+         error_code = EPUBSUB_NOT_AUTH;
+         statusCode = 200;
+         goto errorexit;
+      }
+      g_flags = perms_get (g_email, xcgi_path_info[0]);
    }
 
    if (!(endpoint_valid_params (endpoint))) {
