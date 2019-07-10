@@ -127,6 +127,8 @@ RETURNS:
 ```javascript
 {
    "user-id":     "ID of created user"
+   "email":       "email of user that was created",
+   "nick":        "Nickname of user that was created",
 }
 ```
 

@@ -57,11 +57,12 @@ function call_cgi () {
    echo $3 > tmp.input
    echo "Calling '$PATH_INFO'"
 # I uncomment this snippet when I need to debug a particular test.
-#  if [ "$2" == "login.results" ]; then
+#  if [ "$2" == "user-new-mone.results" ]; then
+#     cat tmp.input
 #     gdb pubsub.elf
 #     exit 0;
 #  fi
-   valgrind --show-leak-kinds=all --error-exitcode=127 --leak-check=full \
+   valgrind --track-origins=yes --show-leak-kinds=all --error-exitcode=127 --leak-check=full \
       ./pubsub.elf < tmp.input >$2
    if [ "$?" -ne 0 ]; then
       echo "Error calling '$PATH_INFO', executable returned: "
@@ -72,6 +73,27 @@ function call_cgi () {
       display_file "✔" $2
    fi
 }
+
+export NAMES='
+   one
+   two
+   three
+   four
+   five
+   six
+   seven
+   eight
+   nine
+   ten'
+
+export RMNAMES='
+   zero
+   two
+   three
+   four
+   five
+   seven
+   ten'
 
 ###############################################
 
@@ -84,39 +106,33 @@ export HTTP_COOKIE=`cat login.results | grep Set-Cookie | grep session-id | cut 
 
 ###############################################
 
-call_cgi /user-new user-new.results '{
-   "email": "example@email.com",
-   "nick": "Example1",
-   "password": "12345"
-}'
+for X in $NAMES; do
+   export EMAIL="m$X@example.com"
+   export NICK="User-m$X"
+   export OUTFILE="user-new-m$X.results"
 
-call_cgi /user-new user-new-1.results '{
-   "email": "todelete1@email.com",
-   "nick": "ToDelete1",
-   "password": "12345"
-}'
-
-
-call_cgi /user-new user-new-2.results '{
-   "email": "todelete2@email.com",
-   "nick": "ToDelete2",
-   "password": "12345"
-}'
-
-call_cgi /user-new user-new-3.results '{
-   "email": "todelete3@email.com",
-   "nick": "ToDelete3",
-   "password": "12345"
-}'
+   call_cgi /user-new $OUTFILE '{
+      "email": "'$EMAIL'",
+      "nick": "'$NICK'",
+      "password": "123456"
+   }'
+done
 
 ###############################################
 
-call_cgi /user-mod user-mod.results '{
-   "old-email":   "todelete2@email.com",
-   "new-email":   "todelete4@email.com",
-   "nick":        "Nickname to use",
-   "password":    "cleartext password"
-}'
+for X in $NAMES; do
+   export OLDEMAIL="m$X@example.com"
+   export NEWEMAIL="$X@example.com"
+   export NICK="User-$X"
+   export OUTFILE="user-mod-$X.results"
+
+   call_cgi /user-mod $OUTFILE '{
+      "old-email":   "'$OLDEMAIL'",
+      "new-email":   "'$NEWEMAIL'",
+      "nick": "'$NICK'",
+      "password": "12345"
+   }'
+done
 
 ###############################################
 

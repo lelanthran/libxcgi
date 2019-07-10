@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <inttypes.h>
 
 #include "xcgi.h"
 #include "xcgi_json.h"
@@ -242,6 +243,9 @@ static bool incoming_init (void)
    memset (input, 0, content_length + 1);
 
    size_t nbytes = fread (input, 1, content_length, xcgi_stdin);
+
+   fwrite (input, 1, 1, stdout);
+
    if (nbytes!=content_length) {
       free (input);
       return false;
@@ -445,15 +449,31 @@ static bool endpoint_USER_NEW (ds_hmap_t *jfields,
 
    uint64_t new_id = sqldb_auth_user_create (xcgi_db, email, nick, password);
 
+   *status_code = 200;
+
    if (new_id==(uint64_t)-1) {
       *error_code = EPUBSUB_RESOURCE_EXISTS;
-      *status_code = 200;
       return false;
    }
 
-   jfields = jfields;
+   char tmp[22];
+   snprintf (tmp, sizeof tmp, "%" PRIu64, new_id);
+   if (!(set_sfield (jfields, "user-id", tmp))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
+   if (!(set_sfield (jfields, "email", email))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
+   if (!(set_sfield (jfields, "nick", nick))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
    *error_code = EPUBSUB_SUCCESS;
-   *status_code = 200;
    return true;
 }
 
