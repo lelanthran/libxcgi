@@ -39,8 +39,8 @@ extern "C" {
     * example.
     * }
     */
-   const char *xcgi_jsonv (const char *json_src, const char *field, va_list ap);
-   const char *xcgi_json (const char *json_src, const char *field, ...);
+   const char *xcgi_json_vfind (const char *json_src, const char *field, va_list ap);
+   const char *xcgi_json_find (const char *json_src, const char *field, ...);
 
    /* ********************************************************************
     * Returns the length of the string as interpreted as a JSON value. See

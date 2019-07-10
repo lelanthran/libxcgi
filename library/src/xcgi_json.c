@@ -65,7 +65,7 @@ static const char *find_value (const char *field)
    return ret;
 }
 
-const char *xcgi_jsonv (const char *json_src, const char *field, va_list ap)
+const char *xcgi_json_vfind (const char *json_src, const char *field, va_list ap)
 {
    const char *begin = json_src;
 
@@ -80,12 +80,12 @@ const char *xcgi_jsonv (const char *json_src, const char *field, va_list ap)
    return NULL;
 }
 
-const char *xcgi_json (const char *json_src, const char *field, ...)
+const char *xcgi_json_find (const char *json_src, const char *field, ...)
 {
    va_list ap;
    va_start (ap, field);
 
-   const char *ret = xcgi_jsonv (json_src, field, ap);
+   const char *ret = xcgi_json_vfind (json_src, field, ap);
 
    va_end (ap);
    return ret;

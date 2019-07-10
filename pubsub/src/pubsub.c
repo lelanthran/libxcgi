@@ -253,7 +253,7 @@ static bool incoming_init (void)
 
    bool error = false;
    for (size_t i=0; i<sizeof g_incoming/sizeof g_incoming[0]; i++) {
-      const char *tmp = xcgi_json (input, g_incoming[i].name, NULL);
+      const char *tmp = xcgi_json_find (input, g_incoming[i].name, NULL);
       size_t len = xcgi_json_length (tmp);
       if (!(g_incoming[i].value = malloc (len + 1))) {
          error = true;
