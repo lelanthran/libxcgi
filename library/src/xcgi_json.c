@@ -25,7 +25,7 @@ static const char *find_field (const char *start, const char *field)
    size_t flen = strlen (field);
 
    while ((tmp = lstrchr (tmp, '"'))) {
-      if ((memcmp (++tmp, field, flen))==0) {
+      if ((strncmp (++tmp, field, flen))==0) {
          const char *end = lstrchr (tmp, '"');
          if (!end)
             continue;
