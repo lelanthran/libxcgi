@@ -137,9 +137,9 @@ done
 ###############################################
 
 call_cgi /user-list user-list.results '{
-   "emailPattern":      "*",
-   "nickPattern":       "*",
-   "idPattern":         "*"
+   "email-pattern":  "*",
+   "nick-pattern":   "*",
+   "id-pattern":     "*"
 }'
 
 ###############################################

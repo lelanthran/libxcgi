@@ -489,10 +489,69 @@ static bool endpoint_USER_RM (ds_hmap_t *jfields,
 static bool endpoint_USER_LIST (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
-   jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   status_code = status_code;
-   return false;
+   bool error = true;
+
+   const char *email_pat = incoming_find (FIELD_STR_EMAIL_PATTERN),
+              *nick_pat = incoming_find (FIELD_STR_NICK_PATTERN);
+
+   char **emails = NULL,
+        **nicks = NULL;
+   uint64_t nitems = 0,
+            *flags = NULL,
+            *ids = NULL;
+
+
+   char *epat = ds_str_chsubst (email_pat, '*', '%',   '?', '_',   0),
+        *npat = ds_str_chsubst (nick_pat,  '*', '%',   '?', '_',   0);
+
+   *status_code = 200;
+
+   if (!epat || !npat) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      goto errorexit;
+   }
+
+   if (!(sqldb_auth_user_find (xcgi_db, epat, npat,
+                                        &nitems,
+                                        &emails,
+                                        &nicks,
+                                        &flags,
+                                        &ids))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      goto errorexit;
+   }
+
+   for (size_t i=0; i<nitems; i++) {
+      if (emails) {
+         printf ("email %zu: [%s]\n", i, emails[i]);
+         free (emails[i]);
+         emails[i] = NULL;
+      }
+      if (nicks) {
+         printf ("nick %zu: [%s]\n", i, emails[i]);
+         free (nicks[i]);
+         nicks[i] = NULL;
+      }
+   }
+   error = false;
+
+errorexit:
+
+   free (epat);
+   free (npat);
+
+   free (flags);
+   free (ids);
+   for (size_t i=0; i<nitems; i++) {
+      if (emails)
+         free (emails[i]);
+      if (nicks)
+         free (nicks[i]);
+   }
+   free (emails);
+   free (nicks);
+
+   return !error;
 }
 
 static bool endpoint_USER_MOD (ds_hmap_t *jfields,
