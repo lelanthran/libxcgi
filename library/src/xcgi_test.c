@@ -108,7 +108,7 @@ int main (void)
    nqstrings = xcgi_qstrings_count ();
    if (!nqstrings) {
       fprintf (stderr, "No query strings, was expecting query strings\n");
-      goto errorexit;
+      // goto errorexit;
    }
 
    if (!xcgi_qstrings) {

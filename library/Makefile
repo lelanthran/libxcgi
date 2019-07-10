@@ -71,6 +71,7 @@ OUTDIRS=$(OUTLIB) $(OUTBIN) $(OUTOBS)
 # Declare the final outputs
 BINPROGS=\
 	$(OUTBIN)/xcgi_test$(EXE_EXT)\
+	$(OUTBIN)/xcgi_json_test$(EXE_EXT)\
 	$(OUTBIN)/xcgi_faker$(EXE_EXT)\
 	$(OUTBIN)/xcgi_gendata$(EXE_EXT)
 
@@ -86,6 +87,7 @@ STCLNK_NAME=$(OUTLIB)/lib$(PROJNAME).a
 # Declare the intermediate outputs
 BINOBS=\
 	$(OUTOBS)/xcgi_test.o\
+	$(OUTOBS)/xcgi_json_test.o\
 	$(OUTOBS)/xcgi_faker.o\
 	$(OUTOBS)/xcgi_gendata.o\
 
