@@ -496,12 +496,25 @@ static bool endpoint_USER_LIST (ds_hmap_t *jfields,
 }
 
 static bool endpoint_USER_MOD (ds_hmap_t *jfields,
-                            int *error_code, int *status_code)
+                               int *error_code, int *status_code)
 {
+   const char *old_email = incoming_find (FIELD_STR_OLD_EMAIL),
+              *new_email = incoming_find (FIELD_STR_NEW_EMAIL),
+              *nick = incoming_find (FIELD_STR_NICK),
+              *password = incoming_find (FIELD_STR_PASSWORD);
+
    jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   status_code = status_code;
-   return false;
+
+   *status_code = 200;
+
+   if (!(sqldb_auth_user_mod (xcgi_db, old_email, new_email, nick, password))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
+   *error_code = 0;
+
+   return true;
 }
 
 static bool endpoint_GROUP_NEW (ds_hmap_t *jfields,
