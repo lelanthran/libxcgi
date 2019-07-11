@@ -150,6 +150,7 @@ POST /user-list
    "nick-pattern":      "Pattern to find for for nicks",
    "resultset-emails":  "true", // set to false to exclude emails
    "resultset-nicks":   "true", // set to false to exclude nicks
+   "resultset-flags":   "true", // set to false to exclude flags
    "resultset-ids":     "true", // set to false to exclude ids
 }
 ```
@@ -162,6 +163,7 @@ RETURNS:
    "resultset-count":   64,               // Number of users in the results
    "resultset-emails":  [email1, ...]
    "resultset-nicks":   [nick1, ...]
+   "resultset-flags":   [flag1, ...]
    "resultset-ids":     [id1, ...]
 }
 ```
@@ -192,6 +194,8 @@ RETURNS:
 ```javascript
 {
    "group-id":     "ID of created group"
+   "group-name":   "Name of created group",
+   "group-description": "Description created group",
 }
 ```
 
@@ -212,6 +216,7 @@ POST /group-mod
 {
    "old-group-name":    "Current group name",
    "new-group-name":    "New group name"
+   "group-description": "New group description"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.

@@ -82,22 +82,25 @@ uint64_t    g_perms = 0;
 #define FIELD_IDX_NICK_PATTERN          6
 #define FIELD_IDX_ID_PATTERN            7
 #define FIELD_IDX_RESULTSET_COUNT       8
-#define FIELD_IDX_RESULTSET             9
-#define FIELD_IDX_OLD_EMAIL             10
-#define FIELD_IDX_NEW_EMAIL             11
-#define FIELD_IDX_GROUP_NAME            12
-#define FIELD_IDX_GROUP_DESCRIPTION     13
-#define FIELD_IDX_GROUP_ID              14
-#define FIELD_IDX_OLD_GROUP_NAME        15
-#define FIELD_IDX_NEW_GROUP_NAME        16
-#define FIELD_IDX_GROUP_PATTERN         17
-#define FIELD_IDX_PERMS                 18
-#define FIELD_IDX_RESOURCE              19
-#define FIELD_IDX_QUEUE_NAME            20
-#define FIELD_IDX_QUEUE_DESCRIPTION     21
-#define FIELD_IDX_QUEUE_ID              22
-#define FIELD_IDX_MESSAGE_ID            23
-#define FIELD_IDX_MESSAGE_IDS           24
+#define FIELD_IDX_RESULTSET_EMAILS      9
+#define FIELD_IDX_RESULTSET_NICKS       10
+#define FIELD_IDX_RESULTSET_FLAGS       11
+#define FIELD_IDX_RESULTSET_IDS         12
+#define FIELD_IDX_OLD_EMAIL             13
+#define FIELD_IDX_NEW_EMAIL             14
+#define FIELD_IDX_GROUP_NAME            15
+#define FIELD_IDX_GROUP_DESCRIPTION     16
+#define FIELD_IDX_GROUP_ID              17
+#define FIELD_IDX_OLD_GROUP_NAME        18
+#define FIELD_IDX_NEW_GROUP_NAME        19
+#define FIELD_IDX_GROUP_PATTERN         20
+#define FIELD_IDX_PERMS                 21
+#define FIELD_IDX_RESOURCE              22
+#define FIELD_IDX_QUEUE_NAME            23
+#define FIELD_IDX_QUEUE_DESCRIPTION     24
+#define FIELD_IDX_QUEUE_ID              25
+#define FIELD_IDX_MESSAGE_ID            26
+#define FIELD_IDX_MESSAGE_IDS           27
 
 #define BIT_EMAIL                ((uint64_t)(1 << FIELD_IDX_EMAIL))
 #define BIT_PASSWORD             ((uint64_t)(1 << FIELD_IDX_PASSWORD))
@@ -108,7 +111,10 @@ uint64_t    g_perms = 0;
 #define BIT_NICK_PATTERN         ((uint64_t)(1 << FIELD_IDX_NICK_PATTERN))
 #define BIT_ID_PATTERN           ((uint64_t)(1 << FIELD_IDX_ID_PATTERN))
 #define BIT_RESULTSET_COUNT      ((uint64_t)(1 << FIELD_IDX_RESULTSET_COUNT))
-#define BIT_RESULTSET            ((uint64_t)(1 << FIELD_IDX_RESULTSET))
+#define BIT_RESULTSET_EMAILS     ((uint64_t)(1 << FIELD_IDX_RESULTSET_EMAILS))
+#define BIT_RESULTSET_NICKS      ((uint64_t)(1 << FIELD_IDX_RESULTSET_NICKS))
+#define BIT_RESULTSET_FLAGS      ((uint64_t)(1 << FIELD_IDX_RESULTSET_FLAGS))
+#define BIT_RESULTSET_IDS        ((uint64_t)(1 << FIELD_IDX_RESULTSET_IDS))
 #define BIT_OLD_EMAIL            ((uint64_t)(1 << FIELD_IDX_OLD_EMAIL))
 #define BIT_NEW_EMAIL            ((uint64_t)(1 << FIELD_IDX_NEW_EMAIL))
 #define BIT_GROUP_NAME           ((uint64_t)(1 << FIELD_IDX_GROUP_NAME))
@@ -135,12 +141,12 @@ uint64_t    g_perms = 0;
 
 #define ARG_USER_NEW               (BIT_EMAIL | BIT_NICK | BIT_PASSWORD)
 #define ARG_USER_RM                (BIT_EMAIL)
-#define ARG_USER_LIST              (BIT_EMAIL_PATTERN | BIT_NICK_PATTERN | BIT_ID_PATTERN)
+#define ARG_USER_LIST              (BIT_EMAIL_PATTERN | BIT_NICK_PATTERN | BIT_ID_PATTERN | BIT_RESULTSET_EMAILS | BIT_RESULTSET_NICKS | BIT_RESULTSET_IDS)
 #define ARG_USER_MOD               (BIT_OLD_EMAIL | BIT_NEW_EMAIL | BIT_NICK | BIT_PASSWORD)
 
 #define ARG_GROUP_NEW              (BIT_GROUP_NAME | BIT_GROUP_DESCRIPTION)
 #define ARG_GROUP_RM               (BIT_GROUP_NAME)
-#define ARG_GROUP_MOD              (BIT_OLD_GROUP_NAME | BIT_NEW_GROUP_NAME)
+#define ARG_GROUP_MOD              (BIT_OLD_GROUP_NAME | BIT_NEW_GROUP_NAME | BIT_GROUP_DESCRIPTION)
 #define ARG_GROUP_ADDUSER          (BIT_GROUP_NAME | BIT_EMAIL)
 #define ARG_GROUP_RMUSER           (BIT_GROUP_NAME | BIT_EMAIL)
 #define ARG_GROUP_LIST             (BIT_GROUP_PATTERN)
@@ -225,9 +231,13 @@ static void incoming_shutdown (void)
 
 static bool incoming_valid (uint64_t mask)
 {
-   for (size_t i=0; i<sizeof mask; i++) {
+   size_t masklen = sizeof mask * 8;
+   if (masklen > (sizeof g_incoming / sizeof g_incoming[0]))
+      masklen = (sizeof g_incoming / sizeof g_incoming[0]);
+
+   for (size_t i=0; i<masklen; i++) {
       if (((uint64_t)1 << i) & mask) {
-         if (!g_incoming[i].value)
+         if (!g_incoming[i].value || !g_incoming[i].value[0])
             return false;
       }
    }
@@ -688,10 +698,38 @@ static bool endpoint_USER_MOD (ds_hmap_t *jfields,
 static bool endpoint_GROUP_NEW (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
-   jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   status_code = status_code;
-   return false;
+   const char *group_name = incoming_find (FIELD_STR_GROUP_NAME),
+              *group_description = incoming_find (FIELD_STR_GROUP_DESCRIPTION);
+
+   uint64_t new_id = sqldb_auth_group_create (xcgi_db, group_name,
+                                                       group_description);
+
+   *status_code = 200;
+
+   if (new_id==(uint64_t)-1) {
+      *error_code = EPUBSUB_RESOURCE_EXISTS;
+      return false;
+   }
+
+   char tmp[22];
+   snprintf (tmp, sizeof tmp, "%" PRIu64, new_id);
+   if (!(set_sfield (jfields, FIELD_STR_GROUP_ID, tmp))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
+   if (!(set_sfield (jfields, FIELD_STR_GROUP_NAME, group_name))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
+   if (!(set_sfield (jfields, FIELD_STR_GROUP_DESCRIPTION, group_description))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
+   *error_code = EPUBSUB_SUCCESS;
+   return true;
 }
 
 static bool endpoint_GROUP_RM (ds_hmap_t *jfields,
@@ -706,10 +744,22 @@ static bool endpoint_GROUP_RM (ds_hmap_t *jfields,
 static bool endpoint_GROUP_MOD (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
+   const char *old_name = incoming_find (FIELD_STR_OLD_GROUP_NAME),
+              *new_name = incoming_find (FIELD_STR_NEW_GROUP_NAME),
+              *description = incoming_find (FIELD_STR_GROUP_DESCRIPTION);
+
    jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   status_code = status_code;
-   return false;
+
+   *status_code = 200;
+
+   if (!(sqldb_auth_group_mod (xcgi_db, old_name, new_name, description))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
+   *error_code = 0;
+
+   return true;
 }
 
 static bool endpoint_GROUP_ADDUSER (ds_hmap_t *jfields,

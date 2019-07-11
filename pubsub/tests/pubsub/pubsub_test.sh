@@ -57,7 +57,7 @@ function call_cgi () {
    echo $3 > tmp.input
    echo "Calling '$PATH_INFO'"
 # I uncomment this snippet when I need to debug a particular test.
-#  if [ "$2" == "user-list.results" ]; then
+#  if [ "$2" == "group-new-3.results" ]; then
 #     cat tmp.input
 #     gdb pubsub.elf
 #     exit 0;
@@ -94,6 +94,19 @@ export RMNAMES='
    five
    seven
    ten'
+
+export LGROUPS='
+   Group-One
+   Group-Two
+   Group-Three
+   Group-Four
+   Group-Five
+   Group-Six
+   Group-Seven
+   Group-Eight
+   Group-Nine
+   Group-Ten
+'
 
 ###############################################
 
@@ -148,17 +161,22 @@ call_cgi /user-list user-list.results '{
 
 ###############################################
 
-call_cgi /group-new group-new-1.results '{
-   "name": "Group1",
-}'
+for X in $LGROUPS; do
+   call_cgi /group-new group-new-$X.results '{
+      "group-name": "m'$X'",
+      "group-description": "m'$X' description.",
+   }'
+done
 
-call_cgi /group-new group-new-2.results '{
-   "name": "Group2",
-}'
+###############################################
 
-call_cgi /group-new group-new-3.results '{
-   "name": "Group3",
-}'
+for X in $LGROUPS; do
+   call_cgi /group-mod group-mod-$X.results '{
+      "old-group-name": "m'$X'",
+      "new-group-name": "'$X'",
+      "group-description": "'$X' description.",
+   }'
+done
 
 ###############################################
 
