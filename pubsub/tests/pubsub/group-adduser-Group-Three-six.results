@@ -1,6 +1,4 @@
-{Found email: ["six@example.com"]
-Found group-name: ["Group-Three"]
-HTTP/1.1 200 OK
+{HTTP/1.1 200 OK
 CONTENT_TYPE: application/json
 
 
