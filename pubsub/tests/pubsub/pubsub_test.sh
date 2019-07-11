@@ -57,7 +57,7 @@ function call_cgi () {
    echo $3 > tmp.input
    echo "Calling '$PATH_INFO'"
 # I uncomment this snippet when I need to debug a particular test.
-#  if [ "$2" == "user-new-mone.results" ]; then
+#  if [ "$2" == "user-list.results" ]; then
 #     cat tmp.input
 #     gdb pubsub.elf
 #     exit 0;
@@ -139,7 +139,11 @@ done
 call_cgi /user-list user-list.results '{
    "email-pattern":  "*",
    "nick-pattern":   "*",
-   "id-pattern":     "*"
+   "id-pattern":     "*",
+   "resultset-emails":  "true",
+   "resultset-nicks":   "true",
+   "resultset-flags":   "true",
+   "resultset-ids":     "true"
 }'
 
 ###############################################

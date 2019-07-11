@@ -148,7 +148,9 @@ POST /user-list
 {
    "email-pattern":     "Pattern to find for for emails",
    "nick-pattern":      "Pattern to find for for nicks",
-   "id-pattern":        "Pattern to find for for IDs",
+   "resultset-emails":  "true", // set to false to exclude emails
+   "resultset-nicks":   "true", // set to false to exclude nicks
+   "resultset-ids":     "true", // set to false to exclude ids
 }
 ```
 RETURNS:
@@ -158,7 +160,9 @@ RETURNS:
    "nick-pattern":      "Pattern matched against nicknames",
    "id-pattern":        "Pattern matched against IDs",
    "resultset-count":   64,               // Number of users in the results
-   "resultset":         [email1, ...]
+   "resultset-emails":  [email1, ...]
+   "resultset-nicks":   [nick1, ...]
+   "resultset-ids":     [id1, ...]
 }
 ```
 

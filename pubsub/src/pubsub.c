@@ -51,7 +51,10 @@ uint64_t    g_perms = 0;
 #define FIELD_STR_NICK_PATTERN          ("nick-pattern")
 #define FIELD_STR_ID_PATTERN            ("id-pattern")
 #define FIELD_STR_RESULTSET_COUNT       ("resultset-count")
-#define FIELD_STR_RESULTSET             ("resultset")
+#define FIELD_STR_RESULTSET_EMAILS      ("resultset-emails")
+#define FIELD_STR_RESULTSET_NICKS       ("resultset-nicks")
+#define FIELD_STR_RESULTSET_FLAGS       ("resultset-flags")
+#define FIELD_STR_RESULTSET_IDS         ("resultset-ids")
 #define FIELD_STR_OLD_EMAIL             ("old-email")
 #define FIELD_STR_NEW_EMAIL             ("new-email")
 #define FIELD_STR_GROUP_NAME            ("group-name")
@@ -67,6 +70,8 @@ uint64_t    g_perms = 0;
 #define FIELD_STR_QUEUE_ID              ("queue-id")
 #define FIELD_STR_MESSAGE_ID            ("message-id")
 #define FIELD_STR_MESSAGE_IDS           ("message-ids")
+#define FIELD_STR_ERROR_MESSAGE         ("error-message")
+#define FIELD_STR_ERROR_CODE            ("error-code")
 
 #define FIELD_IDX_EMAIL                 0
 #define FIELD_IDX_PASSWORD              1
@@ -177,7 +182,10 @@ static struct incoming_value_t g_incoming[] = {
    { FIELD_STR_NICK_PATTERN,        TYPE_STRING, NULL, 0 },
    { FIELD_STR_ID_PATTERN,          TYPE_STRING, NULL, 0 },
    { FIELD_STR_RESULTSET_COUNT,     TYPE_STRING, NULL, 0 },
-   { FIELD_STR_RESULTSET,           TYPE_STRING, NULL, 0 },
+   { FIELD_STR_RESULTSET_EMAILS,    TYPE_STRING, NULL, 0 },
+   { FIELD_STR_RESULTSET_NICKS,     TYPE_STRING, NULL, 0 },
+   { FIELD_STR_RESULTSET_FLAGS,     TYPE_STRING, NULL, 0 },
+   { FIELD_STR_RESULTSET_IDS,       TYPE_STRING, NULL, 0 },
    { FIELD_STR_OLD_EMAIL,           TYPE_STRING, NULL, 0 },
    { FIELD_STR_NEW_EMAIL,           TYPE_STRING, NULL, 0 },
    { FIELD_STR_GROUP_NAME,          TYPE_STRING, NULL, 0 },
@@ -193,6 +201,8 @@ static struct incoming_value_t g_incoming[] = {
    { FIELD_STR_QUEUE_ID,            TYPE_STRING, NULL, 0 },
    { FIELD_STR_MESSAGE_ID,          TYPE_STRING, NULL, 0 },
    { FIELD_STR_MESSAGE_IDS,         TYPE_STRING, NULL, 0 },
+   { FIELD_STR_ERROR_MESSAGE,       TYPE_STRING, NULL, 0 },
+   { FIELD_STR_ERROR_CODE,          TYPE_STRING, NULL, 0 },
 };
 
 static const char *incoming_find (const char *name)
@@ -284,7 +294,7 @@ static bool set_field (ds_hmap_t *hm, const char *name, const void *value,
                        int type)
 {
    if (!hm || !name)
-      return false;
+      return true;
 
    char *tmp = NULL;
    size_t nbytes = 0;
@@ -314,6 +324,60 @@ static bool set_sfield (ds_hmap_t *hm, const char *name, const char *value)
 static bool set_ifield (ds_hmap_t *hm, const char *name, int value)
 {
    return set_field (hm, name, (void *)(intptr_t)value, TYPE_INT);
+}
+
+static char *make_sarray (const char **src, size_t len)
+{
+   char *ret = NULL;
+
+   size_t slen = 3;  // "[]"
+   for (size_t i=0; i<len; i++) {
+      slen += strlen (src[i]) + 3; // "s, "
+   }
+
+   if (!(ret = malloc (slen + 1)))
+      return NULL;
+
+   strcpy (ret, "[");
+
+   for (size_t i=0; i<len; i++) {
+      strcat (ret, src[i]);
+      if (i<(len - 1))
+         strcat (ret, ", ");
+   }
+
+   strcat (ret, "]");
+
+   return ret;
+}
+
+static char *make_iarray (uint64_t *src, size_t len)
+{
+   char *ret = NULL;
+
+   size_t slen = 3;  // "[]"
+   for (size_t i=0; i<len; i++) {
+      char tmp[22];
+      snprintf (tmp, sizeof tmp, "%" PRIu64, src[i]);
+      slen += strlen (tmp) + 3; // "s, "
+   }
+
+   if (!(ret = malloc (slen + 1)))
+      return NULL;
+
+   strcpy (ret, "[");
+
+   for (size_t i=0; i<len; i++) {
+      char tmp[22];
+      snprintf (tmp, sizeof tmp, "%" PRIu64, src[i]);
+      strcat (ret, tmp);
+      if (i<(len - 1))
+         strcat (ret, ", ");
+   }
+
+   strcat (ret, "]");
+
+   return ret;
 }
 
 static void print_json (ds_hmap_t *hm)
@@ -458,17 +522,17 @@ static bool endpoint_USER_NEW (ds_hmap_t *jfields,
 
    char tmp[22];
    snprintf (tmp, sizeof tmp, "%" PRIu64, new_id);
-   if (!(set_sfield (jfields, "user-id", tmp))) {
+   if (!(set_sfield (jfields, FIELD_STR_USER_ID, tmp))) {
       *error_code = EPUBSUB_INTERNAL_ERROR;
       return false;
    }
 
-   if (!(set_sfield (jfields, "email", email))) {
+   if (!(set_sfield (jfields, FIELD_STR_EMAIL, email))) {
       *error_code = EPUBSUB_INTERNAL_ERROR;
       return false;
    }
 
-   if (!(set_sfield (jfields, "nick", nick))) {
+   if (!(set_sfield (jfields, FIELD_STR_NICK, nick))) {
       *error_code = EPUBSUB_INTERNAL_ERROR;
       return false;
    }
@@ -492,17 +556,30 @@ static bool endpoint_USER_LIST (ds_hmap_t *jfields,
    bool error = true;
 
    const char *email_pat = incoming_find (FIELD_STR_EMAIL_PATTERN),
-              *nick_pat = incoming_find (FIELD_STR_NICK_PATTERN);
+              *nick_pat = incoming_find (FIELD_STR_NICK_PATTERN),
+              *rqst_emails = incoming_find (FIELD_STR_RESULTSET_EMAILS),
+              *rqst_nicks = incoming_find (FIELD_STR_RESULTSET_NICKS),
+              *rqst_flags = incoming_find (FIELD_STR_RESULTSET_FLAGS),
+              *rqst_ids = incoming_find (FIELD_STR_RESULTSET_IDS);
 
    char **emails = NULL,
-        **nicks = NULL;
+        **nicks = NULL,
+       ***ptr_emails = NULL,
+       ***ptr_nicks = NULL;
+
    uint64_t nitems = 0,
             *flags = NULL,
-            *ids = NULL;
+            *ids = NULL,
+           **ptr_flags = NULL,
+           **ptr_ids = NULL;
 
+   char *res_emails = NULL;
+   char *res_nicks = NULL;
+   char *res_flags = NULL;
+   char *res_ids = NULL;
 
-   char *epat = ds_str_chsubst (email_pat, '*', '%',   '?', '_',   0),
-        *npat = ds_str_chsubst (nick_pat,  '*', '%',   '?', '_',   0);
+   char *epat = ds_str_chsubst (email_pat, /**/ '*', '%', /**/ '?', '_',   0),
+        *npat = ds_str_chsubst (nick_pat,  /**/ '*', '%', /**/ '?', '_',   0);
 
    *status_code = 200;
 
@@ -511,28 +588,55 @@ static bool endpoint_USER_LIST (ds_hmap_t *jfields,
       goto errorexit;
    }
 
+#define CHECK_TRUE(x)      (x && (((strcasecmp (x, "true"))==0) ||\
+                                  (strcasecmp (x, "\"true\""))==0))
+
+   if ((CHECK_TRUE (rqst_emails)))
+      ptr_emails = &emails;
+
+   if ((CHECK_TRUE (rqst_nicks)))
+      ptr_nicks = &nicks;
+
+   if ((CHECK_TRUE (rqst_flags)))
+      ptr_flags = &flags;
+
+   if ((CHECK_TRUE (rqst_ids)))
+      ptr_ids = &ids;
+
+#undef CHECK_TRUE
+
    if (!(sqldb_auth_user_find (xcgi_db, epat, npat,
                                         &nitems,
-                                        &emails,
-                                        &nicks,
-                                        &flags,
-                                        &ids))) {
+                                        ptr_emails,
+                                        ptr_nicks,
+                                        ptr_flags,
+                                        ptr_ids))) {
       *error_code = EPUBSUB_INTERNAL_ERROR;
       goto errorexit;
    }
 
-   for (size_t i=0; i<nitems; i++) {
-      if (emails) {
-         printf ("email %zu: [%s]\n", i, emails[i]);
-         free (emails[i]);
-         emails[i] = NULL;
-      }
-      if (nicks) {
-         printf ("nick %zu: [%s]\n", i, emails[i]);
-         free (nicks[i]);
-         nicks[i] = NULL;
-      }
+   res_emails = make_sarray ((const char **)emails, nitems);
+   res_nicks = make_sarray ((const char **)nicks, nitems);
+   res_flags = make_iarray (flags, nitems);
+   res_ids = make_iarray (ids, nitems);
+
+   if ((emails && !res_emails) ||
+       (nicks && !res_nicks)   ||
+       (flags && !res_flags)   ||
+       (ids && !res_ids)) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      goto errorexit;
    }
+
+   if (!(set_ifield (jfields, FIELD_STR_RESULTSET_COUNT, nitems)) ||
+       !(set_sfield (jfields, FIELD_STR_RESULTSET_EMAILS, res_emails)) ||
+       !(set_sfield (jfields, FIELD_STR_RESULTSET_NICKS, res_nicks)) ||
+       !(set_sfield (jfields, FIELD_STR_RESULTSET_FLAGS, res_flags)) ||
+       !(set_sfield (jfields, FIELD_STR_RESULTSET_IDS, res_ids))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      goto errorexit;
+   }
+
    error = false;
 
 errorexit:
@@ -550,6 +654,11 @@ errorexit:
    }
    free (emails);
    free (nicks);
+
+   free (res_emails);
+   free (res_nicks);
+   free (res_flags);
+   free (res_ids);
 
    return !error;
 }
@@ -962,12 +1071,12 @@ errorexit:
 
    error_message = pubsub_error_msg (error_code);
 
-   if (!(set_ifield (jfields, "error-code", error_code))) {
+   if (!(set_ifield (jfields, FIELD_STR_ERROR_CODE, error_code))) {
       PROG_ERR ("Failed setting the error-code field\n");
       return EXIT_FAILURE;
    }
 
-   if (!(set_sfield (jfields, "error-message", error_message))) {
+   if (!(set_sfield (jfields, FIELD_STR_ERROR_MESSAGE, error_message))) {
       PROG_ERR ("Failed setting the error-message field\n");
       return EXIT_FAILURE;
    }
