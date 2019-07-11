@@ -1,0 +1,11 @@
+{HTTP/1.1 200 OK
+CONTENT_TYPE: application/json
+
+
+{
+"error-code": 0,
+"email": "mseven@example.com",
+"error-message": "Success",
+"user-id": "8",
+"nick": "User-mseven"
+}

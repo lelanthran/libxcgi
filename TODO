@@ -7,4 +7,4 @@
 4. Create the skeleton pubsub.cgi application. For now simply accepting
    and responding to the API (even if responding with junk data) is
    enough.
-      - Fix the user-list endpoint (work in progress).
+      - Start working on the group endpoints.

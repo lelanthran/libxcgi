@@ -1,0 +1,8 @@
+{HTTP/1.1 501 Not Implemented
+CONTENT_TYPE: application/json
+
+
+{
+"error-code": 256,
+"error-message": "Function not implemented"
+}
