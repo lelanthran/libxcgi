@@ -121,7 +121,7 @@ uint64_t    g_perms = 0;
 
 #define ARG_USER_NEW               (BIT_EMAIL | BIT_NICK | BIT_PASSWORD)
 #define ARG_USER_RM                (BIT_EMAIL)
-#define ARG_USER_LIST              (BIT_EMAIL_PATTERN | BIT_NICK_PATTERN | BIT_ID_PATTERN | BIT_RESULTSET_EMAILS | BIT_RESULTSET_NICKS | BIT_RESULTSET_IDS)
+#define ARG_USER_LIST              (BIT_EMAIL_PATTERN | BIT_NICK_PATTERN | BIT_ID_PATTERN | BIT_RESULTSET_EMAILS | BIT_RESULTSET_NICKS | BIT_RESULTSET_FLAGS | BIT_RESULTSET_IDS)
 #define ARG_USER_MOD               (BIT_OLD_EMAIL | BIT_NEW_EMAIL | BIT_NICK | BIT_PASSWORD)
 
 #define ARG_GROUP_NEW              (BIT_GROUP_NAME | BIT_GROUP_DESCRIPTION)
@@ -130,7 +130,7 @@ uint64_t    g_perms = 0;
 #define ARG_GROUP_ADDUSER          (BIT_GROUP_NAME | BIT_EMAIL)
 #define ARG_GROUP_RMUSER           (BIT_GROUP_NAME | BIT_EMAIL)
 #define ARG_GROUP_LIST             (BIT_NAME_PATTERN | BIT_DESCRIPTION_PATTERN | BIT_RESULTSET_NAMES | BIT_RESULTSET_DESCRIPTIONS | BIT_RESULTSET_IDS)
-#define ARG_GROUP_MEMBERS          (BIT_GROUP_NAME)
+#define ARG_GROUP_MEMBERS          (BIT_GROUP_NAME | BIT_RESULTSET_EMAILS | BIT_RESULTSET_NICKS | BIT_RESULTSET_FLAGS |  BIT_RESULTSET_IDS)
 
 #define ARG_PERMS_GRANT_USER       (BIT_EMAIL | BIT_PERMS | BIT_RESOURCE)
 #define ARG_PERMS_REVOKE_USER      (BIT_EMAIL | BIT_PERMS | BIT_RESOURCE)
@@ -334,6 +334,9 @@ static bool set_afield (ds_hmap_t *hm, const char *name, const char * value)
 static char *make_sarray (const char **src, size_t len)
 {
    char *ret = NULL;
+
+   if (!src)
+      return NULL;
 
    size_t slen = 3;  // "[]"
    for (size_t i=0; i<len; i++) {
@@ -891,10 +894,102 @@ errorexit:
 static bool endpoint_GROUP_MEMBERS (ds_hmap_t *jfields,
                                     int *error_code, int *status_code)
 {
-   jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   status_code = status_code;
-   return false;
+   bool error = true;
+
+   const char *group_name = incoming_find (FIELD_STR_GROUP_NAME),
+              *rqst_emails = incoming_find (FIELD_STR_RESULTSET_EMAILS),
+              *rqst_nicks = incoming_find (FIELD_STR_RESULTSET_NICKS),
+              *rqst_flags = incoming_find (FIELD_STR_RESULTSET_FLAGS),
+              *rqst_ids = incoming_find (FIELD_STR_RESULTSET_IDS);
+
+   char **emails = NULL,
+        **nicks = NULL,
+       ***ptr_emails = NULL,
+       ***ptr_nicks = NULL;
+
+   uint64_t nitems = 0,
+            *flags = NULL,
+            *ids = NULL,
+           **ptr_flags = NULL,
+           **ptr_ids = NULL;
+
+   char *res_emails = NULL;
+   char *res_nicks = NULL;
+   char *res_flags = NULL;
+   char *res_ids = NULL;
+
+   *status_code = 200;
+
+#define CHECK_TRUE(x)      (x && (((strcasecmp (x, "true"))==0) ||\
+                                  (strcasecmp (x, "\"true\""))==0))
+
+   if ((CHECK_TRUE (rqst_emails)))
+      ptr_emails = &emails;
+
+   if ((CHECK_TRUE (rqst_nicks)))
+      ptr_nicks = &nicks;
+
+   if ((CHECK_TRUE (rqst_flags)))
+      ptr_flags = &flags;
+
+   if ((CHECK_TRUE (rqst_ids)))
+      ptr_ids = &ids;
+
+#undef CHECK_TRUE
+
+   if (!(sqldb_auth_group_members (xcgi_db, group_name,
+                                            &nitems,
+                                            ptr_emails,
+                                            ptr_nicks,
+                                            ptr_flags,
+                                            ptr_ids))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      goto errorexit;
+   }
+
+   res_emails = make_sarray ((const char **)emails, nitems);
+   res_nicks = make_sarray ((const char **)nicks, nitems);
+   res_flags = make_iarray (flags, nitems);
+   res_ids = make_iarray (ids, nitems);
+
+   if ((emails && !res_emails) ||
+       (nicks && !res_nicks)   ||
+       (flags && !res_flags)   ||
+       (ids && !res_ids)) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      goto errorexit;
+   }
+
+   if (!(set_ifield (jfields, FIELD_STR_RESULTSET_COUNT, nitems)) ||
+       !(set_afield (jfields, FIELD_STR_RESULTSET_EMAILS, res_emails)) ||
+       !(set_afield (jfields, FIELD_STR_RESULTSET_NICKS, res_nicks)) ||
+       !(set_afield (jfields, FIELD_STR_RESULTSET_FLAGS, res_flags)) ||
+       !(set_afield (jfields, FIELD_STR_RESULTSET_IDS, res_ids))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      goto errorexit;
+   }
+
+   error = false;
+
+errorexit:
+
+   free (flags);
+   free (ids);
+   for (size_t i=0; i<nitems; i++) {
+      if (emails)
+         free (emails[i]);
+      if (nicks)
+         free (nicks[i]);
+   }
+   free (emails);
+   free (nicks);
+
+   free (res_emails);
+   free (res_nicks);
+   free (res_flags);
+   free (res_ids);
+
+   return !error;
 }
 
 static bool endpoint_PERMS_GRANT_USER (ds_hmap_t *jfields,

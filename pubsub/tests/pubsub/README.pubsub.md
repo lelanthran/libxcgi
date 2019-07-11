@@ -270,15 +270,22 @@ RETURNS:
 ```javascript
 POST /group-members
 {
-   "group-name":     "Name of group"
+   "group-name":        "Name of group"
+   "resultset-emails":  "true", // set to false to exclude emails
+   "resultset-nicks":   "true", // set to false to exclude nicks
+   "resultset-flags":   "true", // set to false to exclude flags
+   "resultset-ids":     "true", // set to false to exclude ids
 }
 ```
 RETURNS:
 ```javascript
 {
    "group-name":        "Name of group",
-   "resultset-count":   64,               // Number of groups in the results
-   "resultset":         [group1, ...]
+   "resultset-count":   64,               // Number of users in the results
+   "resultset-emails":  [email1, ...]
+   "resultset-nicks":   [nick1, ...]
+   "resultset-flags":   [flag1, ...]
+   "resultset-ids":     [id1, ...]
 }
 ```
 
