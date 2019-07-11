@@ -18,6 +18,7 @@
 // Used to marshall json fields.
 #define TYPE_STRING        (1)
 #define TYPE_INT           (2)
+#define TYPE_ARRAY         (3)
 
 
 // ErrorReportingMadeEasy(tm)
@@ -128,7 +129,7 @@ uint64_t    g_perms = 0;
 #define ARG_GROUP_MOD              (BIT_OLD_GROUP_NAME | BIT_NEW_GROUP_NAME | BIT_GROUP_DESCRIPTION)
 #define ARG_GROUP_ADDUSER          (BIT_GROUP_NAME | BIT_EMAIL)
 #define ARG_GROUP_RMUSER           (BIT_GROUP_NAME | BIT_EMAIL)
-#define ARG_GROUP_LIST             (BIT_NAME_PATTERN | BIT_DESCRIPTION_PATTERN | BIT_RESULTSET_NAMES | BIT_RESULTSET_DESCRIPTIONS)
+#define ARG_GROUP_LIST             (BIT_NAME_PATTERN | BIT_DESCRIPTION_PATTERN | BIT_RESULTSET_NAMES | BIT_RESULTSET_DESCRIPTIONS | BIT_RESULTSET_IDS)
 #define ARG_GROUP_MEMBERS          (BIT_GROUP_NAME)
 
 #define ARG_PERMS_GRANT_USER       (BIT_EMAIL | BIT_PERMS | BIT_RESOURCE)
@@ -219,7 +220,8 @@ static bool incoming_valid (uint64_t mask)
 
    for (size_t i=0; i<masklen; i++) {
       if (((uint64_t)1 << i) & mask) {
-         if (!g_incoming[i].value || !g_incoming[i].value[0])
+         // if (!g_incoming[i].value || !g_incoming[i].value[0])
+         if (!g_incoming[i].value)
             return false;
       }
    }
@@ -256,6 +258,9 @@ static bool incoming_init (void)
    bool error = false;
    for (size_t i=0; i<sizeof g_incoming/sizeof g_incoming[0]; i++) {
       const char *tmp = xcgi_json_find (input, g_incoming[i].name, NULL);
+      if (!tmp)
+         continue;
+
       size_t len = xcgi_json_length (tmp);
       if (!(g_incoming[i].value = malloc (len + 1))) {
          error = true;
@@ -263,6 +268,7 @@ static bool incoming_init (void)
       }
       strncpy (g_incoming[i].value, tmp, len);
       g_incoming[i].value[len] = 0;
+      printf ("Found %s: [%s]\n", g_incoming[i].name, g_incoming[i].value);
 
       if (g_incoming[i].value[0]=='"') {
          memmove (&g_incoming[i].value[0], &g_incoming[i].value[1], len);
@@ -297,6 +303,9 @@ static bool set_field (ds_hmap_t *hm, const char *name, const void *value,
    if (type==TYPE_INT)
       nbytes = ds_str_printf (&tmp, "%i", (int)((intptr_t)value));
 
+   if (type==TYPE_ARRAY)
+      nbytes = ds_str_printf (&tmp, "%s", value);
+
    if (nbytes==0)
       return false;
 
@@ -318,13 +327,18 @@ static bool set_ifield (ds_hmap_t *hm, const char *name, int value)
    return set_field (hm, name, (void *)(intptr_t)value, TYPE_INT);
 }
 
+static bool set_afield (ds_hmap_t *hm, const char *name, const char * value)
+{
+   return set_field (hm, name, value, TYPE_ARRAY);
+}
+
 static char *make_sarray (const char **src, size_t len)
 {
    char *ret = NULL;
 
    size_t slen = 3;  // "[]"
    for (size_t i=0; i<len; i++) {
-      slen += strlen (src[i]) + 3; // "s, "
+      slen += strlen (src[i]) + 5; // "s, "
    }
 
    if (!(ret = malloc (slen + 1)))
@@ -333,7 +347,9 @@ static char *make_sarray (const char **src, size_t len)
    strcpy (ret, "[");
 
    for (size_t i=0; i<len; i++) {
+      strcat (ret, "\"");
       strcat (ret, src[i]);
+      strcat (ret, "\"");
       if (i<(len - 1))
          strcat (ret, ", ");
    }
@@ -621,10 +637,10 @@ static bool endpoint_USER_LIST (ds_hmap_t *jfields,
    }
 
    if (!(set_ifield (jfields, FIELD_STR_RESULTSET_COUNT, nitems)) ||
-       !(set_sfield (jfields, FIELD_STR_RESULTSET_EMAILS, res_emails)) ||
-       !(set_sfield (jfields, FIELD_STR_RESULTSET_NICKS, res_nicks)) ||
-       !(set_sfield (jfields, FIELD_STR_RESULTSET_FLAGS, res_flags)) ||
-       !(set_sfield (jfields, FIELD_STR_RESULTSET_IDS, res_ids))) {
+       !(set_afield (jfields, FIELD_STR_RESULTSET_EMAILS, res_emails)) ||
+       !(set_afield (jfields, FIELD_STR_RESULTSET_NICKS, res_nicks)) ||
+       !(set_afield (jfields, FIELD_STR_RESULTSET_FLAGS, res_flags)) ||
+       !(set_afield (jfields, FIELD_STR_RESULTSET_IDS, res_ids))) {
       *error_code = EPUBSUB_INTERNAL_ERROR;
       goto errorexit;
    }
@@ -765,10 +781,103 @@ static bool endpoint_GROUP_RMUSER (ds_hmap_t *jfields,
 static bool endpoint_GROUP_LIST (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
-   jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   status_code = status_code;
-   return false;
+   bool error = true;
+
+   const char
+      *name_pat          = incoming_find (FIELD_STR_NAME_PATTERN),
+      *description_pat   = incoming_find (FIELD_STR_DESCRIPTION_PATTERN),
+      *rqst_names        = incoming_find (FIELD_STR_RESULTSET_NAMES),
+      *rqst_descriptions = incoming_find (FIELD_STR_RESULTSET_DESCRIPTIONS),
+      *rqst_ids          = incoming_find (FIELD_STR_RESULTSET_IDS);
+
+   char **names = NULL,
+        **descriptions = NULL,
+       ***ptr_names = NULL,
+       ***ptr_descriptions = NULL;
+
+   uint64_t nitems = 0,
+            *ids = NULL,
+           **ptr_ids = NULL;
+
+   char *res_names = NULL;
+   char *res_descriptions = NULL;
+   char *res_ids = NULL;
+
+   char
+     *npat = ds_str_chsubst (name_pat,        /**/ '*', '%', /**/ '?', '_', 0),
+     *dpat = ds_str_chsubst (description_pat, /**/ '*', '%', /**/ '?', '_', 0);
+
+   *status_code = 200;
+
+   if (!npat || !dpat) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      goto errorexit;
+   }
+
+#define CHECK_TRUE(x)      (x && (((strcasecmp (x, "true"))==0) ||\
+                                  (strcasecmp (x, "\"true\""))==0))
+
+   if ((CHECK_TRUE (rqst_names)))
+      ptr_names = &names;
+
+   if ((CHECK_TRUE (rqst_descriptions)))
+      ptr_descriptions = &descriptions;
+
+   if ((CHECK_TRUE (rqst_ids)))
+      ptr_ids = &ids;
+
+#undef CHECK_TRUE
+
+   if (!(sqldb_auth_group_find (xcgi_db, npat, dpat,
+                                         &nitems,
+                                         ptr_names,
+                                         ptr_descriptions,
+                                         ptr_ids))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      goto errorexit;
+   }
+
+   res_names = make_sarray ((const char **)names, nitems);
+   res_descriptions = make_sarray ((const char **)descriptions, nitems);
+   res_ids = make_iarray (ids, nitems);
+
+   if ((names && !res_names) ||
+       (descriptions && !res_descriptions)   ||
+       (ids && !res_ids)) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      goto errorexit;
+   }
+
+   if (!(set_ifield (jfields, FIELD_STR_RESULTSET_COUNT, nitems)) ||
+       !(set_afield (jfields, FIELD_STR_RESULTSET_NAMES, res_names)) ||
+       !(set_afield (jfields, FIELD_STR_RESULTSET_DESCRIPTIONS, res_descriptions)) ||
+       !(set_afield (jfields, FIELD_STR_RESULTSET_IDS, res_ids))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      goto errorexit;
+   }
+
+   error = false;
+
+errorexit:
+
+   free (npat);
+   free (dpat);
+
+   free (ids);
+   for (size_t i=0; i<nitems; i++) {
+      if (names)
+         free (names[i]);
+      if (descriptions)
+         free (descriptions[i]);
+   }
+   free (names);
+   free (descriptions);
+
+   free (res_names);
+   free (res_descriptions);
+   free (res_ids);
+
+   return !error;
 }
 
 static bool endpoint_GROUP_MEMBERS (ds_hmap_t *jfields,

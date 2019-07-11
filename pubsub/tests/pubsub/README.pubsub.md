@@ -252,6 +252,7 @@ POST /group-list
    "description-pattern":     "Pattern to find, matches description",
    "resultset-names":         "true",  // Set to false to exclude
    "resultset-descriptions":  "true"   // Set to false to exclude
+   "resultset-ids":           "true"   // Set to false to exclude
 }
 ```
 RETURNS:
@@ -261,6 +262,7 @@ RETURNS:
    "resultset-count":         64,       // Number of groups in the results
    "resultset-names":         [group1, ...],
    "resultset-descriptions":  [description1, ...]
+   "resultset-ids":           [id1, ...]
 }
 ```
 

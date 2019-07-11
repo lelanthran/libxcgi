@@ -1,10 +1,12 @@
-{HTTP/1.1 200 OK
-Set-Cookie: session-id=ffb8b30ec8b0a50755854eb759361cd9d2b1370519c73c75449900209277ca92
+{Found email: ["admin@example.com"]
+Found password: ["123456"]
+HTTP/1.1 200 OK
+Set-Cookie: session-id=df51a5cc560452ecf68bd8d539e9ed43db5a29f3c39390e69d59be4d5b0ac83b
 CONTENT_TYPE: application/json
 
 
 {
-"session-id": "ffb8b30ec8b0a50755854eb759361cd9d2b1370519c73c75449900209277ca92",
+"session-id": "df51a5cc560452ecf68bd8d539e9ed43db5a29f3c39390e69d59be4d5b0ac83b",
 "error-code": 0,
 "error-message": "Success"
 }

@@ -180,11 +180,12 @@ done
 
 ###############################################
 
-call_cgi /group-list group-list-1.results '{
-   "name-pattern":               "*",
-   "description-pattern":        "*",
+call_cgi /group-list group-list-t.results '{
+   "name-pattern":               "*-t*",
+   "description-pattern":        "",
    "resultset-names":            "true",
-   "resultset-descriptions":     "true"
+   "resultset-descriptions":     "true",
+   "resultset-ids":              "true"
 }'
 
 ###############################################

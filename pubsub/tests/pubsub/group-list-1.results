@@ -1,8 +1,12 @@
-{HTTP/1.1 501 Not Implemented
+{HTTP/1.1 200 OK
 CONTENT_TYPE: application/json
 
 
 {
-"error-code": 256,
-"error-message": "Function not implemented"
+"resultset-descriptions": "[Group-One description., Group-Two description., Group-Three description., Group-Four description., Group-Five description., Group-Six description., Group-Seven description., Group-Eight description., Group-Nine description., Group-Ten description.]",
+"resultset-count": 10,
+"resultset-names": "[Group-One, Group-Two, Group-Three, Group-Four, Group-Five, Group-Six, Group-Seven, Group-Eight, Group-Nine, Group-Ten]",
+"error-code": 0,
+"error-message": "Success",
+"resultset-ids": "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
 }
