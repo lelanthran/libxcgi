@@ -213,12 +213,16 @@ done
 
 ###############################################
 
-call_cgi /group-rmuser '{
-   "name":     "Group1",
-   "email":    "todelete2@example.com"
-}'
+for X in $RMNAMES; do
+   call_cgi /group-rmuser group-rmuser-$X.results '{
+      "group-name":     "Group-One",
+      "email":          "'$X'@example.com",
+   }'
+done
 
 ###############################################
+
+exit 127
 
 call_cgi /group-members '{
    "name":         "Group1",

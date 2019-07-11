@@ -783,10 +783,19 @@ static bool endpoint_GROUP_ADDUSER (ds_hmap_t *jfields,
 static bool endpoint_GROUP_RMUSER (ds_hmap_t *jfields,
                                    int *error_code, int *status_code)
 {
+   const char *group_name = incoming_find (FIELD_STR_GROUP_NAME),
+              *email      = incoming_find (FIELD_STR_EMAIL);
+
    jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   status_code = status_code;
-   return false;
+   *status_code = 200;
+
+   if (!(sqldb_auth_group_rmuser (xcgi_db, group_name, email))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
+   *error_code = 0;
+   return true;
 }
 
 static bool endpoint_GROUP_LIST (ds_hmap_t *jfields,
