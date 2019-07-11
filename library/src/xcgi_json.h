@@ -28,7 +28,7 @@ extern "C" {
     * }
     *
     * We find the value of element 'one.two.THREE' in JSON tree 'src':
-    *       const char *val = xcgi_json (src, "one", "two", "three", NULL);
+    *       const char *val = xcgi_json_find (src, "one", "two", "three", NULL);
     *
     * The value 'val' will now contain a pointer to the substring:
     *    '3,  "FOUR": 4 ] },\n      "some_other_fields": "More data"\n}'
@@ -39,12 +39,13 @@ extern "C" {
     * example.
     * }
     */
-   const char *xcgi_json_vfind (const char *json_src, const char *field, va_list ap);
+   const char *xcgi_json_vfind (const char *json_src, const char *field,
+                                                      va_list ap);
    const char *xcgi_json_find (const char *json_src, const char *field, ...);
 
    /* ********************************************************************
     * Returns the length of the string as interpreted as a JSON value. See
-    * above description of xcgi_json() for an example.
+    * above description of xcgi_json_find() for an example.
     */
    size_t xcgi_json_length (const char *json_element);
 
