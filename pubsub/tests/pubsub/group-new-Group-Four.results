@@ -1,0 +1,11 @@
+{HTTP/1.1 200 OK
+CONTENT_TYPE: application/json
+
+
+{
+"group-id": "4",
+"error-code": 0,
+"error-message": "Success",
+"group-name": "mGroup-Four",
+"group-description": "mGroup-Four description."
+}

@@ -1,0 +1,8 @@
+{HTTP/1.1 200 OK
+CONTENT_TYPE: application/json
+
+
+{
+"error-code": 1024,
+"error-message": "Missing parameters"
+}
