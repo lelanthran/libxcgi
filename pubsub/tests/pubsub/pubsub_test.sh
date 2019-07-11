@@ -149,7 +149,7 @@ done
 
 ###############################################
 
-call_cgi /user-list user-list.results '{
+call_cgi /user-list user-list-1.results '{
    "email-pattern":  "*",
    "nick-pattern":   "*",
    "id-pattern":     "*",
@@ -180,7 +180,7 @@ done
 
 ###############################################
 
-call_cgi /group-list group-list-t.results '{
+call_cgi /group-list group-list-1.results '{
    "name-pattern":               "*-t*",
    "description-pattern":        "",
    "resultset-names":            "true",
