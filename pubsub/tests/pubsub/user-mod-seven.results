@@ -1,8 +1,4 @@
-{Found password: ["12345"]
-Found nick: ["User-seven"]
-Found old-email: ["mseven@example.com"]
-Found new-email: ["seven@example.com"]
-HTTP/1.1 200 OK
+{HTTP/1.1 200 OK
 CONTENT_TYPE: application/json
 
 

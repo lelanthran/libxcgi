@@ -268,7 +268,6 @@ static bool incoming_init (void)
       }
       strncpy (g_incoming[i].value, tmp, len);
       g_incoming[i].value[len] = 0;
-      printf ("Found %s: [%s]\n", g_incoming[i].name, g_incoming[i].value);
 
       if (g_incoming[i].value[0]=='"') {
          memmove (&g_incoming[i].value[0], &g_incoming[i].value[1], len);
@@ -763,10 +762,19 @@ static bool endpoint_GROUP_MOD (ds_hmap_t *jfields,
 static bool endpoint_GROUP_ADDUSER (ds_hmap_t *jfields,
                                     int *error_code, int *status_code)
 {
+   const char *group_name = incoming_find (FIELD_STR_GROUP_NAME),
+              *email      = incoming_find (FIELD_STR_EMAIL);
+
    jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   status_code = status_code;
-   return false;
+   *status_code = 200;
+
+   if (!(sqldb_auth_group_adduser (xcgi_db, group_name, email))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
+   *error_code = 0;
+   return true;
 }
 
 static bool endpoint_GROUP_RMUSER (ds_hmap_t *jfields,

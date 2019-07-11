@@ -1,11 +1,4 @@
-{Found email-pattern: ["*"]
-Found nick-pattern: ["*"]
-Found id-pattern: ["*"]
-Found resultset-emails: ["true"]
-Found resultset-nicks: ["true"]
-Found resultset-flags: ["true"]
-Found resultset-ids: ["true"]
-HTTP/1.1 200 OK
+{HTTP/1.1 200 OK
 CONTENT_TYPE: application/json
 
 

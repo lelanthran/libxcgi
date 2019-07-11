@@ -7,4 +7,6 @@
 4. Create the skeleton pubsub.cgi application. For now simply accepting
    and responding to the API (even if responding with junk data) is
    enough.
-      - Start working on the group endpoints.
+
+5. Pass through sensible error messages when the database calls fail.
+

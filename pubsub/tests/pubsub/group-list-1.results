@@ -1,9 +1,4 @@
-{Found resultset-ids: ["true"]
-Found name-pattern: ["*-t*"]
-Found description-pattern: [""]
-Found resultset-names: ["true"]
-Found resultset-descriptions: ["true"]
-HTTP/1.1 200 OK
+{HTTP/1.1 200 OK
 CONTENT_TYPE: application/json
 
 

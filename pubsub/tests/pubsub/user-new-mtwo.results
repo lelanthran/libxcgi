@@ -1,7 +1,4 @@
-{Found email: ["mtwo@example.com"]
-Found password: ["123456"]
-Found nick: ["User-mtwo"]
-HTTP/1.1 200 OK
+{HTTP/1.1 200 OK
 CONTENT_TYPE: application/json
 
 

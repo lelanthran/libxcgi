@@ -1,7 +1,4 @@
-{Found group-description: ["Group-Five description."]
-Found old-group-name: ["mGroup-Five"]
-Found new-group-name: ["Group-Five"]
-HTTP/1.1 200 OK
+{HTTP/1.1 200 OK
 CONTENT_TYPE: application/json
 
 

@@ -190,30 +190,14 @@ call_cgi /group-list group-list-1.results '{
 
 ###############################################
 
-call_cgi /group-adduser group-adduser-1.results '{
-   "name":         "Group1",
-   "email":        "todelete1@example.com"
-}'
-
-call_cgi /group-adduser group-adduser-2.results '{
-   "name":         "Group2",
-   "email":        "todelete2@example.com"
-}'
-
-call_cgi /group-adduser group-adduser-3.results '{
-   "name":         "Group3",
-   "email":        "todelete3@example.com"
-}'
-
-call_cgi /group-adduser group-adduser-4.results '{
-   "name":         "Group1",
-   "email":        "todelete2@example.com"
-}'
-
-call_cgi /group-adduser group-adduser-5.results '{
-   "name":         "Group1",
-   "email":        "todelete3@example.com"
-}'
+for X in $LGROUPS; do
+   for Y in $NAMES; do
+      call_cgi /group-adduser group-adduser-$X-$Y.results '{
+         "group-name":   "'$X'",
+         "email":        "'$Y'@example.com"
+      }'
+   done
+done
 
 ###############################################
 
