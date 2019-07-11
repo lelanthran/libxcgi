@@ -181,7 +181,10 @@ done
 ###############################################
 
 call_cgi /group-list group-list-1.results '{
-   "pattern":         "*"
+   "name-pattern":               "*",
+   "description-pattern":        "*",
+   "resultset-names":            "true",
+   "resultset-descriptions":     "true"
 }'
 
 ###############################################

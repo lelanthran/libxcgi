@@ -42,94 +42,73 @@ uint64_t    g_perms = 0;
  * elements to these lists ensure that the index (IDX) #define matches the
  * entry in the array g_incoming below it.
  */
-#define FIELD_STR_EMAIL                 ("email")
-#define FIELD_STR_PASSWORD              ("password")
-#define FIELD_STR_SESSION               ("session-id")
-#define FIELD_STR_NICK                  ("nick")
-#define FIELD_STR_USER_ID               ("user-id")
-#define FIELD_STR_EMAIL_PATTERN         ("email-pattern")
-#define FIELD_STR_NICK_PATTERN          ("nick-pattern")
-#define FIELD_STR_ID_PATTERN            ("id-pattern")
-#define FIELD_STR_RESULTSET_COUNT       ("resultset-count")
-#define FIELD_STR_RESULTSET_EMAILS      ("resultset-emails")
-#define FIELD_STR_RESULTSET_NICKS       ("resultset-nicks")
-#define FIELD_STR_RESULTSET_FLAGS       ("resultset-flags")
-#define FIELD_STR_RESULTSET_IDS         ("resultset-ids")
-#define FIELD_STR_OLD_EMAIL             ("old-email")
-#define FIELD_STR_NEW_EMAIL             ("new-email")
-#define FIELD_STR_GROUP_NAME            ("group-name")
-#define FIELD_STR_GROUP_DESCRIPTION     ("group-description")
-#define FIELD_STR_GROUP_ID              ("group-id")
-#define FIELD_STR_OLD_GROUP_NAME        ("old-group-name")
-#define FIELD_STR_NEW_GROUP_NAME        ("new-group-name")
-#define FIELD_STR_GROUP_PATTERN         ("group-pattern")
-#define FIELD_STR_PERMS                 ("perms")
-#define FIELD_STR_RESOURCE              ("resource")
-#define FIELD_STR_QUEUE_NAME            ("queue-name")
-#define FIELD_STR_QUEUE_DESCRIPTION     ("queue-description")
-#define FIELD_STR_QUEUE_ID              ("queue-id")
-#define FIELD_STR_MESSAGE_ID            ("message-id")
-#define FIELD_STR_MESSAGE_IDS           ("message-ids")
-#define FIELD_STR_ERROR_MESSAGE         ("error-message")
-#define FIELD_STR_ERROR_CODE            ("error-code")
+#define FIELD_STR_EMAIL                    ("email")
+#define FIELD_STR_PASSWORD                 ("password")
+#define FIELD_STR_SESSION                  ("session-id")
+#define FIELD_STR_NICK                     ("nick")
+#define FIELD_STR_USER_ID                  ("user-id")
+#define FIELD_STR_EMAIL_PATTERN            ("email-pattern")
+#define FIELD_STR_NICK_PATTERN             ("nick-pattern")
+#define FIELD_STR_ID_PATTERN               ("id-pattern")
+#define FIELD_STR_RESULTSET_COUNT          ("resultset-count")
+#define FIELD_STR_RESULTSET_EMAILS         ("resultset-emails")
+#define FIELD_STR_RESULTSET_NICKS          ("resultset-nicks")
+#define FIELD_STR_RESULTSET_FLAGS          ("resultset-flags")
+#define FIELD_STR_RESULTSET_IDS            ("resultset-ids")
+#define FIELD_STR_OLD_EMAIL                ("old-email")
+#define FIELD_STR_NEW_EMAIL                ("new-email")
+#define FIELD_STR_GROUP_NAME               ("group-name")
+#define FIELD_STR_GROUP_DESCRIPTION        ("group-description")
+#define FIELD_STR_GROUP_ID                 ("group-id")
+#define FIELD_STR_OLD_GROUP_NAME           ("old-group-name")
+#define FIELD_STR_NEW_GROUP_NAME           ("new-group-name")
+#define FIELD_STR_NAME_PATTERN             ("name-pattern")
+#define FIELD_STR_DESCRIPTION_PATTERN      ("description-pattern")
+#define FIELD_STR_RESULTSET_NAMES          ("resultset-names")
+#define FIELD_STR_RESULTSET_DESCRIPTIONS   ("resultset-descriptions")
+#define FIELD_STR_PERMS                    ("perms")
+#define FIELD_STR_RESOURCE                 ("resource")
+#define FIELD_STR_QUEUE_NAME               ("queue-name")
+#define FIELD_STR_QUEUE_DESCRIPTION        ("queue-description")
+#define FIELD_STR_QUEUE_ID                 ("queue-id")
+#define FIELD_STR_MESSAGE_ID               ("message-id")
+#define FIELD_STR_MESSAGE_IDS              ("message-ids")
+#define FIELD_STR_ERROR_MESSAGE            ("error-message")
+#define FIELD_STR_ERROR_CODE               ("error-code")
 
-#define FIELD_IDX_EMAIL                 0
-#define FIELD_IDX_PASSWORD              1
-#define FIELD_IDX_SESSION               2
-#define FIELD_IDX_NICK                  3
-#define FIELD_IDX_USER_ID               4
-#define FIELD_IDX_EMAIL_PATTERN         5
-#define FIELD_IDX_NICK_PATTERN          6
-#define FIELD_IDX_ID_PATTERN            7
-#define FIELD_IDX_RESULTSET_COUNT       8
-#define FIELD_IDX_RESULTSET_EMAILS      9
-#define FIELD_IDX_RESULTSET_NICKS       10
-#define FIELD_IDX_RESULTSET_FLAGS       11
-#define FIELD_IDX_RESULTSET_IDS         12
-#define FIELD_IDX_OLD_EMAIL             13
-#define FIELD_IDX_NEW_EMAIL             14
-#define FIELD_IDX_GROUP_NAME            15
-#define FIELD_IDX_GROUP_DESCRIPTION     16
-#define FIELD_IDX_GROUP_ID              17
-#define FIELD_IDX_OLD_GROUP_NAME        18
-#define FIELD_IDX_NEW_GROUP_NAME        19
-#define FIELD_IDX_GROUP_PATTERN         20
-#define FIELD_IDX_PERMS                 21
-#define FIELD_IDX_RESOURCE              22
-#define FIELD_IDX_QUEUE_NAME            23
-#define FIELD_IDX_QUEUE_DESCRIPTION     24
-#define FIELD_IDX_QUEUE_ID              25
-#define FIELD_IDX_MESSAGE_ID            26
-#define FIELD_IDX_MESSAGE_IDS           27
-
-#define BIT_EMAIL                ((uint64_t)(1 << FIELD_IDX_EMAIL))
-#define BIT_PASSWORD             ((uint64_t)(1 << FIELD_IDX_PASSWORD))
-#define BIT_SESSION              ((uint64_t)(1 << FIELD_IDX_SESSION))
-#define BIT_NICK                 ((uint64_t)(1 << FIELD_IDX_NICK))
-#define BIT_USER_ID              ((uint64_t)(1 << FIELD_IDX_USER_ID))
-#define BIT_EMAIL_PATTERN        ((uint64_t)(1 << FIELD_IDX_EMAIL_PATTERN))
-#define BIT_NICK_PATTERN         ((uint64_t)(1 << FIELD_IDX_NICK_PATTERN))
-#define BIT_ID_PATTERN           ((uint64_t)(1 << FIELD_IDX_ID_PATTERN))
-#define BIT_RESULTSET_COUNT      ((uint64_t)(1 << FIELD_IDX_RESULTSET_COUNT))
-#define BIT_RESULTSET_EMAILS     ((uint64_t)(1 << FIELD_IDX_RESULTSET_EMAILS))
-#define BIT_RESULTSET_NICKS      ((uint64_t)(1 << FIELD_IDX_RESULTSET_NICKS))
-#define BIT_RESULTSET_FLAGS      ((uint64_t)(1 << FIELD_IDX_RESULTSET_FLAGS))
-#define BIT_RESULTSET_IDS        ((uint64_t)(1 << FIELD_IDX_RESULTSET_IDS))
-#define BIT_OLD_EMAIL            ((uint64_t)(1 << FIELD_IDX_OLD_EMAIL))
-#define BIT_NEW_EMAIL            ((uint64_t)(1 << FIELD_IDX_NEW_EMAIL))
-#define BIT_GROUP_NAME           ((uint64_t)(1 << FIELD_IDX_GROUP_NAME))
-#define BIT_GROUP_DESCRIPTION    ((uint64_t)(1 << FIELD_IDX_GROUP_DESCRIPTION))
-#define BIT_GROUP_ID             ((uint64_t)(1 << FIELD_IDX_GROUP_ID))
-#define BIT_OLD_GROUP_NAME       ((uint64_t)(1 << FIELD_IDX_OLD_GROUP_NAME))
-#define BIT_NEW_GROUP_NAME       ((uint64_t)(1 << FIELD_IDX_NEW_GROUP_NAME))
-#define BIT_GROUP_PATTERN        ((uint64_t)(1 << FIELD_IDX_GROUP_PATTERN))
-#define BIT_PERMS                ((uint64_t)(1 << FIELD_IDX_PERMS))
-#define BIT_RESOURCE             ((uint64_t)(1 << FIELD_IDX_RESOURCE))
-#define BIT_QUEUE_NAME           ((uint64_t)(1 << FIELD_IDX_QUEUE_NAME))
-#define BIT_QUEUE_DESCRIPTION    ((uint64_t)(1 << FIELD_IDX_QUEUE_DESCRIPTION))
-#define BIT_QUEUE_ID             ((uint64_t)(1 << FIELD_IDX_QUEUE_ID))
-#define BIT_MESSAGE_ID           ((uint64_t)(1 << FIELD_IDX_MESSAGE_ID))
-#define BIT_MESSAGE_IDS          ((uint64_t)(1 << FIELD_IDX_MESSAGE_IDS))
+#define BIT_EMAIL                    ((uint64_t)1 << 0 )
+#define BIT_PASSWORD                 ((uint64_t)1 << 1 )
+#define BIT_SESSION                  ((uint64_t)1 << 2 )
+#define BIT_NICK                     ((uint64_t)1 << 3 )
+#define BIT_USER_ID                  ((uint64_t)1 << 4 )
+#define BIT_EMAIL_PATTERN            ((uint64_t)1 << 5 )
+#define BIT_NICK_PATTERN             ((uint64_t)1 << 6 )
+#define BIT_ID_PATTERN               ((uint64_t)1 << 7 )
+#define BIT_RESULTSET_COUNT          ((uint64_t)1 << 8 )
+#define BIT_RESULTSET_EMAILS         ((uint64_t)1 << 9 )
+#define BIT_RESULTSET_NICKS          ((uint64_t)1 << 10)
+#define BIT_RESULTSET_FLAGS          ((uint64_t)1 << 11)
+#define BIT_RESULTSET_IDS            ((uint64_t)1 << 12)
+#define BIT_OLD_EMAIL                ((uint64_t)1 << 13)
+#define BIT_NEW_EMAIL                ((uint64_t)1 << 14)
+#define BIT_GROUP_NAME               ((uint64_t)1 << 15)
+#define BIT_GROUP_DESCRIPTION        ((uint64_t)1 << 16)
+#define BIT_GROUP_ID                 ((uint64_t)1 << 17)
+#define BIT_OLD_GROUP_NAME           ((uint64_t)1 << 18)
+#define BIT_NEW_GROUP_NAME           ((uint64_t)1 << 19)
+#define BIT_NAME_PATTERN             ((uint64_t)1 << 20)
+#define BIT_DESCRIPTION_PATTERN      ((uint64_t)1 << 21)
+#define BIT_RESULTSET_NAMES          ((uint64_t)1 << 22)
+#define BIT_RESULTSET_DESCRIPTIONS   ((uint64_t)1 << 23)
+#define BIT_PERMS                    ((uint64_t)1 << 24)
+#define BIT_RESOURCE                 ((uint64_t)1 << 25)
+#define BIT_QUEUE_NAME               ((uint64_t)1 << 26)
+#define BIT_QUEUE_DESCRIPTION        ((uint64_t)1 << 27)
+#define BIT_QUEUE_ID                 ((uint64_t)1 << 28)
+#define BIT_MESSAGE_ID               ((uint64_t)1 << 29)
+#define BIT_MESSAGE_IDS              ((uint64_t)1 << 30)
+#define BIT_ERROR_MESSAGE            ((uint64_t)1 << 31)
+#define BIT_ERROR_CODE               ((uint64_t)1 << 32)
 
 
 // These are the constraints for each endpoint. It's a bitmask of which
@@ -149,7 +128,7 @@ uint64_t    g_perms = 0;
 #define ARG_GROUP_MOD              (BIT_OLD_GROUP_NAME | BIT_NEW_GROUP_NAME | BIT_GROUP_DESCRIPTION)
 #define ARG_GROUP_ADDUSER          (BIT_GROUP_NAME | BIT_EMAIL)
 #define ARG_GROUP_RMUSER           (BIT_GROUP_NAME | BIT_EMAIL)
-#define ARG_GROUP_LIST             (BIT_GROUP_PATTERN)
+#define ARG_GROUP_LIST             (BIT_NAME_PATTERN | BIT_DESCRIPTION_PATTERN | BIT_RESULTSET_NAMES | BIT_RESULTSET_DESCRIPTIONS)
 #define ARG_GROUP_MEMBERS          (BIT_GROUP_NAME)
 
 #define ARG_PERMS_GRANT_USER       (BIT_EMAIL | BIT_PERMS | BIT_RESOURCE)
@@ -179,36 +158,39 @@ struct incoming_value_t {
    size_t      len;
 };
 static struct incoming_value_t g_incoming[] = {
-   { FIELD_STR_EMAIL,               TYPE_STRING, NULL, 0 },
-   { FIELD_STR_PASSWORD,            TYPE_STRING, NULL, 0 },
-   { FIELD_STR_SESSION,             TYPE_STRING, NULL, 0 },
-   { FIELD_STR_NICK,                TYPE_STRING, NULL, 0 },
-   { FIELD_STR_USER_ID,             TYPE_STRING, NULL, 0 },
-   { FIELD_STR_EMAIL_PATTERN,       TYPE_STRING, NULL, 0 },
-   { FIELD_STR_NICK_PATTERN,        TYPE_STRING, NULL, 0 },
-   { FIELD_STR_ID_PATTERN,          TYPE_STRING, NULL, 0 },
-   { FIELD_STR_RESULTSET_COUNT,     TYPE_STRING, NULL, 0 },
-   { FIELD_STR_RESULTSET_EMAILS,    TYPE_STRING, NULL, 0 },
-   { FIELD_STR_RESULTSET_NICKS,     TYPE_STRING, NULL, 0 },
-   { FIELD_STR_RESULTSET_FLAGS,     TYPE_STRING, NULL, 0 },
-   { FIELD_STR_RESULTSET_IDS,       TYPE_STRING, NULL, 0 },
-   { FIELD_STR_OLD_EMAIL,           TYPE_STRING, NULL, 0 },
-   { FIELD_STR_NEW_EMAIL,           TYPE_STRING, NULL, 0 },
-   { FIELD_STR_GROUP_NAME,          TYPE_STRING, NULL, 0 },
-   { FIELD_STR_GROUP_DESCRIPTION,   TYPE_STRING, NULL, 0 },
-   { FIELD_STR_GROUP_ID,            TYPE_STRING, NULL, 0 },
-   { FIELD_STR_OLD_GROUP_NAME,      TYPE_STRING, NULL, 0 },
-   { FIELD_STR_NEW_GROUP_NAME,      TYPE_STRING, NULL, 0 },
-   { FIELD_STR_GROUP_PATTERN,       TYPE_STRING, NULL, 0 },
-   { FIELD_STR_PERMS,               TYPE_STRING, NULL, 0 },
-   { FIELD_STR_RESOURCE,            TYPE_STRING, NULL, 0 },
-   { FIELD_STR_QUEUE_NAME,          TYPE_STRING, NULL, 0 },
-   { FIELD_STR_QUEUE_DESCRIPTION,   TYPE_STRING, NULL, 0 },
-   { FIELD_STR_QUEUE_ID,            TYPE_STRING, NULL, 0 },
-   { FIELD_STR_MESSAGE_ID,          TYPE_STRING, NULL, 0 },
-   { FIELD_STR_MESSAGE_IDS,         TYPE_STRING, NULL, 0 },
-   { FIELD_STR_ERROR_MESSAGE,       TYPE_STRING, NULL, 0 },
-   { FIELD_STR_ERROR_CODE,          TYPE_STRING, NULL, 0 },
+   { FIELD_STR_EMAIL,                  TYPE_STRING, NULL, 0 },
+   { FIELD_STR_PASSWORD,               TYPE_STRING, NULL, 0 },
+   { FIELD_STR_SESSION,                TYPE_STRING, NULL, 0 },
+   { FIELD_STR_NICK,                   TYPE_STRING, NULL, 0 },
+   { FIELD_STR_USER_ID,                TYPE_STRING, NULL, 0 },
+   { FIELD_STR_EMAIL_PATTERN,          TYPE_STRING, NULL, 0 },
+   { FIELD_STR_NICK_PATTERN,           TYPE_STRING, NULL, 0 },
+   { FIELD_STR_ID_PATTERN,             TYPE_STRING, NULL, 0 },
+   { FIELD_STR_RESULTSET_COUNT,        TYPE_STRING, NULL, 0 },
+   { FIELD_STR_RESULTSET_EMAILS,       TYPE_STRING, NULL, 0 },
+   { FIELD_STR_RESULTSET_NICKS,        TYPE_STRING, NULL, 0 },
+   { FIELD_STR_RESULTSET_FLAGS,        TYPE_STRING, NULL, 0 },
+   { FIELD_STR_RESULTSET_IDS,          TYPE_STRING, NULL, 0 },
+   { FIELD_STR_OLD_EMAIL,              TYPE_STRING, NULL, 0 },
+   { FIELD_STR_NEW_EMAIL,              TYPE_STRING, NULL, 0 },
+   { FIELD_STR_GROUP_NAME,             TYPE_STRING, NULL, 0 },
+   { FIELD_STR_GROUP_DESCRIPTION,      TYPE_STRING, NULL, 0 },
+   { FIELD_STR_GROUP_ID,               TYPE_STRING, NULL, 0 },
+   { FIELD_STR_OLD_GROUP_NAME,         TYPE_STRING, NULL, 0 },
+   { FIELD_STR_NEW_GROUP_NAME,         TYPE_STRING, NULL, 0 },
+   { FIELD_STR_NAME_PATTERN,           TYPE_STRING, NULL, 0 },
+   { FIELD_STR_DESCRIPTION_PATTERN,    TYPE_STRING, NULL, 0 },
+   { FIELD_STR_RESULTSET_NAMES,        TYPE_STRING, NULL, 0 },
+   { FIELD_STR_RESULTSET_DESCRIPTIONS, TYPE_STRING, NULL, 0 },
+   { FIELD_STR_PERMS,                  TYPE_STRING, NULL, 0 },
+   { FIELD_STR_RESOURCE,               TYPE_STRING, NULL, 0 },
+   { FIELD_STR_QUEUE_NAME,             TYPE_STRING, NULL, 0 },
+   { FIELD_STR_QUEUE_DESCRIPTION,      TYPE_STRING, NULL, 0 },
+   { FIELD_STR_QUEUE_ID,               TYPE_STRING, NULL, 0 },
+   { FIELD_STR_MESSAGE_ID,             TYPE_STRING, NULL, 0 },
+   { FIELD_STR_MESSAGE_IDS,            TYPE_STRING, NULL, 0 },
+   { FIELD_STR_ERROR_MESSAGE,          TYPE_STRING, NULL, 0 },
+   { FIELD_STR_ERROR_CODE,             TYPE_STRING, NULL, 0 },
 };
 
 static const char *incoming_find (const char *name)
