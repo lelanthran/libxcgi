@@ -1,0 +1,17 @@
+{Found resultset-ids: ["true"]
+Found name-pattern: ["*-t*"]
+Found description-pattern: [""]
+Found resultset-names: ["true"]
+Found resultset-descriptions: ["true"]
+HTTP/1.1 200 OK
+CONTENT_TYPE: application/json
+
+
+{
+"resultset-descriptions": ["Group-Two description.", "Group-Three description.", "Group-Ten description."],
+"resultset-count": 3,
+"resultset-names": ["Group-Two", "Group-Three", "Group-Ten"],
+"error-code": 0,
+"error-message": "Success",
+"resultset-ids": [2, 3, 10]
+}
