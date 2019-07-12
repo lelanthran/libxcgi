@@ -97,22 +97,104 @@ RETURNS:
 
 
 ### User, group and permissions management
-The list of permissions that can be granted/revoked is:
+The permissions that can be granted/revoked are:
 ```javascript
-   create-queue      // Create a new message queue
-   remove-queue      // Remove an existing message queue
-   put-queue         // Put a new message into a message queue
-   get-queue         // Retrieve a message from a message queue
-   list-queue        // List messages in a message queue
-   del-queue         // Remove a message from the message queue
-   grant             // Grant a permission to a resource
-   revoke            // Revoke a permission from a resource
-   create-user       // Create a new user
-   create-group      // Create a new group
-   mod-user          // Modify a user
-   mod-group         // Modify a group
-   del-user          // Delete a user
-   del-group         // Delete a group
+   create            // Create a new instance of <resource>
+   read              // Read a specific instance
+   update            // Update a specific instance
+   delete            // Delete a specific instance
+```
+The <resources> that can be created are:
+```javascript
+   user
+   group
+   permission
+   membership
+```
+For specific instances (read, update and delete), the instance being
+managed must be named in the granting/revocation call. The call itself is
+specific to the subject, grant/revocation, the permission and the target.
+```javascript
+   subject-gr[-permission]-target
+   subject     Either 'user' or 'group'
+   gr          Either 'grant' or 'revoke'
+   permission  Optional, either 'perms' or 'membership'
+   target      Either 'user' or 'group'
+```
+This results in the following enumeration of API calls to modify
+permissions:
+```javascript
+   user-grant-user      <subject-user>  <permission> <target-user>
+   group-grant-user     <subject-group> <permission> <target-user>
+   user-revoke-user     <subject-user>  <permission> <target-user>
+   group-revoke-user    <subject-group> <permission> <target-user>
+   user-grant-group     <subject-user>  <permission> <target-group>
+   group-grant-group    <subject-group> <permission> <target-group>
+   user-revoke-group    <subject-user>  <permission> <target-group>
+   group-revoke-group   <subject-group> <permission> <target-group>
+
+   user-grant-perms-user    <subject-user>  <permission> <target-user>
+   group-grant-perms-user   <subject-group> <permission> <target-user>
+   user-revoke-perms-user   <subject-user>  <permission> <target-user>
+   group-revoke-perms-user  <subject-group> <permission> <target-user>
+   user-grant-perms-group   <subject-user>  <permission> <target-group>
+   group-grant-perms-group  <subject-group> <permission> <target-group>
+   user-revoke-perms-group  <subject-user>  <permission> <target-group>
+   group-revoke-perms-group <subject-group> <permission> <target-group>
+
+   user-grant-membership-user    <subject-user>  <permission> <target-user>
+   group-grant-membership-user   <subject-group> <permission> <target-user>
+   user-revoke-membership-user   <subject-user>  <permission> <target-user>
+   group-revoke-membership-user  <subject-group> <permission> <target-user>
+   user-grant-membership-group   <subject-user>  <permission> <target-group>
+   group-grant-membership-group  <subject-group> <permission> <target-group>
+   user-revoke-membership-group  <subject-user>  <permission> <target-group>
+   group-revoke-membership-group <subject-group> <permission> <target-group>
+```
+For example:
+```javascript
+   // Grant read,update perms to one@example.com for user two@example.com
+   user-grant-user one@example.com read,update two@example.com
+
+   // Grant read,update perms to user one@example.com for users in group
+   // 'Group-1'.
+   user-grant-group one@example.com read,update Group-2
+
+
+   // Grant read,update perms to group Group-1 for user one@example.com
+   group-grant-user Group-1 read,update one@example.com
+
+   // Grant read,update perms to group 'Group-1' for users in group
+   // 'Group-2'.
+   group-grant-group Group-1 read,update Group-2
+
+
+   // Grant all perms to user one@example.com for permission modifications
+   // of user two@example.com
+   user-grant-perms-user one@example.com all two@example.com
+
+   // Grant all perms to user one@example.com for permission modifications
+   // of group Group-1
+   user-grant-perms-group one@example.com all Group-1
+
+   // Grant all perms to group Group-1 for permission modifications
+   // of group Group-1
+   group-grant-perms-group Group-1 all Group-2
+
+
+   // Grant update perms to user one@example.com for membership modifications
+   // of user two@example.com
+   user-grant-membership-user one@example.com update two@example.com
+
+   // Grant update perms to user one@example.com for membership modifications
+   // of group Group-1
+   user-grant-membership-group one@example.com update Group-1
+
+   // Grant update perms to group Group-1 for membership modifications
+   // of group Group-1
+   group-grant-membership-group Group-1 update Group-2
+
+
 ```
 #### New user
 ```javascript
