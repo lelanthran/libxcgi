@@ -97,6 +97,83 @@ RETURNS:
 
 
 ### User, group and permissions management
+
+```javascript
+POST /grant
+{
+   "email":       "example@email.com",
+   "permission":  "create-user" // "create-group", "del-user", "del-group"
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+
+```javascript
+
+POST /revoke
+{
+   "email":       "example@email.com",
+   "permission":  "create-user" // "create-group",
+                                // "delete-user", "delete-group"
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+
+```javascript
+POST /grant-to-user-over-user
+{
+   "email":       "example@email.com",
+   "target-user": "two@example.com",
+   "permission":  "modify" // "delete",
+                           // "change-permissions",
+                           // "change-membership"
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+
+```javascript
+POST /grant-to-user-over-group
+{
+   "email":       "example@email.com",
+   "group-name":  "Group-1",
+   "permission":  "modify" // "delete",
+                           // "change-permissions",
+                           // "change-membership"
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+
+```javascript
+POST /grant-to-group-over-user
+{
+   "group-name":  "two@example.com",
+   "target-user": "example@email.com",
+   "permission":  "modify" // "delete",
+                           // "change-permissions",
+                           // "change-membership"
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+
+```javascript
+POST /grant-to-group-over-group
+{
+   "group-name":     "two@example.com",
+   "target-group":   "example@email.com",
+   "permission":     "modify" // "delete",
+                              // "change-permissions",
+                              // "change-membership"
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+
+
+
 The permissions that can be granted/revoked are:
 ```javascript
    create            // Create a new instance of <resource>
