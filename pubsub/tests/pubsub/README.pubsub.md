@@ -42,6 +42,10 @@ Content-type header to `application/json`.
 All JSON fields specified herein are case-sensitive, for both request and
 response fields.
 
+Special restrictions apply to the emails and group names that are stored:
+1. All emails must contain at least a single '@' character.
+2. Group names beginning with underscore are not allowed.
+
 ### Session maintenance
 All the endpoints below will check the cookie for a session ID and generate
 an error if the session ID is missing, or present but invalid. The only

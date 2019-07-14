@@ -532,9 +532,17 @@ static bool endpoint_USER_NEW (ds_hmap_t *jfields,
               *nick = incoming_find (FIELD_STR_NICK),
               *password = incoming_find (FIELD_STR_PASSWORD);
 
-   uint64_t new_id = sqldb_auth_user_create (xcgi_db, email, nick, password);
+   uint64_t new_id = (uint64_t)-1;
 
    *status_code = 200;
+
+   if (!(strchr (email, '@'))) {
+      *error_code = EPUBSUB_BAD_PARAMS;
+      return false;
+   }
+
+
+   new_id = sqldb_auth_user_create (xcgi_db, email, nick, password);
 
    if (new_id==(uint64_t)-1) {
       *error_code = EPUBSUB_RESOURCE_EXISTS;
@@ -712,10 +720,17 @@ static bool endpoint_GROUP_NEW (ds_hmap_t *jfields,
    const char *group_name = incoming_find (FIELD_STR_GROUP_NAME),
               *group_description = incoming_find (FIELD_STR_GROUP_DESCRIPTION);
 
-   uint64_t new_id = sqldb_auth_group_create (xcgi_db, group_name,
-                                                       group_description);
+   uint64_t new_id = (uint64_t)-1;
 
    *status_code = 200;
+
+   if (group_name[0]=='_') {
+      *error_code = EPUBSUB_BAD_PARAMS;
+      return false;
+   }
+
+   new_id = sqldb_auth_group_create (xcgi_db, group_name,
+                                              group_description);
 
    if (new_id==(uint64_t)-1) {
       *error_code = EPUBSUB_RESOURCE_EXISTS;
