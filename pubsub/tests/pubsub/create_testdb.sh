@@ -25,12 +25,17 @@ export ENDPOINTS='
    group-list
    group-members
 
-   perms-grant-user
-   perms-revoke-user
-   perms-resource-user
-   perms-grant-group
-   perms-revoke-group
-   perms-resource-group
+   grant
+   grant-to-user-over-user
+   grant-to-user-over-group
+   grant-to-group-over-user
+   grant-to-group-over-group
+
+   revoke
+   revoke-from-user-over-user
+   revoke-from-user-over-group
+   revoke-from-group-over-user
+   revoke-from-group-over-group
 
    queue-new
    queue-rm

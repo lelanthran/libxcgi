@@ -39,6 +39,64 @@ uint64_t    g_id = 0;
 uint64_t    g_perms = 0;
 
 /* ******************************************************************
+ * Managing the permissions.
+ *
+ */
+
+#define PERM_STR_ALL                   ("all")
+#define PERM_STR_CREATE_USER           ("create-user")
+#define PERM_STR_CREATE_GROUP          ("create-group")
+#define PERM_STR_DEL_USER              ("delete-user")
+#define PERM_STR_DEL_GROUP             ("delete-group")
+#define PERM_STR_MODIFY                ("modify")
+#define PERM_STR_DELETE                ("delete")
+#define PERM_STR_CHANGE_PERMISSIONS    ("change-permissions")
+#define PERM_STR_CHANGE_MEMBERSHIP     ("change-membership")
+
+#define PERM_BIT_ALL                  ((uint64_t)(((uint64_t)1) << 0))
+#define PERM_BIT_CREATE_USER          ((uint64_t)(((uint64_t)1) << 1))
+#define PERM_BIT_CREATE_GROUP         ((uint64_t)(((uint64_t)1) << 2))
+#define PERM_BIT_DEL_USER             ((uint64_t)(((uint64_t)1) << 3))
+#define PERM_BIT_DEL_GROUP            ((uint64_t)(((uint64_t)1) << 4))
+#define PERM_BIT_MODIFY               ((uint64_t)(((uint64_t)1) << 5))
+#define PERM_BIT_DELETE               ((uint64_t)(((uint64_t)1) << 6))
+#define PERM_BIT_CHANGE_PERMISSIONS   ((uint64_t)(((uint64_t)1) << 7))
+#define PERM_BIT_CHANGE_MEMBERSHIP    ((uint64_t)(((uint64_t)1) << 8))
+
+uint64_t perms_decode (const char *str)
+{
+   uint64_t ret = 0;
+   bool all = (strstr (str, PERM_STR_ALL)) ? true : false;
+
+   if (all || (strstr (str, PERM_STR_CREATE_USER)))
+      ret |= PERM_BIT_CREATE_USER;
+
+   if (all || (strstr (str, PERM_STR_CREATE_GROUP)))
+      ret |= PERM_BIT_CREATE_GROUP;
+
+   if (all || (strstr (str, PERM_STR_DEL_USER)))
+      ret |= PERM_BIT_DEL_USER;
+
+   if (all || (strstr (str, PERM_STR_DEL_GROUP)))
+      ret |= PERM_BIT_DEL_GROUP;
+
+
+   if (all || (strstr (str, PERM_STR_MODIFY)))
+      ret |= PERM_BIT_MODIFY;
+
+   if (all || (strstr (str, PERM_STR_DELETE)))
+      ret |= PERM_BIT_DELETE;
+
+   if (all || (strstr (str, PERM_STR_CHANGE_PERMISSIONS)))
+      ret |= PERM_BIT_CHANGE_PERMISSIONS;
+
+   if (all || (strstr (str, PERM_STR_CHANGE_MEMBERSHIP)))
+      ret |= PERM_BIT_CHANGE_MEMBERSHIP;
+
+   return ret;
+}
+
+/* ******************************************************************
  * The field names as defined in the API spec document. When adding
  * elements to these lists ensure that the index (IDX) #define matches the
  * entry in the array g_incoming below it.
@@ -462,8 +520,9 @@ static uint64_t perms_get (const char *email, const char *resource)
    uint64_t ret = 0;
    if ((sqldb_auth_perms_get_all (xcgi_db, &ret, email, resource)))
       return ret;
-   else
-      return 0;
+
+   PROG_ERR ("Failed to get permissions for user [%s/%s]\n", email, resource);
+   return 0;
 }
 
 /* ******************************************************************
@@ -1030,15 +1089,44 @@ errorexit:
 static bool endpoint_GRANT (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
+   const char *email = incoming_find (FIELD_STR_EMAIL),
+              *permstr = incoming_find (FIELD_STR_PERMS);
+
+   uint64_t perms = perms_decode (permstr);
+
    jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
    *status_code = 200;
+
+   if (!(sqldb_auth_perms_grant_user (xcgi_db, email,
+                                               SQLDB_AUTH_GLOBAL_RESOURCE,
+                                               perms))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
    return true;
 }
 
 static bool endpoint_GRANT_USER_O_USER (ds_hmap_t *jfields,
                                         int *error_code, int *status_code)
 {
+   const char *email = incoming_find (FIELD_STR_EMAIL),
+              *target = incoming_find (FIELD_STR_TARGET_USER),
+              *permstr = incoming_find (FIELD_STR_PERMS);
+
+   uint64_t perms = perms_decode (permstr);
+
+   jfields = jfields;
+   *status_code = 200;
+
+   if (!(sqldb_auth_perms_grant_user (xcgi_db, email,
+                                               SQLDB_AUTH_GLOBAL_RESOURCE,
+                                               perms))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
+   return true;
    jfields = jfields;
    *error_code = EPUBSUB_UNIMPLEMENTED;
    *status_code = 200;
@@ -1375,7 +1463,11 @@ int main (int argc, char **argv)
          statusCode = 200;
          goto errorexit;
       }
-      g_flags = perms_get (g_email, xcgi_path_info[0]);
+      if (!(g_perms = perms_get (g_email, xcgi_path_info[0]))) {
+         PROG_ERR ("No permissions granted to user [%s] for [%s]\n",
+                    g_email, xcgi_path_info[0]);
+         goto errorexit;
+      }
    }
 
    if (!(endpoint_valid_params (endpoint))) {

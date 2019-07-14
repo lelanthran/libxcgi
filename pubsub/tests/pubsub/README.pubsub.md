@@ -106,7 +106,8 @@ RETURNS:
 POST /grant
 {
    "email":       "example@email.com",
-   "perms":       "create-user" // "create-group", "del-user", "del-group"
+   "perms":       "create-user" // "create-group",
+                                // "delete-user", "delete-group"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.

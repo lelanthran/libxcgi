@@ -222,14 +222,14 @@ done
 
 ###############################################
 
-exit 127
-
-###############################################
-
 call_cgi /grant grant-1.results '{
    "email": "one@example.com",
    "perms": "create-user,create-group,del-user,del-group"
 }'
+
+exit 120
+
+###############################################
 
 call_cgi /grant-to-user-over-user grant-to-user-over-user-1.results '{
    "email":       "two@example.com",
