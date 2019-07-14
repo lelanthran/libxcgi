@@ -224,120 +224,12 @@ done
 
 exit 127
 
-call_cgi /group-members '{
-   "name":         "Group1",
-}'
-
 ###############################################
 
-call_cgi /perms-grant-user perms-grant-user-1.results '{
-   "email":       "todelete1@example.com",
-   "perms":       "put,get,list,del",
-   "resource":    "Resource-1"
-}'
-
-call_cgi /perms-grant-user perms-grant-user-2.results '{
-   "email":       "todelete1@example.com",
-   "perms":       "get,list,del",
-   "resource":    "Resource-2"
-}'
-
-call_cgi /perms-grant-user perms-grant-user-3.results '{
-   "email":       "todelete1@example.com",
-   "perms":       "put,list,del",
-   "resource":    "Resource-3"
-}'
-
-call_cgi /perms-grant-user perms-grant-user-4.results '{
-   "email":       "todelete2@example.com",
-   "perms":       "put,get,del",
-   "resource":    "Resource-1"
-}'
-
-call_cgi /perms-grant-user perms-grant-user-5.results '{
-   "email":       "todelete2@example.com",
-   "perms":       "put,get,list",
-   "resource":    "Resource-2"
-}'
-
-call_cgi /perms-grant-user perms-grant-user-6.results '{
-   "email":       "todelete2@example.com",
-   "perms":       "put,get,list",
-   "resource":    "Resource-3"
-}'
-
-call_cgi /perms-grant-user perms-grant-user-7.results '{
-   "email":       "todelete3@example.com",
-   "perms":       "get,list,del",
-   "resource":    "Resource-1"
-}'
-
-call_cgi /perms-grant-user perms-grant-user-8.results '{
-   "email":       "todelete3@example.com",
-   "perms":       "put,list,del",
-   "resource":    "Resource-2"
-}'
-
-call_cgi /perms-grant-user perms-grant-user-9.results '{
-   "email":       "todelete3@example.com",
-   "perms":       "put,get,del",
-   "resource":    "Resource-3"
-}'
-
-###############################################
-
-call_cgi /perms-grant-group perms-grant-group-1.results '{
-   "name":        "Group1",
-   "perms":       "put,get,list,del",
-   "resource":    "Resource-1"
-}'
-
-call_cgi /perms-grant-group perms-grant-group-2.results '{
-   "name":        "Group1",
-   "perms":       "get,list,del",
-   "resource":    "Resource-2"
-}'
-
-call_cgi /perms-grant-group perms-grant-group-3.results '{
-   "name":        "Group1",
-   "perms":       "put,list,del",
-   "resource":    "Resource-3"
-}'
-
-call_cgi /perms-grant-group perms-grant-group-4.results '{
-   "name":        "Group2",
-   "perms":       "put,get,del",
-   "resource":    "Resource-1"
-}'
-
-call_cgi /perms-grant-group perms-grant-group-5.results '{
-   "name":        "Group2",
-   "perms":       "put,get,list",
-   "resource":    "Resource-2"
-}'
-
-call_cgi /perms-grant-group perms-grant-group-6.results '{
-   "name":        "Group2",
-   "perms":       "get,list,del",
-   "resource":    "Resource-3"
-}'
-
-call_cgi /perms-grant-group perms-grant-group-7.results '{
-   "name":        "Group3",
-   "perms":       "put,list,del",
-   "resource":    "Resource-1"
-}'
-
-call_cgi /perms-grant-group perms-grant-group-8.results '{
-   "name":        "Group3",
-   "perms":       "put,get,del",
-   "resource":    "Resource-2"
-}'
-
-call_cgi /perms-grant-group perms-grant-group-9.results '{
-   "name":        "Group3",
-   "perms":       "put,get,list",
-   "resource":    "Resource-3"
+call_cgi /grant-to-user-over-user grant-to-user-over-user-1.results '{
+   "email":       "one@example.com",
+   "resource":    "two@example.com",
+   "perms":       "all"
 }'
 
 ###############################################
