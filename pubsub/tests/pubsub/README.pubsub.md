@@ -102,7 +102,7 @@ RETURNS:
 POST /grant
 {
    "email":       "example@email.com",
-   "permission":  "create-user" // "create-group", "del-user", "del-group"
+   "perms":       "create-user" // "create-group", "del-user", "del-group"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -113,7 +113,7 @@ RETURNS: "error-code" and "error-message" fields only.
 POST /revoke
 {
    "email":       "example@email.com",
-   "permission":  "create-user" // "create-group",
+   "perms":       "create-user" // "create-group",
                                 // "delete-user", "delete-group"
 }
 ```
@@ -125,7 +125,7 @@ POST /grant-to-user-over-user
 {
    "email":       "example@email.com",
    "target-user": "two@example.com",
-   "permission":  "modify" // "delete",
+   "perms":       "modify" // "delete",
                            // "change-permissions",
                            // "change-membership"
 }
@@ -136,11 +136,11 @@ RETURNS: "error-code" and "error-message" fields only.
 ```javascript
 POST /grant-to-user-over-group
 {
-   "email":       "example@email.com",
-   "group-name":  "Group-1",
-   "permission":  "modify" // "delete",
-                           // "change-permissions",
-                           // "change-membership"
+   "email":          "example@email.com",
+   "target-group":   "Group-1",
+   "perms":          "modify" // "delete",
+                              // "change-permissions",
+                              // "change-membership"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -151,7 +151,7 @@ POST /grant-to-group-over-user
 {
    "group-name":  "two@example.com",
    "target-user": "example@email.com",
-   "permission":  "modify" // "delete",
+   "perms":       "modify" // "delete",
                            // "change-permissions",
                            // "change-membership"
 }
@@ -164,7 +164,59 @@ POST /grant-to-group-over-group
 {
    "group-name":     "two@example.com",
    "target-group":   "example@email.com",
-   "permission":     "modify" // "delete",
+   "perms":          "modify" // "delete",
+                              // "change-permissions",
+                              // "change-membership"
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+
+```javascript
+POST /revoke-from-user-over-user
+{
+   "email":       "example@email.com",
+   "target-user": "two@example.com",
+   "perms":       "modify" // "delete",
+                           // "change-permissions",
+                           // "change-membership"
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+
+```javascript
+POST /revoke-from-user-over-group
+{
+   "email":          "example@email.com",
+   "target-group":   "Group-1",
+   "perms":          "modify" // "delete",
+                              // "change-permissions",
+                              // "change-membership"
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+
+```javascript
+POST /revoke-from-group-over-user
+{
+   "group-name":  "two@example.com",
+   "target-user": "example@email.com",
+   "perms":       "modify" // "delete",
+                           // "change-permissions",
+                           // "change-membership"
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+
+```javascript
+POST /revoke-from-group-over-group
+{
+   "group-name":     "two@example.com",
+   "target-group":   "example@email.com",
+   "perms":          "modify" // "delete",
                               // "change-permissions",
                               // "change-membership"
 }

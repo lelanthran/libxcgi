@@ -68,6 +68,8 @@ uint64_t    g_perms = 0;
 #define FIELD_STR_RESULTSET_NAMES          ("resultset-names")
 #define FIELD_STR_RESULTSET_DESCRIPTIONS   ("resultset-descriptions")
 #define FIELD_STR_PERMS                    ("perms")
+#define FIELD_STR_TARGET_USER              ("target-user")
+#define FIELD_STR_TARGET_GROUP             ("target-group")
 #define FIELD_STR_RESOURCE                 ("resource")
 #define FIELD_STR_QUEUE_NAME               ("queue-name")
 #define FIELD_STR_QUEUE_DESCRIPTION        ("queue-description")
@@ -102,14 +104,16 @@ uint64_t    g_perms = 0;
 #define BIT_RESULTSET_NAMES          ((uint64_t)1 << 22)
 #define BIT_RESULTSET_DESCRIPTIONS   ((uint64_t)1 << 23)
 #define BIT_PERMS                    ((uint64_t)1 << 24)
-#define BIT_RESOURCE                 ((uint64_t)1 << 25)
-#define BIT_QUEUE_NAME               ((uint64_t)1 << 26)
-#define BIT_QUEUE_DESCRIPTION        ((uint64_t)1 << 27)
-#define BIT_QUEUE_ID                 ((uint64_t)1 << 28)
-#define BIT_MESSAGE_ID               ((uint64_t)1 << 29)
-#define BIT_MESSAGE_IDS              ((uint64_t)1 << 30)
-#define BIT_ERROR_MESSAGE            ((uint64_t)1 << 31)
-#define BIT_ERROR_CODE               ((uint64_t)1 << 32)
+#define BIT_TARGET_USER              ((uint64_t)1 << 25)
+#define BIT_TARGET_GROUP             ((uint64_t)1 << 26)
+#define BIT_RESOURCE                 ((uint64_t)1 << 27)
+#define BIT_QUEUE_NAME               ((uint64_t)1 << 28)
+#define BIT_QUEUE_DESCRIPTION        ((uint64_t)1 << 29)
+#define BIT_QUEUE_ID                 ((uint64_t)1 << 30)
+#define BIT_MESSAGE_ID               ((uint64_t)1 << 31)
+#define BIT_MESSAGE_IDS              ((uint64_t)1 << 32)
+#define BIT_ERROR_MESSAGE            ((uint64_t)1 << 33)
+#define BIT_ERROR_CODE               ((uint64_t)1 << 34)
 
 
 // These are the constraints for each endpoint. It's a bitmask of which
@@ -132,12 +136,17 @@ uint64_t    g_perms = 0;
 #define ARG_GROUP_LIST             (BIT_NAME_PATTERN | BIT_DESCRIPTION_PATTERN | BIT_RESULTSET_NAMES | BIT_RESULTSET_DESCRIPTIONS | BIT_RESULTSET_IDS)
 #define ARG_GROUP_MEMBERS          (BIT_GROUP_NAME | BIT_RESULTSET_EMAILS | BIT_RESULTSET_NICKS | BIT_RESULTSET_FLAGS |  BIT_RESULTSET_IDS)
 
-#define ARG_PERMS_GRANT_USER       (BIT_EMAIL | BIT_PERMS | BIT_RESOURCE)
-#define ARG_PERMS_REVOKE_USER      (BIT_EMAIL | BIT_PERMS | BIT_RESOURCE)
-#define ARG_PERMS_RESOURCE_USER    (BIT_EMAIL | BIT_RESOURCE)
-#define ARG_PERMS_GRANT_GROUP      (BIT_GROUP_NAME | BIT_PERMS | BIT_RESOURCE)
-#define ARG_PERMS_REVOKE_GROUP     (BIT_GROUP_NAME | BIT_PERMS | BIT_RESOURCE)
-#define ARG_PERMS_RESOURCE_GROUP   (BIT_GROUP_NAME | BIT_RESOURCE)
+#define ARG_GRANT                  (BIT_EMAIL | BIT_PERMS)
+#define ARG_GRANT_USER_O_USER      (BIT_EMAIL | BIT_PERMS | BIT_TARGET_USER)
+#define ARG_GRANT_USER_O_GROUP     (BIT_EMAIL | BIT_PERMS | BIT_TARGET_GROUP)
+#define ARG_GRANT_GROUP_O_USER     (BIT_GROUP_NAME | BIT_PERMS | BIT_TARGET_USER)
+#define ARG_GRANT_GROUP_O_GROUP    (BIT_GROUP_NAME | BIT_PERMS | BIT_TARGET_GROUP)
+
+#define ARG_REVOKE                  (BIT_EMAIL | BIT_PERMS)
+#define ARG_REVOKE_USER_O_USER      (BIT_EMAIL | BIT_PERMS | BIT_TARGET_USER)
+#define ARG_REVOKE_USER_O_GROUP     (BIT_EMAIL | BIT_PERMS | BIT_TARGET_GROUP)
+#define ARG_REVOKE_GROUP_O_USER     (BIT_GROUP_NAME | BIT_PERMS | BIT_TARGET_USER)
+#define ARG_REVOKE_GROUP_O_GROUP    (BIT_GROUP_NAME | BIT_PERMS | BIT_TARGET_GROUP)
 
 #define ARG_QUEUE_NEW              (BIT_QUEUE_NAME | BIT_QUEUE_DESCRIPTION)
 #define ARG_QUEUE_RM               (BIT_QUEUE_ID)
@@ -184,6 +193,8 @@ static struct incoming_value_t g_incoming[] = {
    { FIELD_STR_RESULTSET_NAMES,        TYPE_STRING, NULL, 0 },
    { FIELD_STR_RESULTSET_DESCRIPTIONS, TYPE_STRING, NULL, 0 },
    { FIELD_STR_PERMS,                  TYPE_STRING, NULL, 0 },
+   { FIELD_STR_TARGET_USER,            TYPE_STRING, NULL, 0 },
+   { FIELD_STR_TARGET_GROUP,           TYPE_STRING, NULL, 0 },
    { FIELD_STR_RESOURCE,               TYPE_STRING, NULL, 0 },
    { FIELD_STR_QUEUE_NAME,             TYPE_STRING, NULL, 0 },
    { FIELD_STR_QUEUE_DESCRIPTION,      TYPE_STRING, NULL, 0 },
@@ -1001,59 +1012,99 @@ errorexit:
    return !error;
 }
 
-static bool endpoint_PERMS_GRANT_USER (ds_hmap_t *jfields,
-                                       int *error_code, int *status_code)
+static bool endpoint_GRANT (ds_hmap_t *jfields,
+                            int *error_code, int *status_code)
 {
    jfields = jfields;
    *error_code = EPUBSUB_UNIMPLEMENTED;
-   status_code = status_code;
-   return false;
+   *status_code = 200;
+   return true;
 }
 
-static bool endpoint_PERMS_REVOKE_USER (ds_hmap_t *jfields,
+static bool endpoint_GRANT_USER_O_USER (ds_hmap_t *jfields,
                                         int *error_code, int *status_code)
 {
    jfields = jfields;
    *error_code = EPUBSUB_UNIMPLEMENTED;
-   status_code = status_code;
-   return false;
+   *status_code = 200;
+   return true;
 }
 
-static bool endpoint_PERMS_RESOURCE_USER (ds_hmap_t *jfields,
-                                          int *error_code, int *status_code)
-{
-   jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   status_code = status_code;
-   return false;
-}
-
-static bool endpoint_PERMS_GRANT_GROUP (ds_hmap_t *jfields,
-                                        int *error_code, int *status_code)
-{
-   jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   status_code = status_code;
-   return false;
-}
-
-static bool endpoint_PERMS_REVOKE_GROUP (ds_hmap_t *jfields,
+static bool endpoint_GRANT_USER_O_GROUP (ds_hmap_t *jfields,
                                          int *error_code, int *status_code)
 {
    jfields = jfields;
    *error_code = EPUBSUB_UNIMPLEMENTED;
-   status_code = status_code;
-   return false;
+   *status_code = 200;
+   return true;
 }
 
-static bool endpoint_PERMS_RESOURCE_GROUP (ds_hmap_t *jfields,
+static bool endpoint_GRANT_GROUP_O_USER (ds_hmap_t *jfields,
+                                         int *error_code, int *status_code)
+{
+   jfields = jfields;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
+   *status_code = 200;
+   return true;
+}
+
+static bool endpoint_GRANT_GROUP_O_GROUP (ds_hmap_t *jfields,
+                                          int *error_code, int *status_code)
+{
+   jfields = jfields;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
+   *status_code = 200;
+   return true;
+}
+
+static bool endpoint_REVOKE (ds_hmap_t *jfields,
+                             int *error_code, int *status_code)
+{
+   jfields = jfields;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
+   *status_code = 200;
+   return true;
+}
+
+static bool endpoint_REVOKE_USER_O_USER (ds_hmap_t *jfields,
+                                         int *error_code, int *status_code)
+{
+   jfields = jfields;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
+   *status_code = 200;
+   return true;
+}
+
+static bool endpoint_REVOKE_USER_O_GROUP (ds_hmap_t *jfields,
+                                          int *error_code, int *status_code)
+{
+   jfields = jfields;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
+   *status_code = 200;
+   return true;
+}
+
+static bool endpoint_REVOKE_GROUP_O_USER (ds_hmap_t *jfields,
+                                          int *error_code, int *status_code)
+{
+   jfields = jfields;
+   *error_code = EPUBSUB_UNIMPLEMENTED;
+   *status_code = 200;
+   return true;
+}
+
+static bool endpoint_REVOKE_GROUP_O_GROUP (ds_hmap_t *jfields,
                                            int *error_code, int *status_code)
 {
    jfields = jfields;
    *error_code = EPUBSUB_UNIMPLEMENTED;
-   status_code = status_code;
-   return false;
+   *status_code = 200;
+   return true;
 }
+
+
+
+
 
 static bool endpoint_QUEUE_NEW (ds_hmap_t *jfields,
                                 int *error_code, int *status_code)
@@ -1123,37 +1174,43 @@ static const struct {
    const char       *str;
    uint64_t          params;
 } g_endpts[] = {
-{ endpoint_ERROR,                  "",                     ARG_ERROR                  },
-{ endpoint_LOGIN,                  "login",                ARG_LOGIN                  },
-{ endpoint_LOGOUT,                 "logout",               ARG_LOGOUT                 },
+{ endpoint_ERROR,                  "",                     ARG_ERROR          },
+{ endpoint_LOGIN,                  "login",                ARG_LOGIN          },
+{ endpoint_LOGOUT,                 "logout",               ARG_LOGOUT         },
 
-{ endpoint_USER_NEW,               "user-new",             ARG_USER_NEW               },
-{ endpoint_USER_RM,                "user-rm",              ARG_USER_RM                },
-{ endpoint_USER_LIST,              "user-list",            ARG_USER_LIST              },
-{ endpoint_USER_MOD,               "user-mod",             ARG_USER_MOD               },
+{ endpoint_USER_NEW,               "user-new",             ARG_USER_NEW       },
+{ endpoint_USER_RM,                "user-rm",              ARG_USER_RM        },
+{ endpoint_USER_LIST,              "user-list",            ARG_USER_LIST      },
+{ endpoint_USER_MOD,               "user-mod",             ARG_USER_MOD       },
 
-{ endpoint_GROUP_NEW,              "group-new",            ARG_GROUP_NEW              },
-{ endpoint_GROUP_RM,               "group-rm",             ARG_GROUP_RM               },
-{ endpoint_GROUP_MOD,              "group-mod",            ARG_GROUP_MOD              },
-{ endpoint_GROUP_ADDUSER,          "group-adduser",        ARG_GROUP_ADDUSER          },
-{ endpoint_GROUP_RMUSER,           "group-rmuser",         ARG_GROUP_RMUSER           },
-{ endpoint_GROUP_LIST,             "group-list",           ARG_GROUP_LIST             },
-{ endpoint_GROUP_MEMBERS,          "group-members",        ARG_GROUP_MEMBERS          },
+{ endpoint_GROUP_NEW,              "group-new",            ARG_GROUP_NEW      },
+{ endpoint_GROUP_RM,               "group-rm",             ARG_GROUP_RM       },
+{ endpoint_GROUP_MOD,              "group-mod",            ARG_GROUP_MOD      },
+{ endpoint_GROUP_ADDUSER,          "group-adduser",        ARG_GROUP_ADDUSER  },
+{ endpoint_GROUP_RMUSER,           "group-rmuser",         ARG_GROUP_RMUSER   },
+{ endpoint_GROUP_LIST,             "group-list",           ARG_GROUP_LIST     },
+{ endpoint_GROUP_MEMBERS,          "group-members",        ARG_GROUP_MEMBERS  },
 
-{ endpoint_PERMS_GRANT_USER,       "perms-grant-user",     ARG_PERMS_GRANT_USER       },
-{ endpoint_PERMS_REVOKE_USER,      "perms-revoke-user",    ARG_PERMS_REVOKE_USER      },
-{ endpoint_PERMS_RESOURCE_USER,    "perms-resource-user",  ARG_PERMS_RESOURCE_USER    },
-{ endpoint_PERMS_GRANT_GROUP,      "perms-grant-group",    ARG_PERMS_GRANT_GROUP      },
-{ endpoint_PERMS_REVOKE_GROUP,     "perms-revoke-group",   ARG_PERMS_REVOKE_GROUP     },
-{ endpoint_PERMS_RESOURCE_GROUP,   "perms-resource-group", ARG_PERMS_RESOURCE_GROUP   },
+{ endpoint_GRANT,                  "grant",                          ARG_GRANT                },
+{ endpoint_GRANT_USER_O_USER,      "grant-to-user-over-user",        ARG_GRANT_USER_O_USER    },
+{ endpoint_GRANT_USER_O_GROUP,     "grant-to-user-over-group",       ARG_GRANT_USER_O_GROUP   },
+{ endpoint_GRANT_GROUP_O_USER,     "grant-to-group-over-user",       ARG_GRANT_GROUP_O_USER   },
+{ endpoint_GRANT_GROUP_O_GROUP,    "grant-to-group-over-group",      ARG_GRANT_GROUP_O_GROUP  },
 
-{ endpoint_QUEUE_NEW,              "queue-new",            ARG_QUEUE_NEW              },
-{ endpoint_QUEUE_RM,               "queue-rm",             ARG_QUEUE_RM               },
-{ endpoint_QUEUE_MOD,              "queue-mod",            ARG_QUEUE_MOD              },
-{ endpoint_QUEUE_PUT,              "queue-put",            ARG_QUEUE_PUT              },
-{ endpoint_QUEUE_GET,              "queue-get",            ARG_QUEUE_GET              },
-{ endpoint_QUEUE_DEL,              "queue-del",            ARG_QUEUE_DEL              },
-{ endpoint_QUEUE_LIST,             "queue-list",           ARG_QUEUE_LIST             },
+{ endpoint_REVOKE,                  "revoke",                        ARG_REVOKE               },
+{ endpoint_REVOKE_USER_O_USER,      "revoke-from-user-over-user",    ARG_REVOKE_USER_O_USER   },
+{ endpoint_REVOKE_USER_O_GROUP,     "revoke-from-user-over-group",   ARG_REVOKE_USER_O_GROUP  },
+{ endpoint_REVOKE_GROUP_O_USER,     "revoke-from-group-over-user",   ARG_REVOKE_GROUP_O_USER  },
+{ endpoint_REVOKE_GROUP_O_GROUP,    "revoke-from-group-over-group",  ARG_REVOKE_GROUP_O_GROUP },
+
+
+{ endpoint_QUEUE_NEW,              "queue-new",  ARG_QUEUE_NEW  },
+{ endpoint_QUEUE_RM,               "queue-rm",   ARG_QUEUE_RM   },
+{ endpoint_QUEUE_MOD,              "queue-mod",  ARG_QUEUE_MOD  },
+{ endpoint_QUEUE_PUT,              "queue-put",  ARG_QUEUE_PUT  },
+{ endpoint_QUEUE_GET,              "queue-get",  ARG_QUEUE_GET  },
+{ endpoint_QUEUE_DEL,              "queue-del",  ARG_QUEUE_DEL  },
+{ endpoint_QUEUE_LIST,             "queue-list", ARG_QUEUE_LIST },
    };
 
 static endpoint_func_t *endpoint_parse (const char *srcstr)

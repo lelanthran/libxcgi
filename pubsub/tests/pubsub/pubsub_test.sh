@@ -226,10 +226,33 @@ exit 127
 
 ###############################################
 
+call_cgi /grant grant-1.results '{
+   "email": "one@example.com",
+   "perms": "create-user,create-group,del-user,del-group"
+}'
+
 call_cgi /grant-to-user-over-user grant-to-user-over-user-1.results '{
-   "email":       "one@example.com",
-   "resource":    "two@example.com",
-   "perms":       "all"
+   "email":       "two@example.com",
+   "target-user": "three@example.com",
+   "perms":       "modify"
+}'
+
+call_cgi /grant-to-user-over-group grant-to-user-over-group-1.results '{
+   "email":          "three@example.com",
+   "target-group":   "Group-1",
+   "perms":          "delete"
+}'
+
+call_cgi /grant-to-group-over-user grant-to-group-over-user-1.results '{
+   "group-name":  "Group-2",
+   "target-user": "three@example.com",
+   "perms":       "change-permissions"
+}'
+
+call_cgi /grant-to-user-over-group grant-to-user-over-group-1.results '{
+   "group-name":     "Group-3",
+   "target-group":   "Group-4",
+   "perms":          "change-membership"
 }'
 
 ###############################################
