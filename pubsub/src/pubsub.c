@@ -20,6 +20,7 @@
 #define TYPE_INT           (2)
 #define TYPE_ARRAY         (3)
 
+static uint64_t perms_decode (const char *str);
 
 // ErrorReportingMadeEasy(tm)
 #define PROG_ERR(...)      do {\
@@ -37,64 +38,6 @@ char       *g_nick = NULL;
 uint64_t    g_flags = 0;
 uint64_t    g_id = 0;
 uint64_t    g_perms = 0;
-
-/* ******************************************************************
- * Managing the permissions.
- *
- */
-
-#define PERM_STR_ALL                   ("all")
-#define PERM_STR_CREATE_USER           ("create-user")
-#define PERM_STR_CREATE_GROUP          ("create-group")
-#define PERM_STR_DEL_USER              ("delete-user")
-#define PERM_STR_DEL_GROUP             ("delete-group")
-#define PERM_STR_MODIFY                ("modify")
-#define PERM_STR_DELETE                ("delete")
-#define PERM_STR_CHANGE_PERMISSIONS    ("change-permissions")
-#define PERM_STR_CHANGE_MEMBERSHIP     ("change-membership")
-
-#define PERM_BIT_ALL                  ((uint64_t)(((uint64_t)1) << 0))
-#define PERM_BIT_CREATE_USER          ((uint64_t)(((uint64_t)1) << 1))
-#define PERM_BIT_CREATE_GROUP         ((uint64_t)(((uint64_t)1) << 2))
-#define PERM_BIT_DEL_USER             ((uint64_t)(((uint64_t)1) << 3))
-#define PERM_BIT_DEL_GROUP            ((uint64_t)(((uint64_t)1) << 4))
-#define PERM_BIT_MODIFY               ((uint64_t)(((uint64_t)1) << 5))
-#define PERM_BIT_DELETE               ((uint64_t)(((uint64_t)1) << 6))
-#define PERM_BIT_CHANGE_PERMISSIONS   ((uint64_t)(((uint64_t)1) << 7))
-#define PERM_BIT_CHANGE_MEMBERSHIP    ((uint64_t)(((uint64_t)1) << 8))
-
-uint64_t perms_decode (const char *str)
-{
-   uint64_t ret = 0;
-   bool all = (strstr (str, PERM_STR_ALL)) ? true : false;
-
-   if (all || (strstr (str, PERM_STR_CREATE_USER)))
-      ret |= PERM_BIT_CREATE_USER;
-
-   if (all || (strstr (str, PERM_STR_CREATE_GROUP)))
-      ret |= PERM_BIT_CREATE_GROUP;
-
-   if (all || (strstr (str, PERM_STR_DEL_USER)))
-      ret |= PERM_BIT_DEL_USER;
-
-   if (all || (strstr (str, PERM_STR_DEL_GROUP)))
-      ret |= PERM_BIT_DEL_GROUP;
-
-
-   if (all || (strstr (str, PERM_STR_MODIFY)))
-      ret |= PERM_BIT_MODIFY;
-
-   if (all || (strstr (str, PERM_STR_DELETE)))
-      ret |= PERM_BIT_DELETE;
-
-   if (all || (strstr (str, PERM_STR_CHANGE_PERMISSIONS)))
-      ret |= PERM_BIT_CHANGE_PERMISSIONS;
-
-   if (all || (strstr (str, PERM_STR_CHANGE_MEMBERSHIP)))
-      ret |= PERM_BIT_CHANGE_MEMBERSHIP;
-
-   return ret;
-}
 
 /* ******************************************************************
  * The field names as defined in the API spec document. When adding
@@ -497,32 +440,6 @@ static void free_json (ds_hmap_t *hm)
 
 errorexit:
    free (keys);
-}
-
-/* ******************************************************************
- * Manage all the permissions. A single permission is a set of 64 flags
- * for a particular resource. Each user may have multiple permissions, but
- * only the first match against a resource is considered.
- */
-
-#define RSC_USERS          ("USERS")
-#define RSC_GROUPS         ("GROUPS")
-
-#define PRM_CREATE_USER       (1 << 0)
-#define PRM_CREATE_GROUP      (1 << 1)
-#define PRM_MODIFY_USER       (1 << 2)
-#define PRM_MODIFY_GROUP      (1 << 3)
-#define PRM_DELETE_USER       (1 << 4)
-#define PRM_DELETE_GROUP      (1 << 5)
-
-static uint64_t perms_get (const char *email, const char *resource)
-{
-   uint64_t ret = 0;
-   if ((sqldb_auth_perms_get_all (xcgi_db, &ret, email, resource)))
-      return ret;
-
-   PROG_ERR ("Failed to get permissions for user [%s/%s]\n", email, resource);
-   return 0;
 }
 
 /* ******************************************************************
@@ -1111,7 +1028,6 @@ static bool endpoint_GRANT_USER_O_USER (ds_hmap_t *jfields,
                                         int *error_code, int *status_code)
 {
    const char *email = incoming_find (FIELD_STR_EMAIL),
-              *target = incoming_find (FIELD_STR_TARGET_USER),
               *permstr = incoming_find (FIELD_STR_PERMS);
 
    uint64_t perms = perms_decode (permstr);
@@ -1340,6 +1256,92 @@ static bool endpoint_valid_params (endpoint_func_t *fptr)
 
    return false;
 }
+
+
+/* ******************************************************************
+ * Manage all the permissions. A single permission is a set of 64 flags
+ * for a particular resource. Each user may have multiple permissions, but
+ * only the first match against a resource is considered.
+ */
+
+static uint64_t perms_get (const char *email, const char *resource)
+{
+   uint64_t ret = 0;
+   if ((sqldb_auth_perms_get_all (xcgi_db, &ret, email, resource)))
+      return ret;
+
+   PROG_ERR ("Failed to get permissions for user [%s/%s]\n", email, resource);
+   return 0;
+}
+
+
+#define PERM_STR_ALL                   ("all")
+#define PERM_STR_CREATE_USER           ("create-user")
+#define PERM_STR_CREATE_GROUP          ("create-group")
+#define PERM_STR_DEL_USER              ("delete-user")
+#define PERM_STR_DEL_GROUP             ("delete-group")
+#define PERM_STR_READ                  ("read")
+#define PERM_STR_LIST_MEMBERS          ("list-members")
+#define PERM_STR_MODIFY                ("modify")
+#define PERM_STR_DELETE                ("delete")
+#define PERM_STR_CHANGE_PERMISSIONS    ("change-permissions")
+#define PERM_STR_CHANGE_MEMBERSHIP     ("change-membership")
+
+#define PERM_BIT_ALL                   ((uint64_t)(((uint64_t)1) << 0))
+#define PERM_BIT_CREATE_USER           ((uint64_t)(((uint64_t)1) << 1))
+#define PERM_BIT_CREATE_GROUP          ((uint64_t)(((uint64_t)1) << 2))
+#define PERM_BIT_DEL_USER              ((uint64_t)(((uint64_t)1) << 3))
+#define PERM_BIT_DEL_GROUP             ((uint64_t)(((uint64_t)1) << 4))
+#define PERM_BIT_READ                  ((uint64_t)(((uint64_t)1) << 5))
+#define PERM_BIT_LIST_MEMBERS          ((uint64_t)(((uint64_t)1) << 6))
+#define PERM_BIT_MODIFY                ((uint64_t)(((uint64_t)1) << 6))
+#define PERM_BIT_DELETE                ((uint64_t)(((uint64_t)1) << 7))
+#define PERM_BIT_CHANGE_PERMISSIONS    ((uint64_t)(((uint64_t)1) << 8))
+#define PERM_BIT_CHANGE_MEMBERSHIP     ((uint64_t)(((uint64_t)1) << 9))
+
+static uint64_t perms_decode (const char *str)
+{
+   uint64_t ret = 0;
+   bool all = (strstr (str, PERM_STR_ALL)) ? true : false;
+
+   if (all || (strstr (str, PERM_STR_CREATE_USER)))
+      ret |= PERM_BIT_CREATE_USER;
+
+   if (all || (strstr (str, PERM_STR_CREATE_GROUP)))
+      ret |= PERM_BIT_CREATE_GROUP;
+
+   if (all || (strstr (str, PERM_STR_DEL_USER)))
+      ret |= PERM_BIT_DEL_USER;
+
+   if (all || (strstr (str, PERM_STR_DEL_GROUP)))
+      ret |= PERM_BIT_DEL_GROUP;
+
+
+   if (all || (strstr (str, PERM_STR_READ)))
+      ret |= PERM_BIT_READ;
+
+   if (all || (strstr (str, PERM_STR_LIST_MEMBERS)))
+      ret |= PERM_BIT_LIST_MEMBERS;
+
+   if (all || (strstr (str, PERM_STR_MODIFY)))
+      ret |= PERM_BIT_MODIFY;
+
+   if (all || (strstr (str, PERM_STR_DELETE)))
+      ret |= PERM_BIT_DELETE;
+
+   if (all || (strstr (str, PERM_STR_CHANGE_PERMISSIONS)))
+      ret |= PERM_BIT_CHANGE_PERMISSIONS;
+
+   if (all || (strstr (str, PERM_STR_CHANGE_MEMBERSHIP)))
+      ret |= PERM_BIT_CHANGE_MEMBERSHIP;
+
+   return ret;
+}
+
+static bool perms_check (endpoint_func_t *fptr, 
+/* ******************************************************************
+ * Misc functions, then main
+ */
 
 static void print_help (void)
 {

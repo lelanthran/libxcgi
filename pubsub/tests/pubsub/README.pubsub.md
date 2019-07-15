@@ -132,7 +132,8 @@ POST /grant-to-user-over-user
    "target-user": "two@example.com",
    "perms":       "modify" // "delete",
                            // "change-permissions",
-                           // "change-membership"
+                           // "change-membership",
+                           // "read"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -145,7 +146,9 @@ POST /grant-to-user-over-group
    "target-group":   "Group-1",
    "perms":          "modify" // "delete",
                               // "change-permissions",
-                              // "change-membership"
+                              // "change-membership",
+                              // "read",
+                              // "list-members"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -158,7 +161,8 @@ POST /grant-to-group-over-user
    "target-user": "example@email.com",
    "perms":       "modify" // "delete",
                            // "change-permissions",
-                           // "change-membership"
+                           // "change-membership",
+                           // "read"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -171,7 +175,9 @@ POST /grant-to-group-over-group
    "target-group":   "example@email.com",
    "perms":          "modify" // "delete",
                               // "change-permissions",
-                              // "change-membership"
+                              // "change-membership",
+                              // "read",
+                              // "list-members"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -184,7 +190,8 @@ POST /revoke-from-user-over-user
    "target-user": "two@example.com",
    "perms":       "modify" // "delete",
                            // "change-permissions",
-                           // "change-membership"
+                           // "change-membership",
+                           // "read"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -197,7 +204,9 @@ POST /revoke-from-user-over-group
    "target-group":   "Group-1",
    "perms":          "modify" // "delete",
                               // "change-permissions",
-                              // "change-membership"
+                              // "change-membership",
+                              // "read",
+                              // "list-members"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -210,7 +219,8 @@ POST /revoke-from-group-over-user
    "target-user": "example@email.com",
    "perms":       "modify" // "delete",
                            // "change-permissions",
-                           // "change-membership"
+                           // "change-membership",
+                           // "read"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -223,7 +233,9 @@ POST /revoke-from-group-over-group
    "target-group":   "example@email.com",
    "perms":          "modify" // "delete",
                               // "change-permissions",
-                              // "change-membership"
+                              // "change-membership",
+                              // "read",
+                              // "list-members"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -231,112 +243,6 @@ RETURNS: "error-code" and "error-message" fields only.
 
 
 
-The permissions that can be granted/revoked are:
-```javascript
-   create            // Create a new instance of <resource>
-   read              // Read a specific instance
-   update            // Update a specific instance
-   delete            // Delete a specific instance
-```
-The &lt;resources&gt; that can be created are:
-```javascript
-   user
-   group
-   permission
-   membership
-```
-For specific instances (read, update and delete), the instance being
-managed must be named in the granting/revocation call. The call itself is
-specific to the subject, grant/revocation, the permission and the target.
-```javascript
-   grant[-specific]-to-[subject][-over-[target]]
-   revoke[-specific]-from-[subject]-over-[target]
-
-   specific   Optional (see above), either perms or membership
-   subject    The entity to grant/revoke the permission (user or group)
-   target     The entity which the subject has control over (user or group)
-
-```
-
-This results in the following enumeration of API calls to modify
-permissions:
-```javascript
-   grant-to-user-over-user                  <email> <target> <perms>
-   grant-to-user-over-group                 <group> <target> <perms>
-   grant-to-group-over-user                 <email> <target> <perms>
-   grant-to-group-over-group                <group> <target> <perms>
-
-   grant-perms-to-user-over-user            <email> <target> <perms>
-   grant-perms-to-user-over-group           <group> <target> <perms>
-   grant-perms-to-group-over-user           <email> <target> <perms>
-   grant-perms-to-group-over-group          <group> <target> <perms>
-
-   grant-membership-to-user-over-user       <email> <target> <perms>
-   grant-membership-to-user-over-group      <group> <target> <perms>
-   grant-membership-to-group-over-user      <email> <target> <perms>
-   grant-membership-to-group-over-group     <group> <target> <perms>
-
-   revoke-to-user-over-user                <email> <target> <perms>
-   revoke-to-user-over-group               <group> <target> <perms>
-   revoke-to-group-over-user               <email> <target> <perms>
-   revoke-to-group-over-group              <group> <target> <perms>
-
-   revoke-perms-to-user-over-user          <email> <target> <perms>
-   revoke-perms-to-user-over-group         <group> <target> <perms>
-   revoke-perms-to-group-over-user         <email> <target> <perms>
-   revoke-perms-to-group-over-group        <group> <target> <perms>
-
-   revoke-membership-to-user-over-user     <email> <target> <perms>
-   revoke-membership-to-user-over-group    <group> <target> <perms>
-   revoke-membership-to-group-over-user    <email> <target> <perms>
-   revoke-membership-to-group-over-group   <group> <target> <perms>
-
-```
-For example:
-```javascript
-   // Grant read,update perms to one@example.com for user two@example.com
-   grant-to-user-over-user one@example.com read,update two@example.com
-
-   // Grant read,update perms to user one@example.com for users in group
-   // Group-1.
-   grant-to-user-over-group one@example.com read,update Group-1
-
-
-   // Grant read,update perms to group Group-1 for user one@example.com
-   grant-to-group-over-user Group-1 read,update one@example.com
-
-   // Grant read,update perms to group Group-1 for users in group
-   // Group-2.
-   grant-to-group-over-group Group-1 read,update Group-2
-
-
-   // Grant all perms to user one@example.com for permission modifications
-   // of user two@example.com
-   grant-perms-to-user-over-user one@example.com all two@example.com
-
-   // Grant all perms to user one@example.com for permission modifications
-   // of group Group-1
-   grant-perms-to-user-over-group one@example.com all Group-1
-
-   // Grant all perms to group Group-1 for permission modifications
-   // of group Group-1
-   grant-perms-to-group-over-group Group-1 all Group-2
-
-
-   // Grant update perms to user one@example.com for membership modifications
-   // of user two@example.com
-   grant-membership-to-user-over-user one@example.com update two@example.com
-
-   // Grant update perms to user one@example.com for membership modifications
-   // of group Group-1
-   grant-membership-to-user-over-group one@example.com update Group-1
-
-   // Grant update perms to group Group-1 for membership modifications
-   // of group Group-1
-   grant-membership-to-group-over-group Group-1 update Group-2
-
-
-```
 #### New user
 ```javascript
 POST /user-new
