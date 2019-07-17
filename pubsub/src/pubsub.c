@@ -1024,11 +1024,10 @@ static bool endpoint_GRANT (ds_hmap_t *jfields,
    return true;
 }
 
-static bool endpoint_GRANT_USER_O_USER (ds_hmap_t *jfields,
-                                        int *error_code, int *status_code)
+static bool endpoint_REVOKE (ds_hmap_t *jfields,
+                             int *error_code, int *status_code)
 {
    const char *email = incoming_find (FIELD_STR_EMAIL),
-              *resource = incoming_find (FIELD_STR_TARGET_USER),
               *permstr = incoming_find (FIELD_STR_PERMS);
 
    uint64_t perms = perms_decode (permstr);
@@ -1036,9 +1035,9 @@ static bool endpoint_GRANT_USER_O_USER (ds_hmap_t *jfields,
    jfields = jfields;
    *status_code = 200;
 
-   if (!(sqldb_auth_perms_grant_user (xcgi_db, email,
-                                               resource,
-                                               perms))) {
+   if (!(sqldb_auth_perms_revoke_user (xcgi_db, email,
+                                       SQLDB_AUTH_GLOBAL_RESOURCE,
+                                       perms))) {
       *error_code = EPUBSUB_INTERNAL_ERROR;
       return false;
    }
@@ -1046,76 +1045,91 @@ static bool endpoint_GRANT_USER_O_USER (ds_hmap_t *jfields,
    return true;
 }
 
+static bool
+endpoint_g_r (bool (*fptr) (sqldb_t *, const char *, const char *, uint64_t),
+              const char *subj, const char *target,
+              ds_hmap_t *jfields,
+              int *error_code, int *status_code)
+{
+   const char *p_subj = incoming_find (subj),
+              *p_target = incoming_find (target),
+              *permstr = incoming_find (FIELD_STR_PERMS);
+
+   uint64_t perms = perms_decode (permstr);
+
+   jfields = jfields;
+   *status_code = 200;
+
+   if (!(fptr (xcgi_db, p_subj, p_target, perms))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
+   return true;
+}
+
+static bool endpoint_GRANT_USER_O_USER (ds_hmap_t *jfields,
+                                        int *error_code, int *status_code)
+{
+   return endpoint_g_r (sqldb_auth_perms_grant_user,
+                        FIELD_STR_EMAIL, FIELD_STR_TARGET_USER,
+                        jfields, error_code, status_code);
+}
+
 static bool endpoint_GRANT_USER_O_GROUP (ds_hmap_t *jfields,
                                          int *error_code, int *status_code)
 {
-   jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   *status_code = 200;
-   return true;
+   return endpoint_g_r (sqldb_auth_perms_grant_user,
+                        FIELD_STR_EMAIL, FIELD_STR_TARGET_GROUP,
+                        jfields, error_code, status_code);
 }
 
 static bool endpoint_GRANT_GROUP_O_USER (ds_hmap_t *jfields,
                                          int *error_code, int *status_code)
 {
-   jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   *status_code = 200;
-   return true;
+   return endpoint_g_r (sqldb_auth_perms_grant_group,
+                        FIELD_STR_GROUP_NAME, FIELD_STR_TARGET_USER,
+                        jfields, error_code, status_code);
 }
 
 static bool endpoint_GRANT_GROUP_O_GROUP (ds_hmap_t *jfields,
                                           int *error_code, int *status_code)
 {
-   jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   *status_code = 200;
-   return true;
-}
-
-static bool endpoint_REVOKE (ds_hmap_t *jfields,
-                             int *error_code, int *status_code)
-{
-   jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   *status_code = 200;
-   return true;
+   return endpoint_g_r (sqldb_auth_perms_grant_group,
+                        FIELD_STR_GROUP_NAME, FIELD_STR_TARGET_GROUP,
+                        jfields, error_code, status_code);
 }
 
 static bool endpoint_REVOKE_USER_O_USER (ds_hmap_t *jfields,
                                          int *error_code, int *status_code)
 {
-   jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   *status_code = 200;
-   return true;
+   return endpoint_g_r (sqldb_auth_perms_grant_user,
+                        FIELD_STR_EMAIL, FIELD_STR_TARGET_USER,
+                        jfields, error_code, status_code);
 }
 
 static bool endpoint_REVOKE_USER_O_GROUP (ds_hmap_t *jfields,
                                           int *error_code, int *status_code)
 {
-   jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   *status_code = 200;
-   return true;
+   return endpoint_g_r (sqldb_auth_perms_grant_user,
+                        FIELD_STR_EMAIL, FIELD_STR_TARGET_GROUP,
+                        jfields, error_code, status_code);
 }
 
 static bool endpoint_REVOKE_GROUP_O_USER (ds_hmap_t *jfields,
                                           int *error_code, int *status_code)
 {
-   jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   *status_code = 200;
-   return true;
+   return endpoint_g_r (sqldb_auth_perms_grant_group,
+                        FIELD_STR_EMAIL, FIELD_STR_TARGET_USER,
+                        jfields, error_code, status_code);
 }
 
 static bool endpoint_REVOKE_GROUP_O_GROUP (ds_hmap_t *jfields,
                                            int *error_code, int *status_code)
 {
-   jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   *status_code = 200;
-   return true;
+   return endpoint_g_r (sqldb_auth_perms_grant_group,
+                        FIELD_STR_EMAIL, FIELD_STR_TARGET_GROUP,
+                        jfields, error_code, status_code);
 }
 
 

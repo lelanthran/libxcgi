@@ -227,8 +227,6 @@ call_cgi /grant grant-1.results '{
    "perms": "create-user,create-group,del-user,del-group"
 }'
 
-exit 120
-
 ###############################################
 
 call_cgi /grant-to-user-over-user grant-to-user-over-user-1.results '{
@@ -249,11 +247,15 @@ call_cgi /grant-to-group-over-user grant-to-group-over-user-1.results '{
    "perms":       "change-permissions"
 }'
 
-call_cgi /grant-to-user-over-group grant-to-user-over-group-1.results '{
+call_cgi /grant-to-group-over-group grant-to-group-over-group-1.results '{
    "group-name":     "Group-3",
    "target-group":   "Group-4",
    "perms":          "change-membership"
 }'
+
+###############################################
+
+exit 120
 
 ###############################################
 
