@@ -1103,7 +1103,7 @@ static bool endpoint_GRANT_GROUP_O_GROUP (ds_hmap_t *jfields,
 static bool endpoint_REVOKE_USER_O_USER (ds_hmap_t *jfields,
                                          int *error_code, int *status_code)
 {
-   return endpoint_g_r (sqldb_auth_perms_grant_user,
+   return endpoint_g_r (sqldb_auth_perms_revoke_user,
                         FIELD_STR_EMAIL, FIELD_STR_TARGET_USER,
                         jfields, error_code, status_code);
 }
@@ -1111,7 +1111,7 @@ static bool endpoint_REVOKE_USER_O_USER (ds_hmap_t *jfields,
 static bool endpoint_REVOKE_USER_O_GROUP (ds_hmap_t *jfields,
                                           int *error_code, int *status_code)
 {
-   return endpoint_g_r (sqldb_auth_perms_grant_user,
+   return endpoint_g_r (sqldb_auth_perms_revoke_user,
                         FIELD_STR_EMAIL, FIELD_STR_TARGET_GROUP,
                         jfields, error_code, status_code);
 }
@@ -1119,7 +1119,7 @@ static bool endpoint_REVOKE_USER_O_GROUP (ds_hmap_t *jfields,
 static bool endpoint_REVOKE_GROUP_O_USER (ds_hmap_t *jfields,
                                           int *error_code, int *status_code)
 {
-   return endpoint_g_r (sqldb_auth_perms_grant_group,
+   return endpoint_g_r (sqldb_auth_perms_revoke_group,
                         FIELD_STR_EMAIL, FIELD_STR_TARGET_USER,
                         jfields, error_code, status_code);
 }
@@ -1127,7 +1127,7 @@ static bool endpoint_REVOKE_GROUP_O_USER (ds_hmap_t *jfields,
 static bool endpoint_REVOKE_GROUP_O_GROUP (ds_hmap_t *jfields,
                                            int *error_code, int *status_code)
 {
-   return endpoint_g_r (sqldb_auth_perms_grant_group,
+   return endpoint_g_r (sqldb_auth_perms_revoke_group,
                         FIELD_STR_EMAIL, FIELD_STR_TARGET_GROUP,
                         jfields, error_code, status_code);
 }

@@ -255,7 +255,7 @@ call_cgi /grant-to-group-over-group grant-to-group-over-group-1.results '{
 
 ###############################################
 
-exit 120
+exit 117
 
 ###############################################
 
