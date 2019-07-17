@@ -1028,6 +1028,7 @@ static bool endpoint_GRANT_USER_O_USER (ds_hmap_t *jfields,
                                         int *error_code, int *status_code)
 {
    const char *email = incoming_find (FIELD_STR_EMAIL),
+              *resource = incoming_find (FIELD_STR_TARGET_USER),
               *permstr = incoming_find (FIELD_STR_PERMS);
 
    uint64_t perms = perms_decode (permstr);
@@ -1036,16 +1037,12 @@ static bool endpoint_GRANT_USER_O_USER (ds_hmap_t *jfields,
    *status_code = 200;
 
    if (!(sqldb_auth_perms_grant_user (xcgi_db, email,
-                                               SQLDB_AUTH_GLOBAL_RESOURCE,
+                                               resource,
                                                perms))) {
       *error_code = EPUBSUB_INTERNAL_ERROR;
       return false;
    }
 
-   return true;
-   jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   *status_code = 200;
    return true;
 }
 
@@ -1338,7 +1335,6 @@ static uint64_t perms_decode (const char *str)
    return ret;
 }
 
-static bool perms_check (endpoint_func_t *fptr, 
 /* ******************************************************************
  * Misc functions, then main
  */
