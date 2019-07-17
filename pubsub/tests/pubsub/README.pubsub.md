@@ -114,7 +114,6 @@ RETURNS: "error-code" and "error-message" fields only.
 
 
 ```javascript
-
 POST /revoke
 {
    "email":       "example@email.com",
@@ -124,6 +123,34 @@ POST /revoke
 ```
 RETURNS: "error-code" and "error-message" fields only.
 
+
+```javascript
+POST /perms-user
+{
+   "email":       "example@email.com",
+}
+```
+RETURNS:
+```javascript
+POST /perms-user
+{
+   "perms":       "modify,create-user,..."
+}
+```
+
+```javascript
+POST /perms-group
+{
+   "group-name":  "Group-1"
+}
+```
+RETURNS:
+```javascript
+POST /perms-user
+{
+   "perms":       "modify,create-user,..."
+}
+```
 
 ```javascript
 POST /grant-to-user-over-user
