@@ -243,13 +243,39 @@ call_cgi /grant-to-user-over-group grant-to-user-over-group-1.results '{
 
 call_cgi /grant-to-group-over-user grant-to-group-over-user-1.results '{
    "group-name":  "Group-2",
-   "target-user": "three@example.com",
+   "target-user": "four@example.com",
    "perms":       "change-permissions"
 }'
 
 call_cgi /grant-to-group-over-group grant-to-group-over-group-1.results '{
    "group-name":     "Group-3",
    "target-group":   "Group-4",
+   "perms":          "change-membership"
+}'
+
+##########################
+
+call_cgi /grant-to-user-over-user grant-to-user-over-user-1.results '{
+   "email":       "five@example.com",
+   "target-user": "six@example.com",
+   "perms":       "modify"
+}'
+
+call_cgi /grant-to-user-over-group grant-to-user-over-group-1.results '{
+   "email":          "seven@example.com",
+   "target-group":   "Group-5",
+   "perms":          "delete"
+}'
+
+call_cgi /grant-to-group-over-user grant-to-group-over-user-1.results '{
+   "group-name":  "Group-6",
+   "target-user": "eight@example.com",
+   "perms":       "change-permissions"
+}'
+
+call_cgi /grant-to-group-over-group grant-to-group-over-group-1.results '{
+   "group-name":     "Group-7",
+   "target-group":   "Group-8",
    "perms":          "change-membership"
 }'
 
