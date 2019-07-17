@@ -132,7 +132,6 @@ POST /perms-user
 ```
 RETURNS:
 ```javascript
-POST /perms-user
 {
    "perms":       "modify,create-user,..."
 }
@@ -146,7 +145,6 @@ POST /perms-group
 ```
 RETURNS:
 ```javascript
-POST /perms-user
 {
    "perms":       "modify,create-user,..."
 }
