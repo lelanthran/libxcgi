@@ -455,7 +455,7 @@ static bool endpoint_ERROR (ds_hmap_t *jfields,
    jfields = jfields;
    *error_code = EPUBSUB_ENDPOINT;
    *status_code = 200;
-   return true;
+   return false;
 }
 
 static bool endpoint_LOGIN (ds_hmap_t *jfields,
