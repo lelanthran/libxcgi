@@ -104,7 +104,7 @@ RETURNS:
 
 #### Grant creation permissions to a user
 ```javascript
-POST /grant
+POST /grant-to-user
 {
    "email":       "example@email.com",
    "perms":       "create-user" // "create-group",
@@ -115,7 +115,7 @@ RETURNS: "error-code" and "error-message" fields only.
 
 #### Revoke creation permissions from a user
 ```javascript
-POST /revoke
+POST /revoke-from-user
 {
    "email":       "example@email.com",
    "perms":       "create-user" // "create-group",
@@ -127,7 +127,7 @@ RETURNS: "error-code" and "error-message" fields only.
 
 #### Grant creation permissions to a group
 ```javascript
-POST /grant-group
+POST /grant-to-group
 {
    "group-name":  "Group-1",
    "perms":       "create-user" // "create-group",
@@ -138,7 +138,7 @@ RETURNS: "error-code" and "error-message" fields only.
 
 #### Revoke creation permissions from a group
 ```javascript
-POST /revoke-group
+POST /revoke-from-group
 {
    "group-name":  "Group-1",
    "perms":       "create-user" // "create-group",

@@ -25,14 +25,15 @@ export ENDPOINTS='
    group-list
    group-members
 
-   grant-user
-   grant-group
+   grant-to-user
+   grant-to-group
    grant-to-user-over-user
    grant-to-user-over-group
    grant-to-group-over-user
    grant-to-group-over-group
 
-   revoke
+   grant-from-user
+   grant-from-group
    revoke-from-user-over-user
    revoke-from-user-over-group
    revoke-from-group-over-user

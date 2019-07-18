@@ -222,12 +222,12 @@ done
 
 ###############################################
 
-call_cgi /grant-user grant-user-1.results '{
+call_cgi /grant-to-user grant-to-user-1.results '{
    "email": "ten@example.com",
    "perms": "create-user,create-group"
 }'
 
-call_cgi /grant-group grant-group-1.results '{
+call_cgi /grant-to-group grant-to-group-1.results '{
    "group-name": "Group-10",
    "perms":      "create-user"
 }'
