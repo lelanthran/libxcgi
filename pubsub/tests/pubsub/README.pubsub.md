@@ -102,17 +102,18 @@ RETURNS:
 
 ### User, group and permissions management
 
+#### Grant creation permissions to a user
 ```javascript
 POST /grant
 {
    "email":       "example@email.com",
    "perms":       "create-user" // "create-group",
-                                // "delete-user", "delete-group"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
 
 
+#### Revoke creation permissions from a user
 ```javascript
 POST /revoke
 {
@@ -124,6 +125,30 @@ POST /revoke
 RETURNS: "error-code" and "error-message" fields only.
 
 
+#### Grant creation permissions to a group
+```javascript
+POST /grant-group
+{
+   "group-name":  "Group-1",
+   "perms":       "create-user" // "create-group",
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+
+#### Revoke creation permissions from a group
+```javascript
+POST /revoke-group
+{
+   "group-name":  "Group-1",
+   "perms":       "create-user" // "create-group",
+                                // "delete-user", "delete-group"
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+
+#### Get creation permissions for a user
 ```javascript
 POST /perms-user
 {
@@ -133,10 +158,11 @@ POST /perms-user
 RETURNS:
 ```javascript
 {
-   "perms":       "modify,create-user,..."
+   "perms":       "create-group,create-user,..."
 }
 ```
 
+#### Get creation permissions for a group
 ```javascript
 POST /perms-group
 {
@@ -146,7 +172,25 @@ POST /perms-group
 RETURNS:
 ```javascript
 {
-   "perms":       "modify,create-user,..."
+   "perms":       "create-group,create-user,..."
+}
+```
+
+```javascript
+POST /perms-user-over-users
+{
+   "email":             "example@email.com",
+   "resultset-emails":  true,    // Set to false to exclude emails
+   "resultset-perms":   true     // Set to false to exclude perms
+}
+```
+RETURNS:
+```javascript
+{
+   "email":             "example@email.com",
+   "resultset-count":   64,               // Number of users in the results
+   "resultset-emails":  [email1, ...]
+   "resultset-perms":   ["modify,delete", ...]
 }
 ```
 

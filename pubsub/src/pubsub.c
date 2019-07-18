@@ -137,17 +137,19 @@ uint64_t    g_perms = 0;
 #define ARG_GROUP_LIST             (BIT_NAME_PATTERN | BIT_DESCRIPTION_PATTERN | BIT_RESULTSET_NAMES | BIT_RESULTSET_DESCRIPTIONS | BIT_RESULTSET_IDS)
 #define ARG_GROUP_MEMBERS          (BIT_GROUP_NAME | BIT_RESULTSET_EMAILS | BIT_RESULTSET_NICKS | BIT_RESULTSET_FLAGS |  BIT_RESULTSET_IDS)
 
-#define ARG_GRANT                  (BIT_EMAIL | BIT_PERMS)
+#define ARG_GRANT_USER             (BIT_EMAIL | BIT_PERMS)
+#define ARG_GRANT_GROUP            (BIT_GROUP_NAME | BIT_PERMS)
 #define ARG_GRANT_USER_O_USER      (BIT_EMAIL | BIT_PERMS | BIT_TARGET_USER)
 #define ARG_GRANT_USER_O_GROUP     (BIT_EMAIL | BIT_PERMS | BIT_TARGET_GROUP)
 #define ARG_GRANT_GROUP_O_USER     (BIT_GROUP_NAME | BIT_PERMS | BIT_TARGET_USER)
 #define ARG_GRANT_GROUP_O_GROUP    (BIT_GROUP_NAME | BIT_PERMS | BIT_TARGET_GROUP)
 
-#define ARG_REVOKE                  (BIT_EMAIL | BIT_PERMS)
-#define ARG_REVOKE_USER_O_USER      (BIT_EMAIL | BIT_PERMS | BIT_TARGET_USER)
-#define ARG_REVOKE_USER_O_GROUP     (BIT_EMAIL | BIT_PERMS | BIT_TARGET_GROUP)
-#define ARG_REVOKE_GROUP_O_USER     (BIT_GROUP_NAME | BIT_PERMS | BIT_TARGET_USER)
-#define ARG_REVOKE_GROUP_O_GROUP    (BIT_GROUP_NAME | BIT_PERMS | BIT_TARGET_GROUP)
+#define ARG_REVOKE_USER            (BIT_EMAIL | BIT_PERMS)
+#define ARG_REVOKE_GROUP           (BIT_GROUP_NAME | BIT_PERMS)
+#define ARG_REVOKE_USER_O_USER     (BIT_EMAIL | BIT_PERMS | BIT_TARGET_USER)
+#define ARG_REVOKE_USER_O_GROUP    (BIT_EMAIL | BIT_PERMS | BIT_TARGET_GROUP)
+#define ARG_REVOKE_GROUP_O_USER    (BIT_GROUP_NAME | BIT_PERMS | BIT_TARGET_USER)
+#define ARG_REVOKE_GROUP_O_GROUP   (BIT_GROUP_NAME | BIT_PERMS | BIT_TARGET_GROUP)
 
 #define ARG_QUEUE_NEW              (BIT_QUEUE_NAME | BIT_QUEUE_DESCRIPTION)
 #define ARG_QUEUE_RM               (BIT_QUEUE_ID)
@@ -1003,48 +1005,6 @@ errorexit:
    return !error;
 }
 
-static bool endpoint_GRANT (ds_hmap_t *jfields,
-                            int *error_code, int *status_code)
-{
-   const char *email = incoming_find (FIELD_STR_EMAIL),
-              *permstr = incoming_find (FIELD_STR_PERMS);
-
-   uint64_t perms = perms_decode (permstr);
-
-   jfields = jfields;
-   *status_code = 200;
-
-   if (!(sqldb_auth_perms_grant_user (xcgi_db, email,
-                                               SQLDB_AUTH_GLOBAL_RESOURCE,
-                                               perms))) {
-      *error_code = EPUBSUB_INTERNAL_ERROR;
-      return false;
-   }
-
-   return true;
-}
-
-static bool endpoint_REVOKE (ds_hmap_t *jfields,
-                             int *error_code, int *status_code)
-{
-   const char *email = incoming_find (FIELD_STR_EMAIL),
-              *permstr = incoming_find (FIELD_STR_PERMS);
-
-   uint64_t perms = perms_decode (permstr);
-
-   jfields = jfields;
-   *status_code = 200;
-
-   if (!(sqldb_auth_perms_revoke_user (xcgi_db, email,
-                                       SQLDB_AUTH_GLOBAL_RESOURCE,
-                                       perms))) {
-      *error_code = EPUBSUB_INTERNAL_ERROR;
-      return false;
-   }
-
-   return true;
-}
-
 static bool
 endpoint_g_r (bool (*fptr) (sqldb_t *, const char *, const char *, uint64_t),
               const char *subj, const char *target,
@@ -1057,6 +1017,9 @@ endpoint_g_r (bool (*fptr) (sqldb_t *, const char *, const char *, uint64_t),
 
    uint64_t perms = perms_decode (permstr);
 
+   if (!target || !target[0])
+      p_target = SQLDB_AUTH_GLOBAL_RESOURCE;
+
    jfields = jfields;
    *status_code = 200;
 
@@ -1066,6 +1029,38 @@ endpoint_g_r (bool (*fptr) (sqldb_t *, const char *, const char *, uint64_t),
    }
 
    return true;
+}
+
+static bool endpoint_GRANT_USER (ds_hmap_t *jfields,
+                                 int *error_code, int *status_code)
+{
+   return endpoint_g_r (sqldb_auth_perms_grant_user,
+                        FIELD_STR_EMAIL, NULL,
+                        jfields, error_code, status_code);
+}
+
+static bool endpoint_REVOKE_USER (ds_hmap_t *jfields,
+                                  int *error_code, int *status_code)
+{
+   return endpoint_g_r (sqldb_auth_perms_revoke_user,
+                        FIELD_STR_EMAIL, NULL,
+                        jfields, error_code, status_code);
+}
+
+static bool endpoint_GRANT_GROUP (ds_hmap_t *jfields,
+                                 int *error_code, int *status_code)
+{
+   return endpoint_g_r (sqldb_auth_perms_grant_group,
+                        FIELD_STR_EMAIL, NULL,
+                        jfields, error_code, status_code);
+}
+
+static bool endpoint_REVOKE_GROUP (ds_hmap_t *jfields,
+                                  int *error_code, int *status_code)
+{
+   return endpoint_g_r (sqldb_auth_perms_revoke_group,
+                        FIELD_STR_EMAIL, NULL,
+                        jfields, error_code, status_code);
 }
 
 static bool endpoint_GRANT_USER_O_USER (ds_hmap_t *jfields,
@@ -1221,13 +1216,15 @@ static const struct {
 { endpoint_GROUP_LIST,             "group-list",           ARG_GROUP_LIST     },
 { endpoint_GROUP_MEMBERS,          "group-members",        ARG_GROUP_MEMBERS  },
 
-{ endpoint_GRANT,                  "grant",                          ARG_GRANT                },
+{ endpoint_GRANT_USER,             "grant-user",                     ARG_GRANT_USER           },
+{ endpoint_GRANT_GROUP,            "grant-group",                    ARG_GRANT_GROUP          },
 { endpoint_GRANT_USER_O_USER,      "grant-to-user-over-user",        ARG_GRANT_USER_O_USER    },
 { endpoint_GRANT_USER_O_GROUP,     "grant-to-user-over-group",       ARG_GRANT_USER_O_GROUP   },
 { endpoint_GRANT_GROUP_O_USER,     "grant-to-group-over-user",       ARG_GRANT_GROUP_O_USER   },
 { endpoint_GRANT_GROUP_O_GROUP,    "grant-to-group-over-group",      ARG_GRANT_GROUP_O_GROUP  },
 
-{ endpoint_REVOKE,                  "revoke",                        ARG_REVOKE               },
+{ endpoint_REVOKE_USER,             "revoke-user",                   ARG_REVOKE_USER          },
+{ endpoint_REVOKE_GROUP,            "revoke-group",                  ARG_REVOKE_GROUP         },
 { endpoint_REVOKE_USER_O_USER,      "revoke-from-user-over-user",    ARG_REVOKE_USER_O_USER   },
 { endpoint_REVOKE_USER_O_GROUP,     "revoke-from-user-over-group",   ARG_REVOKE_USER_O_GROUP  },
 { endpoint_REVOKE_GROUP_O_USER,     "revoke-from-group-over-user",   ARG_REVOKE_GROUP_O_USER  },
