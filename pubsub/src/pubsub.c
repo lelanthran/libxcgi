@@ -453,7 +453,7 @@ static bool endpoint_ERROR (ds_hmap_t *jfields,
                             int *error_code, int *status_code)
 {
    jfields = jfields;
-   *error_code = EPUBSUB_ENDPOINT;
+   *error_code = EPUBSUB_UNKNOWN_ENDPOINT;
    *status_code = 200;
    return false;
 }
@@ -1012,13 +1012,12 @@ endpoint_g_r (bool (*fptr) (sqldb_t *, const char *, const char *, uint64_t),
               int *error_code, int *status_code)
 {
    const char *p_subj = incoming_find (subj),
-              *p_target = incoming_find (target),
-              *permstr = incoming_find (FIELD_STR_PERMS);
+              *permstr = incoming_find (FIELD_STR_PERMS),
+              *p_target = target && target[0] ?
+                                 incoming_find (target) :
+                                 SQLDB_AUTH_GLOBAL_RESOURCE;
 
    uint64_t perms = perms_decode (permstr);
-
-   if (!target || !target[0])
-      p_target = SQLDB_AUTH_GLOBAL_RESOURCE;
 
    jfields = jfields;
    *status_code = 200;
@@ -1051,7 +1050,7 @@ static bool endpoint_GRANT_GROUP (ds_hmap_t *jfields,
                                  int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_grant_group,
-                        FIELD_STR_EMAIL, NULL,
+                        FIELD_STR_GROUP_NAME, NULL,
                         jfields, error_code, status_code);
 }
 
@@ -1059,7 +1058,7 @@ static bool endpoint_REVOKE_GROUP (ds_hmap_t *jfields,
                                   int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_revoke_group,
-                        FIELD_STR_EMAIL, NULL,
+                        FIELD_STR_GROUP_NAME, NULL,
                         jfields, error_code, status_code);
 }
 

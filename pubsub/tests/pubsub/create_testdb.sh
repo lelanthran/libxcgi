@@ -25,7 +25,8 @@ export ENDPOINTS='
    group-list
    group-members
 
-   grant
+   grant-user
+   grant-group
    grant-to-user-over-user
    grant-to-user-over-group
    grant-to-group-over-user
