@@ -3,8 +3,9 @@ CONTENT_TYPE: application/json
 
 
 {
-"target-user": "change-permissions",
+"target-user": "eight@example.com",
 "error-code": 0,
 "error-message": "Success",
-"group-name": "Group-Six"
+"group-name": "Group-Six",
+"perms": "change-permissions"
 }

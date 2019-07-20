@@ -3,8 +3,9 @@ CONTENT_TYPE: application/json
 
 
 {
-"target-user": "list-membersmodify",
+"target-user": "three@example.com",
 "error-code": 0,
 "email": "two@example.com",
-"error-message": "Success"
+"error-message": "Success",
+"perms": "list-members,modify"
 }

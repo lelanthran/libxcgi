@@ -1049,7 +1049,7 @@ endpoint_perm (bool (*fptr) (sqldb_t *, uint64_t *, const char *, const char *),
       return false;
    }
 
-   if (!(set_sfield (jfields, target, perms_str))) {
+   if (!(set_sfield (jfields, FIELD_STR_PERMS, perms_str))) {
       *error_code = EPUBSUB_INTERNAL_ERROR;
       free (perms_str);
       return false;
@@ -1450,10 +1450,11 @@ static char *perms_encode (uint64_t perms)
 {
    char *ret = NULL;
    size_t ret_len = 2;
+   bool comma = false;
 
    for (size_t i=0; i<sizeof g_perm_map/sizeof g_perm_map[0]; i++) {
       if (g_perm_map[i].perm_bit & perms)
-         ret_len += strlen (g_perm_map[i].perm_str);
+         ret_len += strlen (g_perm_map[i].perm_str) + 2;
    }
 
    if (!(ret = malloc (ret_len)))
@@ -1462,8 +1463,13 @@ static char *perms_encode (uint64_t perms)
    memset (ret, 0, ret_len);
 
    for (size_t i=0; i<sizeof g_perm_map/sizeof g_perm_map[0]; i++) {
-      if (g_perm_map[i].perm_bit & perms)
+      if (g_perm_map[i].perm_bit & perms) {
+         if (comma) {
+            strcat (ret, ",");
+         }
          strcat (ret, g_perm_map[i].perm_str);
+         comma = true;
+      }
    }
 
    return ret;
