@@ -100,14 +100,60 @@ RETURNS:
 ```
 
 
+### User flags
+A set of flags are stored for each user. These flags can be set and read
+when the permissions `modify-user` is granted. As of writing, only the
+`lockout` flag is recognised. Other flags are simply ignored.
+
+#### Set user flags
+```javascript
+POST /flags-set
+{
+   "email":       "example@email.com",
+   "flags":       "lockout,..." // More TBA
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+#### Get user flags
+```javascript
+POST /flags-get
+{
+   "email":       "example@email.com",
+}
+```
+RETURNS:
+```javascript
+{
+   "email":       "example@email.com",
+   "flags":       "lockout,..." // More TBA
+}
+```
+
+
 ### User, group and permissions management
+Very fine-grained user, group and ACL management is possible.
+1. Users are members of one or more groups.
+2. User inherit all of the permissions of the groups they are in.
+3. Users can be granted permissions to create users and/or groups.
+4. Groups can be granted permissions to create users and/or groups.
+5. Users can be granted specific permissions to read, modify, grant/revoke
+   permissions or delete a specific instance of another user.
+6. Users can be granted specific permissions to read, modify, grant/revoke
+   permissions, delete or list any members of a specific group.
+7. Groups can be granted specific permissions to read, modify, grant/revoke
+   permissions or delete a specific instance of a user.
+8. Groups can be granted specific permissions to read, modify, grant/revoke
+   permissions, delete or list any members of a specific group.
+
+In practice it is simpler to manage ACL only via groups (role-based ACL).
 
 #### Grant creation permissions to a user
 ```javascript
 POST /grant-to-user
 {
    "email":       "example@email.com",
-   "perms":       "create-user" // "create-group",
+   "perms":       "create-user,..." // "create-group",
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -118,7 +164,7 @@ RETURNS: "error-code" and "error-message" fields only.
 POST /revoke-from-user
 {
    "email":       "example@email.com",
-   "perms":       "create-user" // "create-group",
+   "perms":       "create-user,..." // "create-group",
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -129,7 +175,7 @@ RETURNS: "error-code" and "error-message" fields only.
 POST /grant-to-group
 {
    "group-name":  "Group-1",
-   "perms":       "create-user" // "create-group",
+   "perms":       "create-user,..." // "create-group",
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -140,7 +186,7 @@ RETURNS: "error-code" and "error-message" fields only.
 POST /revoke-from-group
 {
    "group-name":  "Group-1",
-   "perms":       "create-user" // "create-group",
+   "perms":       "create-user,..." // "create-group",
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
