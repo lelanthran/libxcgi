@@ -1395,10 +1395,9 @@ static uint64_t perms_get (const char *email, const char *resource)
 #define PERM_STR_CREATE_GROUP          ("create-group")
 #define PERM_STR_DEL_USER              ("delete-user")
 #define PERM_STR_DEL_GROUP             ("delete-group")
-#define PERM_STR_READ                  ("read")
+#define PERM_STR_READ_USER             ("read-user")
 #define PERM_STR_LIST_MEMBERS          ("list-members")
-#define PERM_STR_MODIFY                ("modify")
-#define PERM_STR_DELETE                ("delete")
+#define PERM_STR_MODIFY_USER           ("modify-user")
 #define PERM_STR_CHANGE_PERMISSIONS    ("change-permissions")
 #define PERM_STR_CHANGE_MEMBERSHIP     ("change-membership")
 
@@ -1407,10 +1406,9 @@ static uint64_t perms_get (const char *email, const char *resource)
 #define PERM_BIT_CREATE_GROUP          ((uint64_t)(((uint64_t)1) << 2))
 #define PERM_BIT_DEL_USER              ((uint64_t)(((uint64_t)1) << 3))
 #define PERM_BIT_DEL_GROUP             ((uint64_t)(((uint64_t)1) << 4))
-#define PERM_BIT_READ                  ((uint64_t)(((uint64_t)1) << 5))
+#define PERM_BIT_READ_USER             ((uint64_t)(((uint64_t)1) << 5))
 #define PERM_BIT_LIST_MEMBERS          ((uint64_t)(((uint64_t)1) << 6))
 #define PERM_BIT_MODIFY                ((uint64_t)(((uint64_t)1) << 7))
-#define PERM_BIT_DELETE                ((uint64_t)(((uint64_t)1) << 8))
 #define PERM_BIT_CHANGE_PERMISSIONS    ((uint64_t)(((uint64_t)1) << 9))
 #define PERM_BIT_CHANGE_MEMBERSHIP     ((uint64_t)(((uint64_t)1) << 10))
 
@@ -1423,10 +1421,9 @@ static const struct {
    { PERM_BIT_CREATE_GROUP,         PERM_STR_CREATE_GROUP           },
    { PERM_BIT_DEL_USER,             PERM_STR_DEL_USER               },
    { PERM_BIT_DEL_GROUP,            PERM_STR_DEL_GROUP              },
-   { PERM_BIT_READ,                 PERM_STR_READ                   },
+   { PERM_BIT_READ_USER,            PERM_STR_READ_USER              },
    { PERM_BIT_LIST_MEMBERS,         PERM_STR_LIST_MEMBERS           },
-   { PERM_BIT_MODIFY,               PERM_STR_MODIFY                 },
-   { PERM_BIT_DELETE,               PERM_STR_DELETE                 },
+   { PERM_BIT_MODIFY,               PERM_STR_MODIFY_USER            },
    { PERM_BIT_CHANGE_PERMISSIONS,   PERM_STR_CHANGE_PERMISSIONS     },
    { PERM_BIT_CHANGE_MEMBERSHIP,    PERM_STR_CHANGE_MEMBERSHIP      },
 };

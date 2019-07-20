@@ -119,7 +119,6 @@ POST /revoke-from-user
 {
    "email":       "example@email.com",
    "perms":       "create-user" // "create-group",
-                                // "delete-user", "delete-group"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -142,7 +141,6 @@ POST /revoke-from-group
 {
    "group-name":  "Group-1",
    "perms":       "create-user" // "create-group",
-                                // "delete-user", "delete-group"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -191,7 +189,7 @@ RETURNS:
 {
    "email":             "example@email.com",
    "target-user":       "two@email.com",
-   "perms":             "modify,delete,..."
+   "perms":             "modify-user,delete-user,..."
 }
 ```
 
@@ -208,7 +206,7 @@ RETURNS:
 {
    "email":             "example@email.com",
    "target-group":      "Group-Name",
-   "perms":             "modify,delete,..."
+   "perms":             "modify-user,delete-user,..."
 }
 ```
 
@@ -225,7 +223,7 @@ RETURNS:
 {
    "email":             "example@email.com",
    "target-user":       "two@email.com",
-   "perms":             "modify,delete,..."
+   "perms":             "modify-user,delete-user,..."
 }
 ```
 
@@ -242,7 +240,7 @@ RETURNS:
 {
    "email":             "example@email.com",
    "target-group":      "Group-1",
-   "perms":             "modify,delete,..."
+   "perms":             "modify-user,delete-user,..."
 }
 ```
 
@@ -252,7 +250,7 @@ POST /grant-to-user-over-user
 {
    "email":       "example@email.com",
    "target-user": "two@example.com",
-   "perms":       "modify" // "delete",
+   "perms":       "modify-user" // "delete-user",
                            // "change-permissions",
                            // "change-membership",
                            // "read"
@@ -267,7 +265,7 @@ POST /grant-to-user-over-group
 {
    "email":          "example@email.com",
    "target-group":   "Group-1",
-   "perms":          "modify" // "delete",
+   "perms":          "modify-user" // "delete-user",
                               // "change-permissions",
                               // "change-membership",
                               // "read",
@@ -283,7 +281,7 @@ POST /grant-to-group-over-user
 {
    "group-name":  "two@example.com",
    "target-user": "example@email.com",
-   "perms":       "modify" // "delete",
+   "perms":       "modify-user" // "delete-user",
                            // "change-permissions",
                            // "change-membership",
                            // "read"
@@ -298,7 +296,7 @@ POST /grant-to-group-over-group
 {
    "group-name":     "two@example.com",
    "target-group":   "example@email.com",
-   "perms":          "modify" // "delete",
+   "perms":          "modify-user" // "delete-user",
                               // "change-permissions",
                               // "change-membership",
                               // "read",
@@ -314,7 +312,7 @@ POST /revoke-from-user-over-user
 {
    "email":       "example@email.com",
    "target-user": "two@example.com",
-   "perms":       "modify" // "delete",
+   "perms":       "modify-user" // "delete-user",
                            // "change-permissions",
                            // "change-membership",
                            // "read"
@@ -329,7 +327,7 @@ POST /revoke-from-user-over-group
 {
    "email":          "example@email.com",
    "target-group":   "Group-1",
-   "perms":          "modify" // "delete",
+   "perms":          "modify-user" // "delete-user",
                               // "change-permissions",
                               // "change-membership",
                               // "read",
@@ -345,7 +343,7 @@ POST /revoke-from-group-over-user
 {
    "group-name":  "two@example.com",
    "target-user": "example@email.com",
-   "perms":       "modify" // "delete",
+   "perms":       "modify-user" // "delete-user",
                            // "change-permissions",
                            // "change-membership",
                            // "read"
@@ -360,7 +358,7 @@ POST /revoke-from-group-over-group
 {
    "group-name":     "two@example.com",
    "target-group":   "example@email.com",
-   "perms":          "modify" // "delete",
+   "perms":          "modify-user" // "delete-user",
                               // "change-permissions",
                               // "change-membership",
                               // "read",
