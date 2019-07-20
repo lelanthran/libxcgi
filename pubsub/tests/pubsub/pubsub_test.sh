@@ -70,8 +70,12 @@ function call_cgi () {
 #     gdb pubsub.elf
 #     exit 0;
 #  fi
-   # valgrind --track-origins=yes --show-leak-kinds=all --error-exitcode=127 --leak-check=full \
+   if [ -z "$VGOPTS" ]; then
       ./pubsub.elf < tmp.input >$2
+   else
+      valgrind $VGOPTS --error-exitcode=127 ./pubsub.elf < tmp.input >$2
+   fi
+
    if [ "$?" -ne 0 ]; then
       echo "Error calling '$PATH_INFO', executable returned: "
       display_file "✘" $2
