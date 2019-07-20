@@ -270,8 +270,6 @@ static bool incoming_init (void)
 
    size_t nbytes = fread (input, 1, content_length, xcgi_stdin);
 
-   fwrite (input, 1, 1, stdout);
-
    if (nbytes!=content_length) {
       free (input);
       return false;
@@ -1618,7 +1616,6 @@ int main (int argc, char **argv)
 
    if (!(endpoint (jfields, &error_code, &statusCode)))
       goto errorexit;
-
 
    ret = EXIT_SUCCESS;
 
