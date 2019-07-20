@@ -7,5 +7,5 @@ CONTENT_TYPE: application/json
 "error-code": 0,
 "error-message": "Success",
 "group-name": "Group-Two",
-"perms": "change-permissions"
+"perms": "read,modify,delete"
 }

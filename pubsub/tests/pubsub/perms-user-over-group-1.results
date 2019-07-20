@@ -6,6 +6,6 @@ CONTENT_TYPE: application/json
 "error-code": 0,
 "email": "three@example.com",
 "error-message": "Success",
-"perms": "delete",
+"perms": "read,list-members,modify",
 "target-group": "Group-One"
 }

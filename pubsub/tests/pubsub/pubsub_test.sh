@@ -65,7 +65,7 @@ function call_cgi () {
       exit 119
    fi
 # I uncomment this snippet when I need to debug a particular test.
-#  if [ "$2" == "grant-to-user-1.results" ]; then
+#  if [ "$2" == "revoke-from-user-over-user-1.results" ]; then
 #     cat tmp.input
 #     gdb pubsub.elf
 #     exit 0;
@@ -245,25 +245,25 @@ call_cgi /grant-to-group grant-to-group-1.results '{
 call_cgi /grant-to-user-over-user grant-to-user-over-user-1.results '{
    "email":       "two@example.com",
    "target-user": "three@example.com",
-   "perms":       "modify"
+   "perms":       "modify,delete,list-members,read"
 }'
 
 call_cgi /grant-to-user-over-group grant-to-user-over-group-1.results '{
    "email":          "three@example.com",
    "target-group":   "Group-One",
-   "perms":          "delete"
+   "perms":       "modify,delete,list-members,read"
 }'
 
 call_cgi /grant-to-group-over-user grant-to-group-over-user-1.results '{
    "group-name":  "Group-Two",
    "target-user": "four@example.com",
-   "perms":       "change-permissions"
+   "perms":       "modify,delete,list-members,read"
 }'
 
 call_cgi /grant-to-group-over-group grant-to-group-over-group-1.results '{
    "group-name":     "Group-Three",
    "target-group":   "Group-Four",
-   "perms":          "change-membership"
+   "perms":          "modify,delete,list-members,read"
 }'
 
 ##########################
@@ -271,25 +271,51 @@ call_cgi /grant-to-group-over-group grant-to-group-over-group-1.results '{
 call_cgi /grant-to-user-over-user grant-to-user-over-user-2.results '{
    "email":       "five@example.com",
    "target-user": "six@example.com",
-   "perms":       "modify"
+   "perms":       "modify,delete,list-members,read"
 }'
 
 call_cgi /grant-to-user-over-group grant-to-user-over-group-2.results '{
    "email":          "seven@example.com",
    "target-group":   "Group-Five",
-   "perms":          "delete"
+   "perms":       "modify,delete,list-members,read"
 }'
 
 call_cgi /grant-to-group-over-user grant-to-group-over-user-2.results '{
    "group-name":  "Group-Six",
    "target-user": "eight@example.com",
-   "perms":       "change-permissions"
+   "perms":       "modify,delete,list-members,read"
 }'
 
 call_cgi /grant-to-group-over-group grant-to-group-over-group-2.results '{
    "group-name":     "Group-Seven",
    "target-group":   "Group-Eight",
-   "perms":          "change-membership"
+   "perms":       "modify,delete,list-members,read"
+}'
+
+##########################
+
+call_cgi /revoke-from-user-over-user revoke-from-user-over-user-1.results '{
+   "email":       "two@example.com",
+   "target-user": "three@example.com",
+   "perms":       "modify"
+}'
+
+call_cgi /revoke-from-user-over-group revoke-from-user-over-group-1.results '{
+   "email":          "three@example.com",
+   "target-group":   "Group-One",
+   "perms":       "delete"
+}'
+
+call_cgi /revoke-from-group-over-user revoke-from-group-over-user-1.results '{
+   "group-name":  "Group-Two",
+   "target-user": "four@example.com",
+   "perms":       "list-members"
+}'
+
+call_cgi /revoke-from-group-over-group revoke-from-group-over-group-1.results '{
+   "group-name":     "Group-Three",
+   "target-group":   "Group-Four",
+   "perms":          "read"
 }'
 
 ###############################################

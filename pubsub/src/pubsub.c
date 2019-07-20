@@ -1215,7 +1215,7 @@ static bool endpoint_REVOKE_GROUP_O_USER (ds_hmap_t *jfields,
                                           int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_revoke_group,
-                        FIELD_STR_EMAIL, FIELD_STR_TARGET_USER,
+                        FIELD_STR_GROUP_NAME, FIELD_STR_TARGET_USER,
                         jfields, error_code, status_code);
 }
 
@@ -1223,7 +1223,7 @@ static bool endpoint_REVOKE_GROUP_O_GROUP (ds_hmap_t *jfields,
                                            int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_revoke_group,
-                        FIELD_STR_EMAIL, FIELD_STR_TARGET_GROUP,
+                        FIELD_STR_GROUP_NAME, FIELD_STR_TARGET_GROUP,
                         jfields, error_code, status_code);
 }
 
@@ -1409,10 +1409,10 @@ static uint64_t perms_get (const char *email, const char *resource)
 #define PERM_BIT_DEL_GROUP             ((uint64_t)(((uint64_t)1) << 4))
 #define PERM_BIT_READ                  ((uint64_t)(((uint64_t)1) << 5))
 #define PERM_BIT_LIST_MEMBERS          ((uint64_t)(((uint64_t)1) << 6))
-#define PERM_BIT_MODIFY                ((uint64_t)(((uint64_t)1) << 6))
-#define PERM_BIT_DELETE                ((uint64_t)(((uint64_t)1) << 7))
-#define PERM_BIT_CHANGE_PERMISSIONS    ((uint64_t)(((uint64_t)1) << 8))
-#define PERM_BIT_CHANGE_MEMBERSHIP     ((uint64_t)(((uint64_t)1) << 9))
+#define PERM_BIT_MODIFY                ((uint64_t)(((uint64_t)1) << 7))
+#define PERM_BIT_DELETE                ((uint64_t)(((uint64_t)1) << 8))
+#define PERM_BIT_CHANGE_PERMISSIONS    ((uint64_t)(((uint64_t)1) << 9))
+#define PERM_BIT_CHANGE_MEMBERSHIP     ((uint64_t)(((uint64_t)1) << 10))
 
 static const struct {
    uint64_t    perm_bit;
