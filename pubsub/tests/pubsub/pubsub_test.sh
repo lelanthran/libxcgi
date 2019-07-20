@@ -49,6 +49,10 @@ function display_file () {
    done
 }
 
+echo Removing existing results...
+rm *.results
+echo Done.
+
 # For each of the endpoints we test we set PATH_INFO and call the cgi
 # program
 function call_cgi () {
@@ -56,8 +60,12 @@ function call_cgi () {
    export CONTENT_LENGTH=`echo -ne $3 | wc -c`
    echo $3 > tmp.input
    echo "Calling '$PATH_INFO'"
+   if [ -f "$2" ]; then
+      echo "File '$2' already exists - duplicate test?"
+      exit 119
+   fi
 # I uncomment this snippet when I need to debug a particular test.
-#  if [ "$2" == "group-members-Group-One.results" ]; then
+#  if [ "$2" == "grant-to-user-1.results" ]; then
 #     cat tmp.input
 #     gdb pubsub.elf
 #     exit 0;
@@ -202,7 +210,7 @@ done
 ###############################################
 
 for X in $LGROUPS; do
-   call_cgi /group-members group-members-$X.results '{
+   call_cgi /group-members group-members-1-$X.results '{
       "group-name":         "'$X'",
       "resultset-emails":  "true",
       "resultset-nicks":   "true",
@@ -228,7 +236,7 @@ call_cgi /grant-to-user grant-to-user-1.results '{
 }'
 
 call_cgi /grant-to-group grant-to-group-1.results '{
-   "group-name": "Group-10",
+   "group-name": "Group-Ten",
    "perms":      "create-user"
 }'
 
@@ -242,98 +250,106 @@ call_cgi /grant-to-user-over-user grant-to-user-over-user-1.results '{
 
 call_cgi /grant-to-user-over-group grant-to-user-over-group-1.results '{
    "email":          "three@example.com",
-   "target-group":   "Group-1",
+   "target-group":   "Group-One",
    "perms":          "delete"
 }'
 
 call_cgi /grant-to-group-over-user grant-to-group-over-user-1.results '{
-   "group-name":  "Group-2",
+   "group-name":  "Group-Two",
    "target-user": "four@example.com",
    "perms":       "change-permissions"
 }'
 
 call_cgi /grant-to-group-over-group grant-to-group-over-group-1.results '{
-   "group-name":     "Group-3",
-   "target-group":   "Group-4",
+   "group-name":     "Group-Three",
+   "target-group":   "Group-Four",
    "perms":          "change-membership"
 }'
 
 ##########################
 
-call_cgi /grant-to-user-over-user grant-to-user-over-user-1.results '{
+call_cgi /grant-to-user-over-user grant-to-user-over-user-2.results '{
    "email":       "five@example.com",
    "target-user": "six@example.com",
    "perms":       "modify"
 }'
 
-call_cgi /grant-to-user-over-group grant-to-user-over-group-1.results '{
+call_cgi /grant-to-user-over-group grant-to-user-over-group-2.results '{
    "email":          "seven@example.com",
-   "target-group":   "Group-5",
+   "target-group":   "Group-Five",
    "perms":          "delete"
 }'
 
-call_cgi /grant-to-group-over-user grant-to-group-over-user-1.results '{
-   "group-name":  "Group-6",
+call_cgi /grant-to-group-over-user grant-to-group-over-user-2.results '{
+   "group-name":  "Group-Six",
    "target-user": "eight@example.com",
    "perms":       "change-permissions"
 }'
 
-call_cgi /grant-to-group-over-group grant-to-group-over-group-1.results '{
-   "group-name":     "Group-7",
-   "target-group":   "Group-8",
+call_cgi /grant-to-group-over-group grant-to-group-over-group-2.results '{
+   "group-name":     "Group-Seven",
+   "target-group":   "Group-Eight",
    "perms":          "change-membership"
 }'
 
 ###############################################
 
+call_cgi /perms-user perms-user-1.results '{
+   "email":    "ten@example.com"
+}'
+
+call_cgi /perms-group perms-group-1.results '{
+   "group-name":    "Group-Ten"
+}'
+
+call_cgi /perms-user-over-user perms-user-over-user-1.results '{
+   "email":       "two@example.com",
+   "target-user": "three@example.com"
+}'
+
+call_cgi /perms-user-over-group perms-user-over-group-1.results '{
+   "email":        "three@example.com",
+   "target-group": "Group-One"
+}'
+
+
+call_cgi /perms-group-over-user perms-group-over-user-1.results '{
+   "group-name":  "Group-Two",
+   "target-user": "four@example.com"
+}'
+
+call_cgi /perms-group-over-group perms-group-over-group-1.results '{
+   "group-name":        "Group-Three",
+   "target-group":      "Group-Four"
+}'
+
+ ##############
+
+call_cgi /perms-user-over-user perms-user-over-user-2.results '{
+   "email":       "five@example.com",
+   "target-user": "six@example.com"
+}'
+
+call_cgi /perms-user-over-group perms-user-over-group-2.results '{
+   "email":        "seven@example.com",
+   "target-group": "Group-Five"
+}'
+
+
+call_cgi /perms-group-over-user perms-group-over-user-2.results '{
+   "group-name":  "Group-Six",
+   "target-user": "eight@example.com"
+}'
+
+call_cgi /perms-group-over-group perms-group-over-group-2.results '{
+   "group-name":        "Group-Seven",
+   "target-group":      "Group-Eight"
+}'
+
+echo "Ending test (117)"
 exit 117
 
 ###############################################
-
-call_cgi /perms-resource-user perms-resource-user-1.results '{
-   "email":       "todelete1@example.com",
-   "resource":    "Resource-1"
-}'
-
-call_cgi /perms-resource-user perms-resource-user-2.results '{
-   "email":       "todelete1@example.com",
-   "resource":    "Resource-2"
-}'
-
-call_cgi /perms-resource-user perms-resource-user-3.results '{
-   "email":       "todelete1@example.com",
-   "resource":    "Resource-3"
-}'
-
-call_cgi /perms-resource-user perms-resource-user-4.results '{
-   "email":       "todelete2@example.com",
-   "resource":    "Resource-1"
-}'
-
-call_cgi /perms-resource-user perms-resource-user-5.results '{
-   "email":       "todelete2@example.com",
-   "resource":    "Resource-2"
-}'
-
-call_cgi /perms-resource-user perms-resource-user-6.results '{
-   "email":       "todelete2@example.com",
-   "resource":    "Resource-3"
-}'
-
-call_cgi /perms-resource-user perms-resource-user-7.results '{
-   "email":       "todelete3@example.com",
-   "resource":    "Resource-1"
-}'
-
-call_cgi /perms-resource-user perms-resource-user-8.results '{
-   "email":       "todelete3@example.com",
-   "resource":    "Resource-2"
-}'
-
-call_cgi /perms-resource-user perms-resource-user-9.results '{
-   "email":       "todelete3@example.com",
-   "resource":    "Resource-3"
-}'
 
 ###############################################
 

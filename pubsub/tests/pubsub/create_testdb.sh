@@ -25,6 +25,13 @@ export ENDPOINTS='
    group-list
    group-members
 
+   perms-user
+   perms-group
+   perms-user-over-user
+   perms-user-over-group
+   perms-group-over-user
+   perms-group-over-group
+
    grant-to-user
    grant-to-group
    grant-to-user-over-user
@@ -32,8 +39,8 @@ export ENDPOINTS='
    grant-to-group-over-user
    grant-to-group-over-group
 
-   grant-from-user
-   grant-from-group
+   revoke-from-user
+   revoke-from-group
    revoke-from-user-over-user
    revoke-from-user-over-group
    revoke-from-group-over-user

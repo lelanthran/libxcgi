@@ -21,6 +21,7 @@
 #define TYPE_ARRAY         (3)
 
 static uint64_t perms_decode (const char *str);
+static char *perms_encode (uint64_t);
 
 // ErrorReportingMadeEasy(tm)
 #define PROG_ERR(...)      do {\
@@ -136,6 +137,13 @@ uint64_t    g_perms = 0;
 #define ARG_GROUP_RMUSER           (BIT_GROUP_NAME | BIT_EMAIL)
 #define ARG_GROUP_LIST             (BIT_NAME_PATTERN | BIT_DESCRIPTION_PATTERN | BIT_RESULTSET_NAMES | BIT_RESULTSET_DESCRIPTIONS | BIT_RESULTSET_IDS)
 #define ARG_GROUP_MEMBERS          (BIT_GROUP_NAME | BIT_RESULTSET_EMAILS | BIT_RESULTSET_NICKS | BIT_RESULTSET_FLAGS |  BIT_RESULTSET_IDS)
+
+#define ARG_PERMS_USER             (BIT_EMAIL)
+#define ARG_PERMS_GROUP            (BIT_GROUP_NAME)
+#define ARG_PERMS_USER_O_USER      (BIT_EMAIL | BIT_TARGET_USER)
+#define ARG_PERMS_USER_O_GROUP     (BIT_EMAIL | BIT_TARGET_GROUP)
+#define ARG_PERMS_GROUP_O_USER     (BIT_GROUP_NAME | BIT_TARGET_USER)
+#define ARG_PERMS_GROUP_O_GROUP    (BIT_GROUP_NAME | BIT_TARGET_GROUP)
 
 #define ARG_GRANT_USER             (BIT_EMAIL | BIT_PERMS)
 #define ARG_GRANT_GROUP            (BIT_GROUP_NAME | BIT_PERMS)
@@ -1006,6 +1014,101 @@ errorexit:
 }
 
 static bool
+endpoint_perm (bool (*fptr) (sqldb_t *, uint64_t *, const char *, const char *),
+               const char *subj, const char *target,
+               ds_hmap_t *jfields,
+               int *error_code, int *status_code)
+{
+   const char *p_subj = incoming_find (subj),
+              *p_target = target && target[0] ?
+                                 incoming_find (target) :
+                                 SQLDB_AUTH_GLOBAL_RESOURCE;
+
+   char *perms_str = NULL;
+   uint64_t perms = 0;
+
+   *status_code = 200;
+
+   if (!(fptr (xcgi_db, &perms, p_subj, p_target))) {
+      *error_code = EPUBSUB_RESOURCE_NOT_FOUND;
+      return false;
+   }
+
+   if (!(set_sfield (jfields, subj, p_subj))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
+   if (!(set_sfield (jfields, target, p_target))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
+   if (!(perms_str = perms_encode (perms))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
+   if (!(set_sfield (jfields, target, perms_str))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      free (perms_str);
+      return false;
+   }
+   free (perms_str);
+
+   return true;
+}
+
+static bool endpoint_PERMS_USER (ds_hmap_t *jfields,
+                                 int *error_code, int *status_code)
+{
+   return endpoint_perm (sqldb_auth_perms_get_user,
+                         FIELD_STR_EMAIL, NULL,
+                         jfields, error_code, status_code);
+}
+
+static bool endpoint_PERMS_GROUP (ds_hmap_t *jfields,
+                                 int *error_code, int *status_code)
+{
+   return endpoint_perm (sqldb_auth_perms_get_group,
+                         FIELD_STR_GROUP_NAME, NULL,
+                         jfields, error_code, status_code);
+}
+
+static bool endpoint_PERMS_USER_O_USER (ds_hmap_t *jfields,
+                                 int *error_code, int *status_code)
+{
+   return endpoint_perm (sqldb_auth_perms_get_user,
+                         FIELD_STR_EMAIL, FIELD_STR_TARGET_USER,
+                         jfields, error_code, status_code);
+}
+
+static bool endpoint_PERMS_USER_O_GROUP (ds_hmap_t *jfields,
+                                 int *error_code, int *status_code)
+{
+   return endpoint_perm (sqldb_auth_perms_get_user,
+                         FIELD_STR_EMAIL, FIELD_STR_TARGET_GROUP,
+                         jfields, error_code, status_code);
+}
+
+static bool endpoint_PERMS_GROUP_O_USER (ds_hmap_t *jfields,
+                                 int *error_code, int *status_code)
+{
+   return endpoint_perm (sqldb_auth_perms_get_group,
+                         FIELD_STR_GROUP_NAME, FIELD_STR_TARGET_USER,
+                         jfields, error_code, status_code);
+}
+
+static bool endpoint_PERMS_GROUP_O_GROUP (ds_hmap_t *jfields,
+                                 int *error_code, int *status_code)
+{
+   return endpoint_perm (sqldb_auth_perms_get_group,
+                         FIELD_STR_GROUP_NAME, FIELD_STR_TARGET_GROUP,
+                         jfields, error_code, status_code);
+}
+
+
+static bool
 endpoint_g_r (bool (*fptr) (sqldb_t *, const char *, const char *, uint64_t),
               const char *subj, const char *target,
               ds_hmap_t *jfields,
@@ -1023,7 +1126,7 @@ endpoint_g_r (bool (*fptr) (sqldb_t *, const char *, const char *, uint64_t),
    *status_code = 200;
 
    if (!(fptr (xcgi_db, p_subj, p_target, perms))) {
-      *error_code = EPUBSUB_INTERNAL_ERROR;
+      *error_code = EPUBSUB_RESOURCE_NOT_FOUND;
       return false;
    }
 
@@ -1215,6 +1318,13 @@ static const struct {
 { endpoint_GROUP_LIST,             "group-list",           ARG_GROUP_LIST     },
 { endpoint_GROUP_MEMBERS,          "group-members",        ARG_GROUP_MEMBERS  },
 
+{ endpoint_PERMS_USER,             "perms-user",               ARG_PERMS_USER           },
+{ endpoint_PERMS_GROUP,            "perms-group",              ARG_PERMS_GROUP          },
+{ endpoint_PERMS_USER_O_USER,      "perms-user-over-user",     ARG_PERMS_USER_O_USER    },
+{ endpoint_PERMS_USER_O_GROUP,     "perms-user-over-group",    ARG_PERMS_USER_O_GROUP   },
+{ endpoint_PERMS_GROUP_O_USER,     "perms-group-over-user",    ARG_PERMS_GROUP_O_USER   },
+{ endpoint_PERMS_GROUP_O_GROUP,    "perms-group-over-group",   ARG_PERMS_GROUP_O_GROUP  },
+
 { endpoint_GRANT_USER,             "grant-to-user",                  ARG_GRANT_USER           },
 { endpoint_GRANT_GROUP,            "grant-to-group",                 ARG_GRANT_GROUP          },
 { endpoint_GRANT_USER_O_USER,      "grant-to-user-over-user",        ARG_GRANT_USER_O_USER    },
@@ -1306,41 +1416,55 @@ static uint64_t perms_get (const char *email, const char *resource)
 #define PERM_BIT_CHANGE_PERMISSIONS    ((uint64_t)(((uint64_t)1) << 8))
 #define PERM_BIT_CHANGE_MEMBERSHIP     ((uint64_t)(((uint64_t)1) << 9))
 
+static const struct {
+   uint64_t    perm_bit;
+   const char *perm_str;
+} g_perm_map[] = {
+   { PERM_BIT_ALL,                  PERM_STR_ALL                    },
+   { PERM_BIT_CREATE_USER,          PERM_STR_CREATE_USER            },
+   { PERM_BIT_CREATE_GROUP,         PERM_STR_CREATE_GROUP           },
+   { PERM_BIT_DEL_USER,             PERM_STR_DEL_USER               },
+   { PERM_BIT_DEL_GROUP,            PERM_STR_DEL_GROUP              },
+   { PERM_BIT_READ,                 PERM_STR_READ                   },
+   { PERM_BIT_LIST_MEMBERS,         PERM_STR_LIST_MEMBERS           },
+   { PERM_BIT_MODIFY,               PERM_STR_MODIFY                 },
+   { PERM_BIT_DELETE,               PERM_STR_DELETE                 },
+   { PERM_BIT_CHANGE_PERMISSIONS,   PERM_STR_CHANGE_PERMISSIONS     },
+   { PERM_BIT_CHANGE_MEMBERSHIP,    PERM_STR_CHANGE_MEMBERSHIP      },
+};
+
 static uint64_t perms_decode (const char *str)
 {
    uint64_t ret = 0;
    bool all = (strstr (str, PERM_STR_ALL)) ? true : false;
 
-   if (all || (strstr (str, PERM_STR_CREATE_USER)))
-      ret |= PERM_BIT_CREATE_USER;
+   for (size_t i=0; i<sizeof g_perm_map/sizeof g_perm_map[0]; i++) {
+      if (all || ((strstr (str, g_perm_map[i].perm_str))!=NULL))
+         ret |= g_perm_map[i].perm_bit;
+   }
 
-   if (all || (strstr (str, PERM_STR_CREATE_GROUP)))
-      ret |= PERM_BIT_CREATE_GROUP;
+   return ret;
+}
 
-   if (all || (strstr (str, PERM_STR_DEL_USER)))
-      ret |= PERM_BIT_DEL_USER;
+static char *perms_encode (uint64_t perms)
+{
+   char *ret = NULL;
+   size_t ret_len = 2;
 
-   if (all || (strstr (str, PERM_STR_DEL_GROUP)))
-      ret |= PERM_BIT_DEL_GROUP;
+   for (size_t i=0; i<sizeof g_perm_map/sizeof g_perm_map[0]; i++) {
+      if (g_perm_map[i].perm_bit & perms)
+         ret_len += strlen (g_perm_map[i].perm_str);
+   }
 
+   if (!(ret = malloc (ret_len)))
+      return NULL;
 
-   if (all || (strstr (str, PERM_STR_READ)))
-      ret |= PERM_BIT_READ;
+   memset (ret, 0, ret_len);
 
-   if (all || (strstr (str, PERM_STR_LIST_MEMBERS)))
-      ret |= PERM_BIT_LIST_MEMBERS;
-
-   if (all || (strstr (str, PERM_STR_MODIFY)))
-      ret |= PERM_BIT_MODIFY;
-
-   if (all || (strstr (str, PERM_STR_DELETE)))
-      ret |= PERM_BIT_DELETE;
-
-   if (all || (strstr (str, PERM_STR_CHANGE_PERMISSIONS)))
-      ret |= PERM_BIT_CHANGE_PERMISSIONS;
-
-   if (all || (strstr (str, PERM_STR_CHANGE_MEMBERSHIP)))
-      ret |= PERM_BIT_CHANGE_MEMBERSHIP;
+   for (size_t i=0; i<sizeof g_perm_map/sizeof g_perm_map[0]; i++) {
+      if (g_perm_map[i].perm_bit & perms)
+         strcat (ret, g_perm_map[i].perm_str);
+   }
 
    return ret;
 }

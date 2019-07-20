@@ -158,6 +158,7 @@ POST /perms-user
 RETURNS:
 ```javascript
 {
+   "email":       "example@email.com",
    "perms":       "create-group,create-user,..."
 }
 ```
@@ -172,28 +173,80 @@ POST /perms-group
 RETURNS:
 ```javascript
 {
+   "group-name":  "Group-1"
    "perms":       "create-group,create-user,..."
 }
 ```
 
+#### Get permissions for a user over another user
 ```javascript
-POST /perms-user-over-users
+POST /perms-user-over-user
 {
    "email":             "example@email.com",
-   "resultset-emails":  true,    // Set to false to exclude emails
-   "resultset-perms":   true     // Set to false to exclude perms
+   "target-user":       "two@email.com"
 }
 ```
 RETURNS:
 ```javascript
 {
    "email":             "example@email.com",
-   "resultset-count":   64,               // Number of users in the results
-   "resultset-emails":  [email1, ...]
-   "resultset-perms":   ["modify,delete", ...]
+   "target-user":       "two@email.com",
+   "perms":             "modify,delete,..."
 }
 ```
 
+#### Get permissions for a user over a group
+```javascript
+POST /perms-user-over-group
+{
+   "email":             "example@email.com",
+   "target-group":      "Group-Name"
+}
+```
+RETURNS:
+```javascript
+{
+   "email":             "example@email.com",
+   "target-group":      "Group-Name",
+   "perms":             "modify,delete,..."
+}
+```
+
+#### Get permissions for a group over a user
+```javascript
+POST /perms-user-over-group
+{
+   "group-name":        "example@email.com",
+   "target-user":       "two@email.com"
+}
+```
+RETURNS:
+```javascript
+{
+   "email":             "example@email.com",
+   "target-user":       "two@email.com",
+   "perms":             "modify,delete,..."
+}
+```
+
+#### Get permissions for a group over a group
+```javascript
+POST /perms-group-over-group
+{
+   "group-name":        "example@email.com",
+   "target-group":      "Group-1"
+}
+```
+RETURNS:
+```javascript
+{
+   "email":             "example@email.com",
+   "target-group":      "Group-1",
+   "perms":             "modify,delete,..."
+}
+```
+
+#### Grant permissions to a user over another user
 ```javascript
 POST /grant-to-user-over-user
 {
@@ -208,6 +261,7 @@ POST /grant-to-user-over-user
 RETURNS: "error-code" and "error-message" fields only.
 
 
+#### Grant permissions to a user over a group
 ```javascript
 POST /grant-to-user-over-group
 {
@@ -223,6 +277,7 @@ POST /grant-to-user-over-group
 RETURNS: "error-code" and "error-message" fields only.
 
 
+#### Grant permissions to a group over a user
 ```javascript
 POST /grant-to-group-over-user
 {
@@ -237,6 +292,7 @@ POST /grant-to-group-over-user
 RETURNS: "error-code" and "error-message" fields only.
 
 
+#### Grant permissions to a group over another group
 ```javascript
 POST /grant-to-group-over-group
 {
@@ -252,6 +308,7 @@ POST /grant-to-group-over-group
 RETURNS: "error-code" and "error-message" fields only.
 
 
+#### Revoke permissions from a user over another user
 ```javascript
 POST /revoke-from-user-over-user
 {
@@ -266,6 +323,7 @@ POST /revoke-from-user-over-user
 RETURNS: "error-code" and "error-message" fields only.
 
 
+#### Revoke permissions from a user over a group
 ```javascript
 POST /revoke-from-user-over-group
 {
@@ -281,6 +339,7 @@ POST /revoke-from-user-over-group
 RETURNS: "error-code" and "error-message" fields only.
 
 
+#### Revoke permissions from a group over a user
 ```javascript
 POST /revoke-from-group-over-user
 {
@@ -295,6 +354,7 @@ POST /revoke-from-group-over-user
 RETURNS: "error-code" and "error-message" fields only.
 
 
+#### Revoke permissions from a group over another group
 ```javascript
 POST /revoke-from-group-over-group
 {

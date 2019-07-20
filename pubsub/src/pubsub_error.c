@@ -21,6 +21,7 @@ const char *pubsub_error_msg (int errorcode)
       { EPUBSUB_AUTH_FAILURE,       "Authentication failure"               },
       { EPUBSUB_PERM_DENIED,        "Permission denied"                    },
       { EPUBSUB_RESOURCE_EXISTS,    "Specific resource already exists"     },
+      { EPUBSUB_RESOURCE_NOT_FOUND, "Resource does not exist"              },
    };
 
    for (size_t i=0; i<sizeof errs/sizeof errs[0]; i++) {

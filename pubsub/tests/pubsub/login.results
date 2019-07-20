@@ -1,10 +1,10 @@
 {HTTP/1.1 200 OK
-Set-Cookie: session-id=a1a62c29a0f24d731e9c4d31e0c3409493a97840c637ccee1e9bc3075731f5f8
+Set-Cookie: session-id=70a707bff1b41cf473911cd7aaa45687698cbe14352e48fcd5ee2e23715c9fe2
 CONTENT_TYPE: application/json
 
 
 {
-"session-id": "a1a62c29a0f24d731e9c4d31e0c3409493a97840c637ccee1e9bc3075731f5f8",
+"session-id": "70a707bff1b41cf473911cd7aaa45687698cbe14352e48fcd5ee2e23715c9fe2",
 "error-code": 0,
 "error-message": "Success"
 }
