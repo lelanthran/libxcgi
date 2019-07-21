@@ -14,6 +14,7 @@ export ENDPOINTS='
 
    user-new
    user-rm
+   user-info
    user-list
    user-mod
 
@@ -24,6 +25,9 @@ export ENDPOINTS='
    group-rmuser
    group-list
    group-members
+
+   flags-set
+   flags-clear
 
    perms-user
    perms-group

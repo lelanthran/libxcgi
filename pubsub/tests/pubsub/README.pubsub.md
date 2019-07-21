@@ -115,20 +115,15 @@ POST /flags-set
 ```
 RETURNS: "error-code" and "error-message" fields only.
 
-#### Get user flags
+#### Clear user flags
 ```javascript
-POST /flags-get
-{
-   "email":       "example@email.com",
-}
-```
-RETURNS:
-```javascript
+POST /flags-clear
 {
    "email":       "example@email.com",
    "flags":       "lockout,..." // More TBA
 }
 ```
+RETURNS: "error-code" and "error-message" fields only.
 
 
 ### User, group and permissions management
@@ -444,6 +439,24 @@ POST /user-rm
 RETURNS: "error-code" and "error-message" fields only.
 
 
+#### User info
+```javascript
+POST /user-info
+{
+   "email":       "example@email.com"
+}
+```
+RETURNS:
+```javascript
+{
+   "email":     "one@example.com",
+   "nick":      "User One",
+   "flags":     "lockout", // ...
+   "user-id":   "12"
+}
+```
+
+
 #### List users
 ```javascript
 POST /user-list
@@ -463,9 +476,9 @@ RETURNS:
    "nick-pattern":      "Pattern matched against nicknames",
    "id-pattern":        "Pattern matched against IDs",
    "resultset-count":   64,               // Number of users in the results
-   "resultset-emails":  [email1, ...]
-   "resultset-nicks":   [nick1, ...]
-   "resultset-flags":   [flag1, ...]
+   "resultset-emails":  [email1, ...],
+   "resultset-nicks":   [nick1, ...],
+   "resultset-flags":   [flag1, ...],
    "resultset-ids":     [id1, ...]
 }
 ```
@@ -563,7 +576,7 @@ RETURNS:
    "group-pattern":           "Pattern used for matching",
    "resultset-count":         64,       // Number of groups in the results
    "resultset-names":         [group1, ...],
-   "resultset-descriptions":  [description1, ...]
+   "resultset-descriptions":  [description1, ...],
    "resultset-ids":           [id1, ...]
 }
 ```
@@ -584,9 +597,9 @@ RETURNS:
 {
    "group-name":        "Name of group",
    "resultset-count":   64,               // Number of users in the results
-   "resultset-emails":  [email1, ...]
-   "resultset-nicks":   [nick1, ...]
-   "resultset-flags":   [flag1, ...]
+   "resultset-emails":  [email1, ...],
+   "resultset-nicks":   [nick1, ...],
+   "resultset-flags":   [flag1, ...],
    "resultset-ids":     [id1, ...]
 }
 ```

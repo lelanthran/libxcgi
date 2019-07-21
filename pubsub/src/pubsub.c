@@ -20,6 +20,8 @@
 #define TYPE_INT           (2)
 #define TYPE_ARRAY         (3)
 
+static uint64_t flags_decode (const char *str);
+static char *flags_encode (uint64_t flags);
 static uint64_t perms_decode (const char *str);
 static char *perms_encode (uint64_t);
 
@@ -70,6 +72,7 @@ uint64_t    g_perms = 0;
 #define FIELD_STR_RESULTSET_NAMES          ("resultset-names")
 #define FIELD_STR_RESULTSET_DESCRIPTIONS   ("resultset-descriptions")
 #define FIELD_STR_PERMS                    ("perms")
+#define FIELD_STR_FLAGS                    ("flags")
 #define FIELD_STR_TARGET_USER              ("target-user")
 #define FIELD_STR_TARGET_GROUP             ("target-group")
 #define FIELD_STR_RESOURCE                 ("resource")
@@ -106,16 +109,17 @@ uint64_t    g_perms = 0;
 #define BIT_RESULTSET_NAMES          ((uint64_t)1 << 22)
 #define BIT_RESULTSET_DESCRIPTIONS   ((uint64_t)1 << 23)
 #define BIT_PERMS                    ((uint64_t)1 << 24)
-#define BIT_TARGET_USER              ((uint64_t)1 << 25)
-#define BIT_TARGET_GROUP             ((uint64_t)1 << 26)
-#define BIT_RESOURCE                 ((uint64_t)1 << 27)
-#define BIT_QUEUE_NAME               ((uint64_t)1 << 28)
-#define BIT_QUEUE_DESCRIPTION        ((uint64_t)1 << 29)
-#define BIT_QUEUE_ID                 ((uint64_t)1 << 30)
-#define BIT_MESSAGE_ID               ((uint64_t)1 << 31)
-#define BIT_MESSAGE_IDS              ((uint64_t)1 << 32)
-#define BIT_ERROR_MESSAGE            ((uint64_t)1 << 33)
-#define BIT_ERROR_CODE               ((uint64_t)1 << 34)
+#define BIT_FLAGS                    ((uint64_t)1 << 25)
+#define BIT_TARGET_USER              ((uint64_t)1 << 26)
+#define BIT_TARGET_GROUP             ((uint64_t)1 << 27)
+#define BIT_RESOURCE                 ((uint64_t)1 << 28)
+#define BIT_QUEUE_NAME               ((uint64_t)1 << 29)
+#define BIT_QUEUE_DESCRIPTION        ((uint64_t)1 << 30)
+#define BIT_QUEUE_ID                 ((uint64_t)1 << 31)
+#define BIT_MESSAGE_ID               ((uint64_t)1 << 32)
+#define BIT_MESSAGE_IDS              ((uint64_t)1 << 33)
+#define BIT_ERROR_MESSAGE            ((uint64_t)1 << 34)
+#define BIT_ERROR_CODE               ((uint64_t)1 << 35)
 
 
 // These are the constraints for each endpoint. It's a bitmask of which
@@ -127,6 +131,7 @@ uint64_t    g_perms = 0;
 
 #define ARG_USER_NEW               (BIT_EMAIL | BIT_NICK | BIT_PASSWORD)
 #define ARG_USER_RM                (BIT_EMAIL)
+#define ARG_USER_INFO              (BIT_EMAIL)
 #define ARG_USER_LIST              (BIT_EMAIL_PATTERN | BIT_NICK_PATTERN | BIT_ID_PATTERN | BIT_RESULTSET_EMAILS | BIT_RESULTSET_NICKS | BIT_RESULTSET_FLAGS | BIT_RESULTSET_IDS)
 #define ARG_USER_MOD               (BIT_OLD_EMAIL | BIT_NEW_EMAIL | BIT_NICK | BIT_PASSWORD)
 
@@ -137,6 +142,9 @@ uint64_t    g_perms = 0;
 #define ARG_GROUP_RMUSER           (BIT_GROUP_NAME | BIT_EMAIL)
 #define ARG_GROUP_LIST             (BIT_NAME_PATTERN | BIT_DESCRIPTION_PATTERN | BIT_RESULTSET_NAMES | BIT_RESULTSET_DESCRIPTIONS | BIT_RESULTSET_IDS)
 #define ARG_GROUP_MEMBERS          (BIT_GROUP_NAME | BIT_RESULTSET_EMAILS | BIT_RESULTSET_NICKS | BIT_RESULTSET_FLAGS |  BIT_RESULTSET_IDS)
+
+#define ARG_FLAGS_SET              (BIT_EMAIL | BIT_FLAGS)
+#define ARG_FLAGS_CLEAR            (BIT_EMAIL | BIT_FLAGS)
 
 #define ARG_PERMS_USER             (BIT_EMAIL)
 #define ARG_PERMS_GROUP            (BIT_GROUP_NAME)
@@ -204,6 +212,7 @@ static struct incoming_value_t g_incoming[] = {
    { FIELD_STR_RESULTSET_NAMES,        TYPE_STRING, NULL, 0 },
    { FIELD_STR_RESULTSET_DESCRIPTIONS, TYPE_STRING, NULL, 0 },
    { FIELD_STR_PERMS,                  TYPE_STRING, NULL, 0 },
+   { FIELD_STR_FLAGS,                  TYPE_STRING, NULL, 0 },
    { FIELD_STR_TARGET_USER,            TYPE_STRING, NULL, 0 },
    { FIELD_STR_TARGET_GROUP,           TYPE_STRING, NULL, 0 },
    { FIELD_STR_RESOURCE,               TYPE_STRING, NULL, 0 },
@@ -557,10 +566,56 @@ static bool endpoint_USER_NEW (ds_hmap_t *jfields,
 static bool endpoint_USER_RM (ds_hmap_t *jfields,
                               int *error_code, int *status_code)
 {
+   // TODO
    jfields = jfields;
    *error_code = EPUBSUB_UNIMPLEMENTED;
    status_code = status_code;
    return false;
+}
+
+static bool endpoint_USER_INFO (ds_hmap_t *jfields,
+                                int *error_code, int *status_code)
+{
+   const char *email = incoming_find (FIELD_STR_EMAIL);
+   char str_id[27];
+
+   char session[65];
+
+   char *nick = NULL;
+   char *str_flags = NULL;
+
+   uint64_t id = 0;
+   uint64_t flags = 0;
+
+   *status_code = 200;
+
+   *error_code = EPUBSUB_INTERNAL_ERROR;
+   if (!(sqldb_auth_user_info (xcgi_db, email, &id, &flags, &nick, session)))
+      goto errorexit;
+
+   sprintf (str_id, "%" PRIu64, id);
+
+   if (!(str_flags = flags_encode (flags)))
+      goto errorexit;
+
+   if (!(set_sfield (jfields, FIELD_STR_EMAIL, email)))
+      goto errorexit;
+
+   if (!(set_sfield (jfields, FIELD_STR_NICK, nick)))
+      goto errorexit;
+
+   if (!(set_sfield (jfields, FIELD_STR_FLAGS, str_flags)))
+      goto errorexit;
+
+   if (!(set_sfield (jfields, FIELD_STR_USER_ID, str_id)))
+      goto errorexit;
+
+   *error_code = 0;
+
+errorexit:
+   free (nick);
+   free (str_flags);
+   return *error_code ? false : true;
 }
 
 static bool endpoint_USER_LIST (ds_hmap_t *jfields,
@@ -1011,6 +1066,48 @@ errorexit:
    return !error;
 }
 
+static bool endpoint_FLAGS_SET (ds_hmap_t *jfields,
+                                int *error_code, int *status_code)
+{
+   const char *str_email = incoming_find (FIELD_STR_EMAIL),
+              *str_flags = incoming_find (FIELD_STR_FLAGS);
+
+   uint64_t flags = flags_decode (str_flags);
+
+   jfields = jfields;
+
+   *status_code = 200;
+   *error_code = 0;
+
+   if (!(sqldb_auth_user_flags_set (xcgi_db, str_email, flags))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
+   return true;
+}
+
+static bool endpoint_FLAGS_CLEAR (ds_hmap_t *jfields,
+                                  int *error_code, int *status_code)
+{
+   const char *str_email = incoming_find (FIELD_STR_EMAIL),
+              *str_flags = incoming_find (FIELD_STR_FLAGS);
+
+   uint64_t flags = flags_decode (str_flags);
+
+   jfields = jfields;
+
+   *status_code = 200;
+   *error_code = 0;
+
+   if (!(sqldb_auth_user_flags_clear (xcgi_db, str_email, flags))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
+   return true;
+}
+
 static bool
 endpoint_perm (bool (*fptr) (sqldb_t *, uint64_t *, const char *, const char *),
                const char *subj, const char *target,
@@ -1305,6 +1402,7 @@ static const struct {
 
 { endpoint_USER_NEW,               "user-new",             ARG_USER_NEW       },
 { endpoint_USER_RM,                "user-rm",              ARG_USER_RM        },
+{ endpoint_USER_INFO,              "user-info",            ARG_USER_INFO      },
 { endpoint_USER_LIST,              "user-list",            ARG_USER_LIST      },
 { endpoint_USER_MOD,               "user-mod",             ARG_USER_MOD       },
 
@@ -1315,6 +1413,9 @@ static const struct {
 { endpoint_GROUP_RMUSER,           "group-rmuser",         ARG_GROUP_RMUSER   },
 { endpoint_GROUP_LIST,             "group-list",           ARG_GROUP_LIST     },
 { endpoint_GROUP_MEMBERS,          "group-members",        ARG_GROUP_MEMBERS  },
+
+{ endpoint_FLAGS_SET,              "flags-set",            ARG_FLAGS_SET   },
+{ endpoint_FLAGS_CLEAR,            "flags-clear",          ARG_FLAGS_CLEAR },
 
 { endpoint_PERMS_USER,             "perms-user",               ARG_PERMS_USER           },
 { endpoint_PERMS_GROUP,            "perms-group",              ARG_PERMS_GROUP          },
@@ -1372,6 +1473,35 @@ static bool endpoint_valid_params (endpoint_func_t *fptr)
    return false;
 }
 
+
+/* ******************************************************************
+ * Manage the flags. Not much is needed here.
+ */
+
+#define FLAGS_BIT_LOCKOUT        (((uint64_t)1) << 0)
+
+static uint64_t flags_decode (const char *str)
+{
+   uint64_t ret = 0;
+
+   if ((strstr (str, "lockout"))!=0)
+      ret |= FLAGS_BIT_LOCKOUT;
+
+   return ret;
+}
+
+static char *flags_encode (uint64_t flags)
+{
+   char *ret = NULL;
+
+   if (flags & FLAGS_BIT_LOCKOUT) {
+      if (!(ret = malloc (strlen ("lockout") + 1)))
+         return NULL;
+      strcpy (ret, "lockout");
+   }
+
+   return ret;
+}
 
 /* ******************************************************************
  * Manage all the permissions. A single permission is a set of 64 flags

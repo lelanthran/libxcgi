@@ -65,7 +65,7 @@ function call_cgi () {
       exit 119
    fi
 # I uncomment this snippet when I need to debug a particular test.
-#  if [ "$2" == "revoke-from-user-over-user-1.results" ]; then
+#  if [ "$2" == "user-info-1.results" ]; then
 #     cat tmp.input
 #     gdb pubsub.elf
 #     exit 0;
@@ -376,10 +376,28 @@ call_cgi /perms-group-over-group perms-group-over-group-2.results '{
    "target-group":      "Group-Eight"
 }'
 
+###############################################
+
+call_cgi /flags-set flags-set-1.results '{
+   "email":      "one@example.com",
+   "flags":      "lockout"
+}'
+
+call_cgi /user-info user-info-1.results '{
+   "email":      "one@example.com",
+}'
+
+call_cgi /flags-clear flags-clear-1.results '{
+   "email":      "one@example.com",
+   "flags":      "lockout"
+}'
+
+call_cgi /user-info user-info-2.results '{
+   "email":      "one@example.com",
+}'
+
 echo "Ending test (117)"
 exit 117
-
-###############################################
 
 
 ###############################################
