@@ -20,10 +20,16 @@
 #define TYPE_INT           (2)
 #define TYPE_ARRAY         (3)
 
+// Used to determine permissions type (builtin group/user/acl or
+// user-defined arbitrary permissions in a bitstream)
+#define PERM_TYPE_ERROR          (0)
+#define PERM_TYPE_BUILTIN        (1)
+#define PERM_TYPE_BITSTREAM      (2)
+
 static uint64_t flags_decode (const char *str);
 static char *flags_encode (uint64_t flags);
-static uint64_t perms_decode (const char *str);
-static char *perms_encode (uint64_t);
+static uint64_t perms_decode (int perm_type, const char *str);
+static char *perms_encode (int perm_type, uint64_t);
 
 // ErrorReportingMadeEasy(tm)
 #define PROG_ERR(...)      do {\
@@ -1116,6 +1122,7 @@ static bool endpoint_FLAGS_CLEAR (ds_hmap_t *jfields,
 
 static bool
 endpoint_perm (bool (*fptr) (sqldb_t *, uint64_t *, const char *, const char *),
+               int perm_type,
                const char *subj, const char *target,
                ds_hmap_t *jfields,
                int *error_code, int *status_code)
@@ -1145,7 +1152,7 @@ endpoint_perm (bool (*fptr) (sqldb_t *, uint64_t *, const char *, const char *),
       return false;
    }
 
-   if (!(perms_str = perms_encode (perms))) {
+   if (!(perms_str = perms_encode (perm_type, perms))) {
       *error_code = EPUBSUB_INTERNAL_ERROR;
       return false;
    }
@@ -1164,6 +1171,7 @@ static bool endpoint_PERMS_USER (ds_hmap_t *jfields,
                                  int *error_code, int *status_code)
 {
    return endpoint_perm (sqldb_auth_perms_get_user,
+                         PERM_TYPE_BITSTREAM,
                          FIELD_STR_EMAIL, FIELD_STR_RESOURCE,
                          jfields, error_code, status_code);
 }
@@ -1172,6 +1180,7 @@ static bool endpoint_PERMS_GROUP (ds_hmap_t *jfields,
                                   int *error_code, int *status_code)
 {
    return endpoint_perm (sqldb_auth_perms_get_group,
+                         PERM_TYPE_BITSTREAM,
                          FIELD_STR_GROUP_NAME, FIELD_STR_RESOURCE,
                          jfields, error_code, status_code);
 }
@@ -1180,6 +1189,7 @@ static bool endpoint_PERMS_CREATE_USER (ds_hmap_t *jfields,
                                         int *error_code, int *status_code)
 {
    return endpoint_perm (sqldb_auth_perms_get_user,
+                         PERM_TYPE_BUILTIN,
                          FIELD_STR_EMAIL, NULL,
                          jfields, error_code, status_code);
 }
@@ -1188,6 +1198,7 @@ static bool endpoint_PERMS_CREATE_GROUP (ds_hmap_t *jfields,
                                          int *error_code, int *status_code)
 {
    return endpoint_perm (sqldb_auth_perms_get_group,
+                         PERM_TYPE_BUILTIN,
                          FIELD_STR_GROUP_NAME, NULL,
                          jfields, error_code, status_code);
 }
@@ -1196,6 +1207,7 @@ static bool endpoint_PERMS_USER_O_USER (ds_hmap_t *jfields,
                                  int *error_code, int *status_code)
 {
    return endpoint_perm (sqldb_auth_perms_get_user,
+                         PERM_TYPE_BUILTIN,
                          FIELD_STR_EMAIL, FIELD_STR_TARGET_USER,
                          jfields, error_code, status_code);
 }
@@ -1204,6 +1216,7 @@ static bool endpoint_PERMS_USER_O_GROUP (ds_hmap_t *jfields,
                                  int *error_code, int *status_code)
 {
    return endpoint_perm (sqldb_auth_perms_get_user,
+                         PERM_TYPE_BUILTIN,
                          FIELD_STR_EMAIL, FIELD_STR_TARGET_GROUP,
                          jfields, error_code, status_code);
 }
@@ -1212,6 +1225,7 @@ static bool endpoint_PERMS_GROUP_O_USER (ds_hmap_t *jfields,
                                  int *error_code, int *status_code)
 {
    return endpoint_perm (sqldb_auth_perms_get_group,
+                         PERM_TYPE_BUILTIN,
                          FIELD_STR_GROUP_NAME, FIELD_STR_TARGET_USER,
                          jfields, error_code, status_code);
 }
@@ -1220,6 +1234,7 @@ static bool endpoint_PERMS_GROUP_O_GROUP (ds_hmap_t *jfields,
                                  int *error_code, int *status_code)
 {
    return endpoint_perm (sqldb_auth_perms_get_group,
+                         PERM_TYPE_BUILTIN,
                          FIELD_STR_GROUP_NAME, FIELD_STR_TARGET_GROUP,
                          jfields, error_code, status_code);
 }
@@ -1227,6 +1242,7 @@ static bool endpoint_PERMS_GROUP_O_GROUP (ds_hmap_t *jfields,
 
 static bool
 endpoint_g_r (bool (*fptr) (sqldb_t *, const char *, const char *, uint64_t),
+              int perm_type,
               const char *subj, const char *target,
               ds_hmap_t *jfields,
               int *error_code, int *status_code)
@@ -1237,7 +1253,7 @@ endpoint_g_r (bool (*fptr) (sqldb_t *, const char *, const char *, uint64_t),
                                  incoming_find (target) :
                                  SQLDB_AUTH_GLOBAL_RESOURCE;
 
-   uint64_t perms = perms_decode (permstr);
+   uint64_t perms = perms_decode (perm_type, permstr);
 
    jfields = jfields;
    *status_code = 200;
@@ -1254,6 +1270,7 @@ static bool endpoint_GRANT_USER (ds_hmap_t *jfields,
                                         int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_grant_user,
+                        PERM_TYPE_BITSTREAM,
                         FIELD_STR_EMAIL, FIELD_STR_RESOURCE,
                         jfields, error_code, status_code);
 }
@@ -1262,6 +1279,7 @@ static bool endpoint_GRANT_CREATE_USER (ds_hmap_t *jfields,
                                         int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_grant_user,
+                        PERM_TYPE_BUILTIN,
                         FIELD_STR_EMAIL, NULL,
                         jfields, error_code, status_code);
 }
@@ -1270,6 +1288,7 @@ static bool endpoint_REVOKE_USER (ds_hmap_t *jfields,
                                   int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_revoke_user,
+                        PERM_TYPE_BITSTREAM,
                         FIELD_STR_EMAIL, FIELD_STR_RESOURCE,
                         jfields, error_code, status_code);
 }
@@ -1278,6 +1297,7 @@ static bool endpoint_REVOKE_CREATE_USER (ds_hmap_t *jfields,
                                          int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_revoke_user,
+                        PERM_TYPE_BUILTIN,
                         FIELD_STR_EMAIL, NULL,
                         jfields, error_code, status_code);
 }
@@ -1286,6 +1306,7 @@ static bool endpoint_GRANT_GROUP (ds_hmap_t *jfields,
                                          int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_grant_group,
+                        PERM_TYPE_BITSTREAM,
                         FIELD_STR_GROUP_NAME, FIELD_STR_RESOURCE,
                         jfields, error_code, status_code);
 }
@@ -1294,6 +1315,7 @@ static bool endpoint_GRANT_CREATE_GROUP (ds_hmap_t *jfields,
                                          int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_grant_group,
+                        PERM_TYPE_BUILTIN,
                         FIELD_STR_GROUP_NAME, NULL,
                         jfields, error_code, status_code);
 }
@@ -1302,6 +1324,7 @@ static bool endpoint_REVOKE_GROUP (ds_hmap_t *jfields,
                                    int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_revoke_group,
+                        PERM_TYPE_BITSTREAM,
                         FIELD_STR_GROUP_NAME, FIELD_STR_RESOURCE,
                         jfields, error_code, status_code);
 }
@@ -1310,6 +1333,7 @@ static bool endpoint_REVOKE_CREATE_GROUP (ds_hmap_t *jfields,
                                           int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_revoke_group,
+                        PERM_TYPE_BUILTIN,
                         FIELD_STR_GROUP_NAME, NULL,
                         jfields, error_code, status_code);
 }
@@ -1318,6 +1342,7 @@ static bool endpoint_GRANT_USER_O_USER (ds_hmap_t *jfields,
                                         int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_grant_user,
+                        PERM_TYPE_BUILTIN,
                         FIELD_STR_EMAIL, FIELD_STR_TARGET_USER,
                         jfields, error_code, status_code);
 }
@@ -1326,6 +1351,7 @@ static bool endpoint_GRANT_USER_O_GROUP (ds_hmap_t *jfields,
                                          int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_grant_user,
+                        PERM_TYPE_BUILTIN,
                         FIELD_STR_EMAIL, FIELD_STR_TARGET_GROUP,
                         jfields, error_code, status_code);
 }
@@ -1334,6 +1360,7 @@ static bool endpoint_GRANT_GROUP_O_USER (ds_hmap_t *jfields,
                                          int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_grant_group,
+                        PERM_TYPE_BUILTIN,
                         FIELD_STR_GROUP_NAME, FIELD_STR_TARGET_USER,
                         jfields, error_code, status_code);
 }
@@ -1342,6 +1369,7 @@ static bool endpoint_GRANT_GROUP_O_GROUP (ds_hmap_t *jfields,
                                           int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_grant_group,
+                        PERM_TYPE_BUILTIN,
                         FIELD_STR_GROUP_NAME, FIELD_STR_TARGET_GROUP,
                         jfields, error_code, status_code);
 }
@@ -1350,6 +1378,7 @@ static bool endpoint_REVOKE_USER_O_USER (ds_hmap_t *jfields,
                                          int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_revoke_user,
+                        PERM_TYPE_BUILTIN,
                         FIELD_STR_EMAIL, FIELD_STR_TARGET_USER,
                         jfields, error_code, status_code);
 }
@@ -1358,6 +1387,7 @@ static bool endpoint_REVOKE_USER_O_GROUP (ds_hmap_t *jfields,
                                           int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_revoke_user,
+                        PERM_TYPE_BUILTIN,
                         FIELD_STR_EMAIL, FIELD_STR_TARGET_GROUP,
                         jfields, error_code, status_code);
 }
@@ -1366,6 +1396,7 @@ static bool endpoint_REVOKE_GROUP_O_USER (ds_hmap_t *jfields,
                                           int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_revoke_group,
+                        PERM_TYPE_BUILTIN,
                         FIELD_STR_GROUP_NAME, FIELD_STR_TARGET_USER,
                         jfields, error_code, status_code);
 }
@@ -1374,6 +1405,7 @@ static bool endpoint_REVOKE_GROUP_O_GROUP (ds_hmap_t *jfields,
                                            int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_revoke_group,
+                        PERM_TYPE_BUILTIN,
                         FIELD_STR_GROUP_NAME, FIELD_STR_TARGET_GROUP,
                         jfields, error_code, status_code);
 }
@@ -1621,44 +1653,92 @@ static const struct {
    { PERM_BIT_CHANGE_MEMBERSHIP,    PERM_STR_CHANGE_MEMBERSHIP      },
 };
 
-static uint64_t perms_decode (const char *str)
+static uint64_t perms_decode (int perm_type, const char *str)
 {
    uint64_t ret = 0;
    bool all = (strstr (str, PERM_STR_ALL)) ? true : false;
 
-   for (size_t i=0; i<sizeof g_perm_map/sizeof g_perm_map[0]; i++) {
-      if (all || ((strstr (str, g_perm_map[i].perm_str))!=NULL))
-         ret |= g_perm_map[i].perm_bit;
+   if (perm_type == PERM_TYPE_BUILTIN) {
+      for (size_t i=0; i<sizeof g_perm_map/sizeof g_perm_map[0]; i++) {
+         if (all || ((strstr (str, g_perm_map[i].perm_str))!=NULL))
+            ret |= g_perm_map[i].perm_bit;
+      }
+   }
+   if (perm_type == PERM_TYPE_BITSTREAM) {
+      unsigned int bitnum = 0;
+
+      if ((sscanf (str, "%u", &bitnum))!=1)
+         return ret;
+
+      ret |= (uint64_t)(((uint64_t)1) << (uint64_t)bitnum);
+
+      char *l_str = ds_str_dup (str);
+      if (!l_str)
+         return ret;
+
+      char *tok = strtok (l_str, ",");
+      while (tok) {
+         if ((sscanf (tok, "%u", &bitnum))!=1) {
+            free (l_str);
+            return ret;
+         }
+
+         ret |= (uint64_t)(((uint64_t)1) << (uint64_t)bitnum);
+         tok = strtok (NULL, ",");
+      }
+      free (l_str);
    }
 
    return ret;
 }
 
-static char *perms_encode (uint64_t perms)
+static char *perms_encode (int perm_type, uint64_t perms)
 {
    char *ret = NULL;
    size_t ret_len = 2;
    bool comma = false;
 
-   for (size_t i=0; i<sizeof g_perm_map/sizeof g_perm_map[0]; i++) {
-      if (g_perm_map[i].perm_bit & perms)
-         ret_len += strlen (g_perm_map[i].perm_str) + 2;
-   }
+   if (perm_type == PERM_TYPE_BUILTIN) {
+      for (size_t i=0; i<sizeof g_perm_map/sizeof g_perm_map[0]; i++) {
+         if (g_perm_map[i].perm_bit & perms)
+            ret_len += strlen (g_perm_map[i].perm_str) + 2;
+      }
 
-   if (!(ret = malloc (ret_len)))
-      return NULL;
+      if (!(ret = malloc (ret_len)))
+         return NULL;
 
-   memset (ret, 0, ret_len);
+      memset (ret, 0, ret_len);
 
-   for (size_t i=0; i<sizeof g_perm_map/sizeof g_perm_map[0]; i++) {
-      if (g_perm_map[i].perm_bit & perms) {
-         if (comma) {
-            strcat (ret, ",");
+      for (size_t i=0; i<sizeof g_perm_map/sizeof g_perm_map[0]; i++) {
+         if (g_perm_map[i].perm_bit & perms) {
+            if (comma) {
+               strcat (ret, ",");
+            }
+            strcat (ret, g_perm_map[i].perm_str);
+            comma = true;
          }
-         strcat (ret, g_perm_map[i].perm_str);
-         comma = true;
       }
    }
+
+   if (perm_type == PERM_TYPE_BITSTREAM) {
+      if (!(ret = malloc (200)))
+         return ds_str_dup ("");
+      memset (ret, 0, 200);
+
+      for (size_t i=0; i < (sizeof perms) * 8; i++) {
+         char tmp[5];
+         if (perms & ((uint64_t)((uint64_t)1) << i)) {
+            if (comma)
+               strcat (ret, ",");
+            sprintf (tmp, "%zu", i);
+            strcat (ret, tmp);
+            comma = true;
+         }
+      }
+   }
+
+   if (!ret)
+      ret = ds_str_dup ("");
 
    return ret;
 }

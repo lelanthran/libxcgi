@@ -65,7 +65,7 @@ function call_cgi () {
       exit 119
    fi
 # I uncomment this snippet when I need to debug a particular test.
-#  if [ "$2" == "user-info-1.results" ]; then
+#  if [ "$2" == "grant-to-user-1.results" ]; then
 #     cat tmp.input
 #     gdb pubsub.elf
 #     exit 0;
