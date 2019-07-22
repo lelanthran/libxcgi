@@ -8,9 +8,7 @@ resource for access control.
    map urls to functions?
 
 ===============
-4. Create the skeleton pubsub.cgi application. For now simply accepting
-   and responding to the API (even if responding with junk data) is
-   enough.
+4. Complete the user-rm and group-rm endpoints.
 
 5. Pass through sensible error messages when the database calls fail.
 

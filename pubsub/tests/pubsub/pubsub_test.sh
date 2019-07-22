@@ -494,27 +494,6 @@ call_cgi /user-rm user-rm-3.results '{
 
 ###############################################
 
-call_cgi /group-mod group-mod-1.results '{
-   "old-name":         "Group1",
-   "new-name":         "p1-Renamed"
-}'
-
-###############################################
-
-call_cgi /group-list group-list-1.results '{
-   "pattern":         "*"
-}'
-
-###############################################
-
-call_cgi /user-list user-list-1.results '{
-   "emailPattern":      "*",
-   "nickPattern":       "*",
-   "idPattern":         "*"
-}'
-
-###############################################
-
 
 
 
