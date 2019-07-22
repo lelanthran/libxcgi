@@ -234,14 +234,24 @@ done
 
 ###############################################
 
-call_cgi /grant-to-user grant-to-user-1.results '{
+call_cgi /grant-create-to-user grant-create-to-user-1.results '{
    "email": "ten@example.com",
    "perms": "create-user,create-group"
 }'
 
-call_cgi /grant-to-group grant-to-group-1.results '{
+call_cgi /grant-create-to-group grant-create-to-group-1.results '{
    "group-name": "Group-Ten",
-   "perms":      "create-user"
+   "perms":      "create-user,create-group"
+}'
+
+call_cgi /revoke-create-from-user revoke-create-from-user-1.results '{
+   "email": "ten@example.com",
+   "perms": "create-user"
+}'
+
+call_cgi /revoke-create-from-group revoke-create-from-group-1.results '{
+   "group-name": "Group-Ten",
+   "perms":      "create-group"
 }'
 
 ###############################################
@@ -324,11 +334,11 @@ call_cgi /revoke-from-group-over-group revoke-from-group-over-group-1.results '{
 
 ###############################################
 
-call_cgi /perms-user perms-user-1.results '{
+call_cgi /perms-create-user perms-create-user-1.results '{
    "email":    "ten@example.com"
 }'
 
-call_cgi /perms-group perms-group-1.results '{
+call_cgi /perms-create-group perms-create-group-1.results '{
    "group-name":    "Group-Ten"
 }'
 

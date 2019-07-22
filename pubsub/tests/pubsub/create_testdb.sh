@@ -29,22 +29,22 @@ export ENDPOINTS='
    flags-set
    flags-clear
 
-   perms-user
-   perms-group
+   perms-create-user
+   perms-create-group
    perms-user-over-user
    perms-user-over-group
    perms-group-over-user
    perms-group-over-group
 
-   grant-to-user
-   grant-to-group
+   grant-create-to-user
+   grant-create-to-group
    grant-to-user-over-user
    grant-to-user-over-group
    grant-to-group-over-user
    grant-to-group-over-group
 
-   revoke-from-user
-   revoke-from-group
+   revoke-create-from-user
+   revoke-create-from-group
    revoke-from-user-over-user
    revoke-from-user-over-group
    revoke-from-group-over-user

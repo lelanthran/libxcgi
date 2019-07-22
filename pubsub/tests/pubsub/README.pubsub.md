@@ -145,7 +145,7 @@ In practice it is simpler to manage ACL only via groups (role-based ACL).
 
 #### Grant creation permissions to a user
 ```javascript
-POST /grant-to-user
+POST /grant-create-to-user
 {
    "email":       "example@email.com",
    "perms":       "create-user,..." // "create-group",
@@ -156,7 +156,7 @@ RETURNS: "error-code" and "error-message" fields only.
 
 #### Revoke creation permissions from a user
 ```javascript
-POST /revoke-from-user
+POST /revoke-create-from-user
 {
    "email":       "example@email.com",
    "perms":       "create-user,..." // "create-group",
@@ -167,7 +167,7 @@ RETURNS: "error-code" and "error-message" fields only.
 
 #### Grant creation permissions to a group
 ```javascript
-POST /grant-to-group
+POST /grant-create-to-group
 {
    "group-name":  "Group-1",
    "perms":       "create-user,..." // "create-group",
@@ -178,7 +178,7 @@ RETURNS: "error-code" and "error-message" fields only.
 
 #### Revoke creation permissions from a group
 ```javascript
-POST /revoke-from-group
+POST /revoke-create-from-group
 {
    "group-name":  "Group-1",
    "perms":       "create-user,..." // "create-group",
