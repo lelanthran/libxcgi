@@ -415,13 +415,13 @@ call_cgi /grant-to-group grant-to-group-2.results '{
 call_cgi /revoke-from-user revoke-from-user-1.results '{
    "email":       "four@example.com",
    "resource":    "MyTempResource",
-   "perms":       "0,3,6,7"
+   "perms":       "0,3,6,"
 }'
 
 call_cgi /revoke-from-group revoke-from-group-1.results '{
    "group-name":  "Group-Four",
    "resource":    "MyTempResource",
-   "perms":       "0,3,6,7"
+   "perms":       "0,3,6,"
 }'
 
 call_cgi /perms-for-user perms-for-user-1.results '{

@@ -146,6 +146,8 @@ uint64_t    g_perms = 0;
 #define ARG_FLAGS_SET              (BIT_EMAIL | BIT_FLAGS)
 #define ARG_FLAGS_CLEAR            (BIT_EMAIL | BIT_FLAGS)
 
+#define ARG_PERMS_USER             (BIT_EMAIL | BIT_RESOURCE)
+#define ARG_PERMS_GROUP            (BIT_GROUP_NAME | BIT_RESOURCE)
 #define ARG_PERMS_CREATE_USER      (BIT_EMAIL)
 #define ARG_PERMS_CREATE_GROUP     (BIT_GROUP_NAME)
 #define ARG_PERMS_USER_O_USER      (BIT_EMAIL | BIT_TARGET_USER)
@@ -153,6 +155,8 @@ uint64_t    g_perms = 0;
 #define ARG_PERMS_GROUP_O_USER     (BIT_GROUP_NAME | BIT_TARGET_USER)
 #define ARG_PERMS_GROUP_O_GROUP    (BIT_GROUP_NAME | BIT_TARGET_GROUP)
 
+#define ARG_GRANT_USER             (BIT_EMAIL | BIT_PERMS | BIT_RESOURCE)
+#define ARG_GRANT_GROUP            (BIT_GROUP_NAME | BIT_PERMS | BIT_RESOURCE)
 #define ARG_GRANT_CREATE_USER      (BIT_EMAIL | BIT_PERMS)
 #define ARG_GRANT_CREATE_GROUP     (BIT_GROUP_NAME | BIT_PERMS)
 #define ARG_GRANT_USER_O_USER      (BIT_EMAIL | BIT_PERMS | BIT_TARGET_USER)
@@ -160,6 +164,8 @@ uint64_t    g_perms = 0;
 #define ARG_GRANT_GROUP_O_USER     (BIT_GROUP_NAME | BIT_PERMS | BIT_TARGET_USER)
 #define ARG_GRANT_GROUP_O_GROUP    (BIT_GROUP_NAME | BIT_PERMS | BIT_TARGET_GROUP)
 
+#define ARG_REVOKE_USER            (BIT_EMAIL | BIT_PERMS | BIT_RESOURCE)
+#define ARG_REVOKE_GROUP           (BIT_GROUP_NAME | BIT_PERMS | BIT_RESOURCE)
 #define ARG_REVOKE_CREATE_USER     (BIT_EMAIL | BIT_PERMS)
 #define ARG_REVOKE_CREATE_GROUP    (BIT_GROUP_NAME | BIT_PERMS)
 #define ARG_REVOKE_USER_O_USER     (BIT_EMAIL | BIT_PERMS | BIT_TARGET_USER)
@@ -1154,6 +1160,22 @@ endpoint_perm (bool (*fptr) (sqldb_t *, uint64_t *, const char *, const char *),
    return true;
 }
 
+static bool endpoint_PERMS_USER (ds_hmap_t *jfields,
+                                 int *error_code, int *status_code)
+{
+   return endpoint_perm (sqldb_auth_perms_get_user,
+                         FIELD_STR_EMAIL, FIELD_STR_RESOURCE,
+                         jfields, error_code, status_code);
+}
+
+static bool endpoint_PERMS_GROUP (ds_hmap_t *jfields,
+                                  int *error_code, int *status_code)
+{
+   return endpoint_perm (sqldb_auth_perms_get_group,
+                         FIELD_STR_GROUP_NAME, FIELD_STR_RESOURCE,
+                         jfields, error_code, status_code);
+}
+
 static bool endpoint_PERMS_CREATE_USER (ds_hmap_t *jfields,
                                         int *error_code, int *status_code)
 {
@@ -1228,11 +1250,27 @@ endpoint_g_r (bool (*fptr) (sqldb_t *, const char *, const char *, uint64_t),
    return true;
 }
 
+static bool endpoint_GRANT_USER (ds_hmap_t *jfields,
+                                        int *error_code, int *status_code)
+{
+   return endpoint_g_r (sqldb_auth_perms_grant_user,
+                        FIELD_STR_EMAIL, FIELD_STR_RESOURCE,
+                        jfields, error_code, status_code);
+}
+
 static bool endpoint_GRANT_CREATE_USER (ds_hmap_t *jfields,
                                         int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_grant_user,
                         FIELD_STR_EMAIL, NULL,
+                        jfields, error_code, status_code);
+}
+
+static bool endpoint_REVOKE_USER (ds_hmap_t *jfields,
+                                  int *error_code, int *status_code)
+{
+   return endpoint_g_r (sqldb_auth_perms_revoke_user,
+                        FIELD_STR_EMAIL, FIELD_STR_RESOURCE,
                         jfields, error_code, status_code);
 }
 
@@ -1244,11 +1282,27 @@ static bool endpoint_REVOKE_CREATE_USER (ds_hmap_t *jfields,
                         jfields, error_code, status_code);
 }
 
+static bool endpoint_GRANT_GROUP (ds_hmap_t *jfields,
+                                         int *error_code, int *status_code)
+{
+   return endpoint_g_r (sqldb_auth_perms_grant_group,
+                        FIELD_STR_GROUP_NAME, FIELD_STR_RESOURCE,
+                        jfields, error_code, status_code);
+}
+
 static bool endpoint_GRANT_CREATE_GROUP (ds_hmap_t *jfields,
                                          int *error_code, int *status_code)
 {
    return endpoint_g_r (sqldb_auth_perms_grant_group,
                         FIELD_STR_GROUP_NAME, NULL,
+                        jfields, error_code, status_code);
+}
+
+static bool endpoint_REVOKE_GROUP (ds_hmap_t *jfields,
+                                   int *error_code, int *status_code)
+{
+   return endpoint_g_r (sqldb_auth_perms_revoke_group,
+                        FIELD_STR_GROUP_NAME, FIELD_STR_RESOURCE,
                         jfields, error_code, status_code);
 }
 
@@ -1417,6 +1471,8 @@ static const struct {
 { endpoint_FLAGS_SET,              "flags-set",            ARG_FLAGS_SET   },
 { endpoint_FLAGS_CLEAR,            "flags-clear",          ARG_FLAGS_CLEAR },
 
+{ endpoint_PERMS_USER,             "perms-for-user",           ARG_PERMS_USER           },
+{ endpoint_PERMS_GROUP,            "perms-for-group",          ARG_PERMS_GROUP          },
 { endpoint_PERMS_CREATE_USER,      "perms-create-user",        ARG_PERMS_CREATE_USER    },
 { endpoint_PERMS_CREATE_GROUP,     "perms-create-group",       ARG_PERMS_CREATE_GROUP   },
 { endpoint_PERMS_USER_O_USER,      "perms-user-over-user",     ARG_PERMS_USER_O_USER    },
@@ -1424,6 +1480,8 @@ static const struct {
 { endpoint_PERMS_GROUP_O_USER,     "perms-group-over-user",    ARG_PERMS_GROUP_O_USER   },
 { endpoint_PERMS_GROUP_O_GROUP,    "perms-group-over-group",   ARG_PERMS_GROUP_O_GROUP  },
 
+{ endpoint_GRANT_USER,             "grant-to-user",                  ARG_GRANT_USER           },
+{ endpoint_GRANT_GROUP,            "grant-to-group",                 ARG_GRANT_GROUP          },
 { endpoint_GRANT_CREATE_USER,      "grant-create-to-user",           ARG_GRANT_CREATE_USER    },
 { endpoint_GRANT_CREATE_GROUP,     "grant-create-to-group",          ARG_GRANT_CREATE_GROUP   },
 { endpoint_GRANT_USER_O_USER,      "grant-to-user-over-user",        ARG_GRANT_USER_O_USER    },
@@ -1431,6 +1489,8 @@ static const struct {
 { endpoint_GRANT_GROUP_O_USER,     "grant-to-group-over-user",       ARG_GRANT_GROUP_O_USER   },
 { endpoint_GRANT_GROUP_O_GROUP,    "grant-to-group-over-group",      ARG_GRANT_GROUP_O_GROUP  },
 
+{ endpoint_REVOKE_USER,             "revoke-from-user",              ARG_REVOKE_USER          },
+{ endpoint_REVOKE_GROUP,            "revoke-from-group",             ARG_REVOKE_GROUP         },
 { endpoint_REVOKE_CREATE_USER,      "revoke-create-from-user",       ARG_REVOKE_CREATE_USER   },
 { endpoint_REVOKE_CREATE_GROUP,     "revoke-create-from-group",      ARG_REVOKE_CREATE_GROUP  },
 { endpoint_REVOKE_USER_O_USER,      "revoke-from-user-over-user",    ARG_REVOKE_USER_O_USER   },
