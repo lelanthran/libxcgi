@@ -143,6 +143,94 @@ Very fine-grained user, group and ACL management is possible.
 
 In practice it is simpler to manage ACL only via groups (role-based ACL).
 
+#### Grant permissions to a user
+```javascript
+POST /grant-to-user
+{
+   "email":       "example@email.com",
+   "perms":       "0,..."  // Up to 32 bits can be used (0..31)
+   "resource":    "..." // Caller-defined
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+
+#### Revoke permissions from a user
+```javascript
+POST /revoke-from-user
+{
+   "email":       "example@email.com",
+   "perms":       "0,..."  // Up to 32 bits can be used (0..31)
+   "resource":    "..." // Caller-defined
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+
+#### Get permissions for a user
+```javascript
+POST /perms-for-user
+{
+   "email":       "example@email.com",
+   "resource":    "..." // Caller-defined
+}
+```
+RETURNS:
+```javascript
+{
+   "email":          "example@email.com",
+   "resource":       "..." // caller-defined
+   "perms":          "0,1,..." (0..31)
+}
+```
+
+
+#### Grant permissions to a group
+```javascript
+POST /grant-to-group
+{
+   "group-name":  "Group-1",
+   "perms":       "0,..."  // Up to 32 bits can be used (0..31)
+   "resource":    "..." // Caller-defined
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+
+#### Revoke permissions from a group
+```javascript
+POST /revoke-from-group
+{
+   "group-name":  "Group-1",
+   "perms":       "0,..."  // Up to 32 bits can be used (0..31)
+   "resource":    "..." // Caller-defined
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+
+#### Get permissions for a group
+```javascript
+POST /perms-for-group
+{
+   "group-name":  "Group-1",
+   "resource":    "..." // Caller-defined
+}
+```
+RETURNS:
+```javascript
+{
+   "email":          "example@email.com",
+   "resource":       "..." // caller-defined
+   "perms":          "0,1,..." (0..31)
+}
+```
+
+
+
+
+
+
 #### Grant creation permissions to a user
 ```javascript
 POST /grant-create-to-user

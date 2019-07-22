@@ -29,6 +29,8 @@ export ENDPOINTS='
    flags-set
    flags-clear
 
+   perms-for-user
+   perms-for-group
    perms-create-user
    perms-create-group
    perms-user-over-user
@@ -36,6 +38,8 @@ export ENDPOINTS='
    perms-group-over-user
    perms-group-over-group
 
+   grant-to-user
+   grant-to-group
    grant-create-to-user
    grant-create-to-group
    grant-to-user-over-user
@@ -43,6 +47,8 @@ export ENDPOINTS='
    grant-to-group-over-user
    grant-to-group-over-group
 
+   revoke-from-user
+   revoke-from-group
    revoke-create-from-user
    revoke-create-from-group
    revoke-from-user-over-user

@@ -388,6 +388,65 @@ call_cgi /perms-group-over-group perms-group-over-group-2.results '{
 
 ###############################################
 
+call_cgi /grant-to-user grant-to-user-1.results '{
+   "email":      "four@example.com",
+   "resource":   "MyTempResource",
+   "perms":      "0,3,4,6,7"
+}'
+
+call_cgi /grant-to-user grant-to-user-2.results '{
+   "email":      "five@example.com",
+   "resource":   "MyTempResource",
+   "perms":      "0,3,4,6,7"
+}'
+
+call_cgi /grant-to-group grant-to-group-1.results '{
+   "group-name":  "Group-Four",
+   "resource":    "MyTempResource",
+   "perms":       "0,3,4,6,7"
+}'
+
+call_cgi /grant-to-group grant-to-group-2.results '{
+   "group-name":  "Group-Five",
+   "resource":    "MyTempResource",
+   "perms":       "0,3,4,6,7"
+}'
+
+call_cgi /revoke-from-user revoke-from-user-1.results '{
+   "email":       "four@example.com",
+   "resource":    "MyTempResource",
+   "perms":       "0,3,6,7"
+}'
+
+call_cgi /revoke-from-group revoke-from-group-1.results '{
+   "group-name":  "Group-Four",
+   "resource":    "MyTempResource",
+   "perms":       "0,3,6,7"
+}'
+
+call_cgi /perms-for-user perms-for-user-1.results '{
+   "email":       "four@example.com",
+   "resource":    "MyTempResource",
+}'
+
+call_cgi /perms-for-user perms-for-user-2.results '{
+   "email":       "five@example.com",
+   "resource":    "MyTempResource",
+}'
+
+call_cgi /perms-for-group perms-for-group-1.results '{
+   "group-name":  "Group-Four",
+   "resource":    "MyTempResource",
+}'
+
+call_cgi /perms-for-group perms-for-group-2.results '{
+   "group-name":  "Group-Five",
+   "resource":    "MyTempResource",
+}'
+
+
+###############################################
+
 call_cgi /flags-set flags-set-1.results '{
    "email":      "one@example.com",
    "flags":      "lockout"
@@ -409,6 +468,7 @@ call_cgi /user-info user-info-2.results '{
 echo "Ending test (117)"
 exit 117
 
+###############################################
 
 ###############################################
 ###############################################
