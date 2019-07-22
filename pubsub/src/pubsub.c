@@ -1500,6 +1500,9 @@ static char *flags_encode (uint64_t flags)
       strcpy (ret, "lockout");
    }
 
+   if (!ret)
+      ret = ds_str_dup ("");
+
    return ret;
 }
 
