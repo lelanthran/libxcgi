@@ -94,6 +94,14 @@ function call_cgi () {
       -H "Content-type: application/json" \
       -d @tmp.input\
       -o $2.curl
+   ERRCODE=`grep error-code $2.curl | cut -f 2 -d : | cut -f 1 -d ,`
+   if [ "$ERRCODE" -ne 0 ]; then
+      echo Failed on request \"$1\"
+      cat tmp.input
+      echo ======================
+      display_file "✘" $2.curl
+      exit -1
+   fi
 }
 
 export NAMES='
