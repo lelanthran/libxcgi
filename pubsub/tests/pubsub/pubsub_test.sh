@@ -465,41 +465,45 @@ call_cgi /user-info user-info-2.results '{
    "email":      "one@example.com",
 }'
 
-echo "Ending test (117)"
-exit 117
-
 ###############################################
 
-###############################################
-###############################################
-###############################################
+call_cgi /grant-to-user-over-user grant-to-user-over-user-3.results '{
+   "email":       "nine@example.com",
+   "target-user": "ten@example.com",
+   "perms":       "modify-user,delete-user,list-members,read-user"
+}'
 
-call_cgi /group-rm group-rm-1.results '{
-   "name":    "Group2"
+call_cgi /grant-to-user-over-group grant-to-user-over-group-3.results '{
+   "email":          "nine@example.com",
+   "target-group":   "Group-One",
+   "perms":       "modify-user,delete-user,list-members,read-user"
+}'
+
+call_cgi /grant-to-group-over-user grant-to-group-over-user-3.results '{
+   "group-name":  "Group-Two",
+   "target-user": "four@example.com",
+   "perms":       "modify-user,delete-user,list-members,read-user"
+}'
+
+call_cgi /grant-to-group-over-group grant-to-group-over-group-3.results '{
+   "group-name":     "Group-Two",
+   "target-group":   "Group-Four",
+   "perms":          "modify-user,delete-user,list-members,read-user"
 }'
 
 ###############################################
 
 call_cgi /user-rm user-rm-1.results '{
-   "email":    "ToDelete1"
+   "email":    "nine@example.com"
 }'
 
-call_cgi /user-rm user-rm-2.results '{
-   "email":    "ToDelete2"
+call_cgi /group-rm group-rm-1.results '{
+   "group-name":    "Group-Two"
 }'
 
-call_cgi /user-rm user-rm-3.results '{
-   "email":    "ToDelete3"
-}'
+echo "Ending test (117)"
+exit 117
 
 ###############################################
-
-
-
-
-# export PATH_INFO=/logout
-# echo -ne '{ }'
-
-
 
 

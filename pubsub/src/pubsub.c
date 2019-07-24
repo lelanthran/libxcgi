@@ -578,11 +578,16 @@ static bool endpoint_USER_NEW (ds_hmap_t *jfields,
 static bool endpoint_USER_RM (ds_hmap_t *jfields,
                               int *error_code, int *status_code)
 {
-   // TODO
+   const char *email = incoming_find (FIELD_STR_EMAIL);
+
    jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   status_code = status_code;
-   return false;
+   *status_code = 200;
+   *error_code = 0;
+
+   if (!(sqldb_auth_user_rm (xcgi_db, email)))
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+
+   return *error_code ? false : true;
 }
 
 static bool endpoint_USER_INFO (ds_hmap_t *jfields,
@@ -812,10 +817,16 @@ static bool endpoint_GROUP_NEW (ds_hmap_t *jfields,
 static bool endpoint_GROUP_RM (ds_hmap_t *jfields,
                                int *error_code, int *status_code)
 {
+   const char *group = incoming_find (FIELD_STR_GROUP_NAME);
+
    jfields = jfields;
-   *error_code = EPUBSUB_UNIMPLEMENTED;
-   status_code = status_code;
-   return false;
+   *status_code = 200;
+   *error_code = 0;
+
+   if (!(sqldb_auth_group_rm (xcgi_db, group)))
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+
+   return *error_code ? false : true;
 }
 
 static bool endpoint_GROUP_MOD (ds_hmap_t *jfields,

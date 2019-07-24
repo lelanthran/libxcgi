@@ -858,7 +858,7 @@ permissions lookups will take time unless a dedicated indexed storage is used.
 
 Unfortunately this means at least one more dependency: a RDBMS. To this
 end the dependency is [libsqldb](https://github.com/lelanthran/libsqldb),
-with a minimum version of v0.1.4.
+with a minimum version of v0.1.5.
 
 ### Queues
 Queues will be implemented using a combination of the database and the
