@@ -55,46 +55,46 @@ echo Done.
 
 # For each of the endpoints we test we set PATH_INFO and call the cgi
 # program
-function call_cgi () {
-   export PATH_INFO=$1
-   export CONTENT_LENGTH=`echo -ne $3 | wc -c`
-   echo $3 > tmp.input
-   echo "Calling '$PATH_INFO'"
-   if [ -f "$2" ]; then
-      echo "File '$2' already exists - duplicate test?"
-      exit 119
-   fi
-# I uncomment this snippet when I need to debug a particular test.
-#  if [ "$2" == "grant-to-user-1.results" ]; then
-#     cat tmp.input
-#     gdb pubsub.elf
-#     exit 0;
-#  fi
-   if [ -z "$VGOPTS" ]; then
-      ./pubsub.elf < tmp.input >$2
-   else
-      valgrind $VGOPTS --error-exitcode=127 ./pubsub.elf < tmp.input >$2
-   fi
-
-   if [ "$?" -ne 0 ]; then
-      echo "Error calling '$PATH_INFO', executable returned: "
-      display_file "✘" $2
-      exit 127
-   else
-      echo "Success calling '$PATH_INFO', executable returned: "
-      display_file "✔" $2
-   fi
-}
-
-
 # function call_cgi () {
+#    export PATH_INFO=$1
+#    export CONTENT_LENGTH=`echo -ne $3 | wc -c`
 #    echo $3 > tmp.input
-#    curl -X POST 'http://localhost/~lelanthran/cgi-bin/pubsub.sh'$1 \
-#       --cookie "session-id=$HTTP_COOKIE" \
-#       -H "Content-type: application/json" \
-#       -d @tmp.input\
-#       -o $2
+#    echo "Calling '$PATH_INFO'"
+#    if [ -f "$2" ]; then
+#       echo "File '$2' already exists - duplicate test?"
+#       exit 119
+#    fi
+# # I uncomment this snippet when I need to debug a particular test.
+# #  if [ "$2" == "grant-to-user-1.results" ]; then
+# #     cat tmp.input
+# #     gdb pubsub.elf
+# #     exit 0;
+# #  fi
+#    if [ -z "$VGOPTS" ]; then
+#       ./pubsub.elf < tmp.input >$2
+#    else
+#       valgrind $VGOPTS --error-exitcode=127 ./pubsub.elf < tmp.input >$2
+#    fi
+# 
+#    if [ "$?" -ne 0 ]; then
+#       echo "Error calling '$PATH_INFO', executable returned: "
+#       display_file "✘" $2
+#       exit 127
+#    else
+#       echo "Success calling '$PATH_INFO', executable returned: "
+#       display_file "✔" $2
+#    fi
 # }
+
+
+function call_cgi () {
+   echo $3 > tmp.input
+   curl -X POST 'http://localhost/~lelanthran/cgi-bin/pubsub.sh'$1 \
+      --cookie "session-id=$HTTP_COOKIE" \
+      -H "Content-type: application/json" \
+      -d @tmp.input\
+      -o $2.curl
+}
 
 export NAMES='
    one
@@ -147,7 +147,7 @@ call_cgi /login login.results '{
 export HTTP_COOKIE=`cat login.results | grep Set-Cookie | grep session-id | cut -f 2 -d \  `
 
 if [ -z "$HTTP_COOKIE" ]; then
-   export HTTP_COOKIE=`cat login.results | grep session-id | cut -f 4 -d \"  `
+   export HTTP_COOKIE=`cat login.results.curl | grep session-id | cut -f 4 -d \"  `
 fi
 
 echo "Session = [$HTTP_COOKIE]"

@@ -1,0 +1,8 @@
+
+{
+"error-code": 0,
+"email": "three@example.com",
+"error-message": "Success",
+"perms": "read-user,list-members,modify-user",
+"target-group": "Group-One"
+}

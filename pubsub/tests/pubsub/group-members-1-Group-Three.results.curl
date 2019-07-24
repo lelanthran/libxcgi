@@ -1,0 +1,10 @@
+
+{
+"resultset-emails": ["one@example.com", "two@example.com", "three@example.com", "four@example.com", "five@example.com", "six@example.com", "seven@example.com", "eight@example.com", "nine@example.com", "ten@example.com"],
+"resultset-count": 10,
+"error-code": 0,
+"error-message": "Success",
+"resultset-ids": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+"resultset-flags": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+"resultset-nicks": ["User-one", "User-two", "User-three", "User-four", "User-five", "User-six", "User-seven", "User-eight", "User-nine", "User-ten"]
+}
