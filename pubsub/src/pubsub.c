@@ -1789,7 +1789,7 @@ int main (int argc, char **argv)
    const char *error_message = "Success";
    const char *wdir = getenv (WORKING_DIR);
 
-   int statusCode = 501;
+   int statusCode = 200;
    const char *statusMessage = "Internal Server Error";
 
    ds_hmap_t *jfields = NULL;
@@ -1801,18 +1801,20 @@ int main (int argc, char **argv)
    }
 
    if (!wdir || !wdir[0]) {
-      PROG_ERR ("Environment variable [%s] is not set.\n",
-                 WORKING_DIR);
+      PROG_ERR ("Environment variable [%s] is not set.\n", WORKING_DIR);
+      error_code = EPUBSUB_INTERNAL_ERROR;
       return EXIT_FAILURE;
    }
 
    if (!(jfields = ds_hmap_new (32))) {
       PROG_ERR ("Failed to create hashmap for json fields\n");
+      error_code = EPUBSUB_INTERNAL_ERROR;
       return EXIT_FAILURE;
    }
 
    if (!(xcgi_init (wdir))) {
       PROG_ERR ("Failed to initialise the xcgi library\n");
+      error_code = EPUBSUB_INTERNAL_ERROR;
       goto errorexit;
    }
 
@@ -1834,21 +1836,24 @@ int main (int argc, char **argv)
 
    if (!xcgi_db) {
       PROG_ERR ("No database available\n");
+      error_code = EPUBSUB_INTERNAL_ERROR;
       goto errorexit;
    }
 
    if (!(incoming_init ())) {
       PROG_ERR ("Failed to read incoming json fields\n");
+      error_code = EPUBSUB_BAD_PARAMS;
       goto errorexit;
    }
 
    if ((endpoint = endpoint_parse (xcgi_path_info[0]))==endpoint_ERROR) {
       PROG_ERR ("Warning: endpoint [%s] not found\n", xcgi_path_info[0]);
+      error_code = EPUBSUB_UNKNOWN_ENDPOINT;
+      goto errorexit;
    }
 
    if (endpoint!=endpoint_LOGIN && !g_session_id) {
       error_code = EPUBSUB_NOT_AUTH;
-      statusCode = 200;
       goto errorexit;
    }
 
@@ -1869,7 +1874,6 @@ int main (int argc, char **argv)
          xcgi_header_cookie_clear (FIELD_STR_SESSION);
          xcgi_header_cookie_set (FIELD_STR_SESSION, "", 0, 0);
          error_code = EPUBSUB_NOT_AUTH;
-         statusCode = 200;
          goto errorexit;
       }
       if (!g_email || !g_nick) {
@@ -1877,12 +1881,12 @@ int main (int argc, char **argv)
          xcgi_header_cookie_clear (FIELD_STR_SESSION);
          xcgi_header_cookie_set (FIELD_STR_SESSION, "", 0, 0);
          error_code = EPUBSUB_NOT_AUTH;
-         statusCode = 200;
          goto errorexit;
       }
       if (!(g_perms = perms_get (g_email, xcgi_path_info[0]))) {
          PROG_ERR ("No permissions granted to user [%s] for [%s]\n",
                     g_email, xcgi_path_info[0]);
+         error_code = EPUBSUB_PERM_DENIED;
          goto errorexit;
       }
    }
@@ -1891,7 +1895,6 @@ int main (int argc, char **argv)
       PROG_ERR ("Endpoint [%s] missing required parameters\n",
                 xcgi_path_info[0]);
       error_code = EPUBSUB_MISSING_PARAMS;
-      statusCode = 200;
       goto errorexit;
    }
 
@@ -1914,11 +1917,16 @@ errorexit:
       return EXIT_FAILURE;
    }
 
-   xcgi_headers_value_set ("CONTENT_TYPE", "application/json");
+   xcgi_headers_value_set ("Content-Type", "application/json");
 
-   statusMessage = xcgi_reason_phrase (statusCode);
+   if (statusCode != 200) {
+      statusMessage = xcgi_reason_phrase (statusCode);
+      PROG_ERR ("Script returned: %s\n", statusMessage);
+   }
 
-   printf ("HTTP/1.1 %i %s\r\n", statusCode, statusMessage);
+   char tmp[25];
+   snprintf (tmp, sizeof tmp, "%i", statusCode);
+   xcgi_headers_value_set ("Status", tmp);
 
    xcgi_headers_write ();
 
@@ -1932,6 +1940,8 @@ errorexit:
 
    free (g_email);
    free (g_nick);
+
+   fflush (stdout);
 
    return ret;
 }

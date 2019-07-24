@@ -86,6 +86,16 @@ function call_cgi () {
    fi
 }
 
+
+# function call_cgi () {
+#    echo $3 > tmp.input
+#    curl -X POST 'http://localhost/~lelanthran/cgi-bin/pubsub.sh'$1 \
+#       --cookie "session-id=$HTTP_COOKIE" \
+#       -H "Content-type: application/json" \
+#       -d @tmp.input\
+#       -o $2
+# }
+
 export NAMES='
    one
    two
@@ -122,12 +132,25 @@ export LGROUPS='
 
 ###############################################
 
+# call_cgi "" null_endpoint.results '{
+#     "ignored":  "values",
+#     "null":     "endpoint"
+# }'
+
+###############################################
+
 call_cgi /login login.results '{
    "email":    "admin@example.com",
    "password": "123456"
 }'
 
 export HTTP_COOKIE=`cat login.results | grep Set-Cookie | grep session-id | cut -f 2 -d \  `
+
+if [ -z "$HTTP_COOKIE" ]; then
+   export HTTP_COOKIE=`cat login.results | grep session-id | cut -f 4 -d \"  `
+fi
+
+echo "Session = [$HTTP_COOKIE]"
 
 ###############################################
 
