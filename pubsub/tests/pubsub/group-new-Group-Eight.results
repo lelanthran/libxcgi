@@ -1,5 +1,5 @@
-HTTP/1.1 200 OK
-CONTENT_TYPE: application/json
+Content-Type: application/json
+Status: 200
 
 
 {
