@@ -1615,16 +1615,6 @@ static char *flags_encode (uint64_t flags)
  * only the first match against a resource is considered.
  */
 
-static uint64_t perms_get (const char *email, const char *resource)
-{
-   uint64_t ret = 0;
-   if ((sqldb_auth_perms_get_all (xcgi_db, &ret, email, resource)))
-      return ret;
-
-   PROG_ERR ("Failed to get permissions for user [%s/%s]\n", email, resource);
-   return 0;
-}
-
 
 #define PERM_STR_ALL                   ("all")
 #define PERM_STR_CREATE_USER           ("create-user")
@@ -1638,15 +1628,92 @@ static uint64_t perms_get (const char *email, const char *resource)
 #define PERM_STR_CHANGE_MEMBERSHIP     ("change-membership")
 
 #define PERM_BIT_ALL                   ((uint64_t)(((uint64_t)1) << 0))
-#define PERM_BIT_CREATE_USER           ((uint64_t)(((uint64_t)1) << 1))
-#define PERM_BIT_CREATE_GROUP          ((uint64_t)(((uint64_t)1) << 2))
-#define PERM_BIT_DEL_USER              ((uint64_t)(((uint64_t)1) << 3))
-#define PERM_BIT_DEL_GROUP             ((uint64_t)(((uint64_t)1) << 4))
-#define PERM_BIT_READ_USER             ((uint64_t)(((uint64_t)1) << 5))
-#define PERM_BIT_LIST_MEMBERS          ((uint64_t)(((uint64_t)1) << 6))
-#define PERM_BIT_MODIFY                ((uint64_t)(((uint64_t)1) << 7))
-#define PERM_BIT_CHANGE_PERMISSIONS    ((uint64_t)(((uint64_t)1) << 9))
-#define PERM_BIT_CHANGE_MEMBERSHIP     ((uint64_t)(((uint64_t)1) << 10))
+#define PERM_BIT_RESERVED              ((uint64_t)(((uint64_t)1) << 1))
+#define PERM_BIT_CREATE_USER           ((uint64_t)(((uint64_t)1) << 2))
+#define PERM_BIT_CREATE_GROUP          ((uint64_t)(((uint64_t)1) << 3))
+#define PERM_BIT_DEL_USER              ((uint64_t)(((uint64_t)1) << 4))
+#define PERM_BIT_DEL_GROUP             ((uint64_t)(((uint64_t)1) << 5))
+#define PERM_BIT_READ_USER             ((uint64_t)(((uint64_t)1) << 6))
+#define PERM_BIT_LIST_MEMBERS          ((uint64_t)(((uint64_t)1) << 7))
+#define PERM_BIT_MODIFY                ((uint64_t)(((uint64_t)1) << 8))
+#define PERM_BIT_CHANGE_PERMISSIONS    ((uint64_t)(((uint64_t)1) << 10))
+#define PERM_BIT_CHANGE_MEMBERSHIP     ((uint64_t)(((uint64_t)1) << 11))
+
+static uint64_t perms_get (const char *email, const char *resource)
+{
+   struct {
+      endpoint_func_t *fptr;     // endpoint
+      const char      *target;   // FIELD_STR of the resource in request
+      uint64_t         mask;     // Bitmask for this endpoint
+   } perms [] = {
+{ endpoint_ERROR,                  "",             ((uint64_t)-1) },
+{ endpoint_LOGIN,                  "",             ((uint64_t)-1) },
+{ endpoint_LOGOUT,                 "",             ((uint64_t)-1) },
+
+{ endpoint_USER_NEW,               "",                PERM_BIT_CREATE_USER    },
+{ endpoint_USER_RM,                "email",           PERM_BIT_DEL_USER       },
+{ endpoint_USER_INFO,              "email",           PERM_BIT_READ_USER      },
+ // TODO: User list and group list must be handled separately
+{ endpoint_USER_LIST,              "email-pattern",   PERM_BIT_RESERVED       },
+{ endpoint_USER_MOD,               "old-email",       PERM_BIT_MODIFY         },
+
+{ endpoint_GROUP_NEW,              "",                PERM_BIT_CREATE_GROUP      },
+{ endpoint_GROUP_RM,               "group-name",      PERM_BIT_DEL_GROUP         },
+{ endpoint_GROUP_MOD,              "old-group-name",  PERM_BIT_DEL_GROUP         },
+{ endpoint_GROUP_ADDUSER,          "group-name",      PERM_BIT_CHANGE_MEMBERSHIP },
+{ endpoint_GROUP_RMUSER,           "group-name",      PERM_BIT_CHANGE_MEMBERSHIP },
+ // TODO: User list and group list must be handled separately
+{ endpoint_GROUP_LIST,             "name-pattern",    PERM_BIT_RESERVED          },
+{ endpoint_GROUP_MEMBERS,          "group-name",      PERM_BIT_LIST_MEMBERS      },
+
+{ endpoint_FLAGS_SET,              "email",           PERM_BIT_MODIFY      },
+{ endpoint_FLAGS_CLEAR,            "email",           PERM_BIT_MODIFY      },
+
+{ endpoint_PERMS_USER,             "email",           PERM_BIT_READ        },
+{ endpoint_PERMS_GROUP,            "group",           PERM_BIT_READ        },
+{ endpoint_PERMS_CREATE_USER,      "email",         },
+{ endpoint_PERMS_CREATE_GROUP,     "permscreategroup",        },
+{ endpoint_PERMS_USER_O_USER,      "email",       },
+{ endpoint_PERMS_USER_O_GROUP,     "email",      },
+{ endpoint_PERMS_GROUP_O_USER,     "permsgroupoveruser",      },
+{ endpoint_PERMS_GROUP_O_GROUP,    "permsgroupovergroup",     },
+
+{ endpoint_GRANT_USER,             "granttouser",            },
+{ endpoint_GRANT_GROUP,            "granttogroup",           },
+{ endpoint_GRANT_CREATE_USER,      "grantuser",              },
+{ endpoint_GRANT_CREATE_GROUP,     "grantgroup",             },
+{ endpoint_GRANT_USER_O_USER,      "grantoveruser",         },
+{ endpoint_GRANT_USER_O_GROUP,     "grantovergroup",        },
+{ endpoint_GRANT_GROUP_O_USER,     "grantoveruser",         },
+{ endpoint_GRANT_GROUP_O_GROUP,    "grantgroupgroup",       },
+                                                               },
+{ endpoint_REVOKE_USER,             "revokefromuser",        },
+{ endpoint_REVOKE_GROUP,            "revokefromgroup",       },
+{ endpoint_REVOKE_CREATE_USER,      "revokeuser",            },
+{ endpoint_REVOKE_CREATE_GROUP,     "revokegroup",           },
+{ endpoint_REVOKE_USER_O_USER,      "revokeveruser",         },
+{ endpoint_REVOKE_USER_O_GROUP,     "revokevergroup",        },
+{ endpoint_REVOKE_GROUP_O_USER,     "revokeoveruser",        },
+{ endpoint_REVOKE_GROUP_O_GROUP,    "revokeovergroup",       },
+
+
+{ endpoint_QUEUE_NEW,              "queuenew",                },
+{ endpoint_QUEUE_RM,               "queuerm",                 },
+{ endpoint_QUEUE_MOD,              "queuemod",                },
+{ endpoint_QUEUE_PUT,              "queueput",                },
+{ endpoint_QUEUE_GET,              "queueget",                },
+{ endpoint_QUEUE_DEL,              "queuedel",                },
+{ endpoint_QUEUE_LIST,             "queuelist",               },
+   };
+
+   uint64_t ret = 0;
+   if ((sqldb_auth_perms_get_all (xcgi_db, &ret, email, resource)))
+      return ret;
+
+   PROG_ERR ("Failed to get permissions for user [%s/%s]\n", email, resource);
+   return 0;
+}
+
 
 static const struct {
    uint64_t    perm_bit;
