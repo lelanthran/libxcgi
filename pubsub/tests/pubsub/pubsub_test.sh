@@ -50,7 +50,7 @@ function display_file () {
 }
 
 echo Removing existing results...
-rm *.results
+rm *.results*
 echo Done.
 
 # For each of the endpoints we test we set PATH_INFO and call the cgi
