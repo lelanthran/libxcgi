@@ -46,7 +46,7 @@ char       *g_email = NULL;
 char       *g_nick = NULL;
 uint64_t    g_flags = 0;
 uint64_t    g_id = 0;
-uint64_t    g_perms = 0;
+bool        g_perms_allowed = 0;
 
 /* ******************************************************************
  * The field names as defined in the API spec document. When adding
@@ -1639,14 +1639,14 @@ static char *flags_encode (uint64_t flags)
 #define PERM_BIT_CHANGE_PERMISSIONS    ((uint64_t)(((uint64_t)1) << 10))
 #define PERM_BIT_CHANGE_MEMBERSHIP     ((uint64_t)(((uint64_t)1) << 11))
 
-static uint64_t perms_get (const char *current_user, const char *resource)
+static bool perms_check_allowed (endpoint_func_t *fptr)
 {
-   struct {
+   struct perms_map_t {
       endpoint_func_t *fptr;     // endpoint
       const char      *subject;  // FIELD_STR of user/group, default current user
       const char      *resource; // FIELD_STR of the resource in request, defailt SQLDB_ALL
       uint64_t         mask;     // Bitmask for this endpoint
-   } perms [] = {
+   } perms_map [] = {
 { endpoint_ERROR,                NULL,     NULL,             ((uint64_t)-1) },
 { endpoint_LOGIN,                NULL,     NULL,             ((uint64_t)-1) },
 { endpoint_LOGOUT,               NULL,     NULL,             ((uint64_t)-1) },
@@ -1708,12 +1708,43 @@ static uint64_t perms_get (const char *current_user, const char *resource)
 #endif
    };
 
-   uint64_t ret = 0;
-   if ((sqldb_auth_perms_get_all (xcgi_db, &ret, current_user, resource)))
-      return ret;
+   const char *str_user = NULL,
+              *str_resource = NULL;
 
-   PROG_ERR ("Failed to get permissions for user [%s/%s]\n", current_user, resource);
-   return 0;
+   uint64_t perms = 0,
+            ret = 0;
+
+   for (size_t i=0; i<sizeof perms_map / sizeof perms_map[0]; i++) {
+      if (perms_map[i].fptr == fptr) {
+         str_user = perms_map[i].subject;
+         str_resource = perms_map[i].resource;
+         perms = perms_map[i].mask;
+         break;
+      }
+   }
+
+   if (!perms)
+      return false;
+
+   if (perms == (uint64_t)-1)
+      return true;
+
+   str_user = str_user ? incoming_find (str_user) : g_email;
+   str_resource = str_resource ? incoming_find (str_resource) : SQLDB_AUTH_GLOBAL_RESOURCE;
+
+   if (!str_user || !str_resource)
+      return false;
+
+   if (!(sqldb_auth_perms_get_all (xcgi_db, &ret, str_user, str_resource))) {
+      PROG_ERR ("Failed to get permissions for user [%s/%s]\n", str_user, str_resource);
+      return false;
+   }
+
+   if ( (fptr == endpoint_USER_LIST) || (fptr == endpoint_GROUP_LIST)) {
+      // TODO: Stopped here last.
+   }
+
+   return ret & perms ? true : false;
 }
 
 
@@ -1929,7 +1960,7 @@ int main (int argc, char **argv)
    if (endpoint==endpoint_LOGIN || endpoint==endpoint_LOGOUT) {
       xcgi_header_cookie_clear (FIELD_STR_SESSION);
       xcgi_header_cookie_set (FIELD_STR_SESSION, "", 0, 0);
-      g_perms = 0xffffffffffffffff;
+      g_perms_allowed = true;
    } else {
       char session_id[65];
       strncpy (session_id, g_session_id, sizeof session_id);
@@ -1952,7 +1983,7 @@ int main (int argc, char **argv)
          error_code = EPUBSUB_NOT_AUTH;
          goto errorexit;
       }
-      if (!(g_perms = perms_get (g_email, xcgi_path_info[0]))) {
+      if (!(g_perms_allowed = perms_check_allowed (endpoint))) {
          PROG_ERR ("No permissions granted to user [%s] for [%s]\n",
                     g_email, xcgi_path_info[0]);
          error_code = EPUBSUB_PERM_DENIED;
