@@ -50,7 +50,8 @@ function display_file () {
 }
 
 echo Removing existing results...
-# rm *.results*
+rm *.results
+#rm *.results.curl
 echo Done.
 
 # For each of the endpoints we test we set PATH_INFO and call the cgi
@@ -192,7 +193,7 @@ done
 
 ###############################################
 
-call_cgi /user-list user-list-1.results '{
+call_cgi /user-find user-find-1.results '{
    "email-pattern":  "*",
    "nick-pattern":   "*",
    "id-pattern":     "*",
@@ -223,7 +224,7 @@ done
 
 ###############################################
 
-call_cgi /group-list group-list-1.results '{
+call_cgi /group-find group-find-1.results '{
    "name-pattern":               "*-t*",
    "description-pattern":        "",
    "resultset-names":            "true",

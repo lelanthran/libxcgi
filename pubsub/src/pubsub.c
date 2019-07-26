@@ -635,7 +635,7 @@ errorexit:
    return *error_code ? false : true;
 }
 
-static bool endpoint_USER_LIST (ds_hmap_t *jfields,
+static bool endpoint_USER_FIND (ds_hmap_t *jfields,
                                 int *error_code, int *status_code)
 {
    bool error = true;
@@ -886,7 +886,7 @@ static bool endpoint_GROUP_RMUSER (ds_hmap_t *jfields,
    return true;
 }
 
-static bool endpoint_GROUP_LIST (ds_hmap_t *jfields,
+static bool endpoint_GROUP_FIND (ds_hmap_t *jfields,
                                  int *error_code, int *status_code)
 {
    bool error = true;
@@ -1500,7 +1500,7 @@ static const struct {
 { endpoint_USER_NEW,               "user-new",             ARG_USER_NEW       },
 { endpoint_USER_RM,                "user-rm",              ARG_USER_RM        },
 { endpoint_USER_INFO,              "user-info",            ARG_USER_INFO      },
-{ endpoint_USER_LIST,              "user-list",            ARG_USER_LIST      },
+{ endpoint_USER_FIND,              "user-find",            ARG_USER_LIST      },
 { endpoint_USER_MOD,               "user-mod",             ARG_USER_MOD       },
 
 { endpoint_GROUP_NEW,              "group-new",            ARG_GROUP_NEW      },
@@ -1508,7 +1508,7 @@ static const struct {
 { endpoint_GROUP_MOD,              "group-mod",            ARG_GROUP_MOD      },
 { endpoint_GROUP_ADDUSER,          "group-adduser",        ARG_GROUP_ADDUSER  },
 { endpoint_GROUP_RMUSER,           "group-rmuser",         ARG_GROUP_RMUSER   },
-{ endpoint_GROUP_LIST,             "group-list",           ARG_GROUP_LIST     },
+{ endpoint_GROUP_FIND,             "group-find",           ARG_GROUP_LIST     },
 { endpoint_GROUP_MEMBERS,          "group-members",        ARG_GROUP_MEMBERS  },
 
 { endpoint_FLAGS_SET,              "flags-set",            ARG_FLAGS_SET   },
@@ -1655,7 +1655,7 @@ static bool perms_check_allowed (endpoint_func_t *fptr)
 { endpoint_USER_RM,              NULL,     "email",          PERM_BIT_DEL_USER       },
 { endpoint_USER_INFO,            NULL,     "email",          PERM_BIT_READ_USER      },
  // TODO: User list and group list must be handled separately
-{ endpoint_USER_LIST,            NULL,     "email-pattern",  PERM_BIT_RESERVED       },
+{ endpoint_USER_FIND,            NULL,     "email-pattern",  PERM_BIT_RESERVED       },
 { endpoint_USER_MOD,             NULL,     "old-email",      PERM_BIT_MODIFY         },
 
 { endpoint_GROUP_NEW,            NULL,     NULL,              PERM_BIT_CREATE_GROUP      },
@@ -1664,7 +1664,7 @@ static bool perms_check_allowed (endpoint_func_t *fptr)
 { endpoint_GROUP_ADDUSER,        NULL,     "group-name",      PERM_BIT_CHANGE_MEMBERSHIP },
 { endpoint_GROUP_RMUSER,         NULL,     "group-name",      PERM_BIT_CHANGE_MEMBERSHIP },
  // TODO: User list and group list must be handled separately
-{ endpoint_GROUP_LIST,           NULL,     "name-pattern",    PERM_BIT_RESERVED          },
+{ endpoint_GROUP_FIND,           NULL,     "name-pattern",    PERM_BIT_RESERVED          },
 { endpoint_GROUP_MEMBERS,        NULL,     "group-name",      PERM_BIT_LIST_MEMBERS      },
 
 { endpoint_FLAGS_SET,            NULL,     "email",           PERM_BIT_MODIFY      },
@@ -1740,7 +1740,7 @@ static bool perms_check_allowed (endpoint_func_t *fptr)
       return false;
    }
 
-   if ( (fptr == endpoint_USER_LIST) || (fptr == endpoint_GROUP_LIST)) {
+   if ((fptr == endpoint_USER_FIND) || (fptr == endpoint_GROUP_FIND)) {
       // TODO: Stopped here last.
    }
 

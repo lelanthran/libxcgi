@@ -547,7 +547,7 @@ RETURNS:
 
 #### List users
 ```javascript
-POST /user-list
+POST /user-find
 {
    "email-pattern":     "Pattern to find for for emails",
    "nick-pattern":      "Pattern to find for for nicks",
@@ -649,7 +649,7 @@ RETURNS: "error-code" and "error-message" fields only.
 
 #### List groups
 ```javascript
-POST /group-list
+POST /group-find
 {
    "name-pattern":            "Pattern to find, matches name",
    "description-pattern":     "Pattern to find, matches description",

@@ -9,6 +9,8 @@ export DBFILE=./localdb.sqlite
 export DBARGS="--database=$DBFILE --database-type=sqlite"
 export FPERMS=`echo {0..63}`
 export ENDPOINTS='
+
+   _ALL_
    login
    logout
 
