@@ -127,7 +127,10 @@ RETURNS: "error-code" and "error-message" fields only.
 
 
 ### User, group and permissions management
-Very fine-grained user, group and ACL management is possible.
+Very fine-grained user, group and ACL management is possible. In addition
+to managing the user and group ACLS, caller-defined resources can be also
+managed (see below, `Resource management`).
+
 1. Users are members of one or more groups.
 2. User inherit all of the permissions of the groups they are in.
 3. Users can be granted permissions to create users and/or groups.
@@ -143,7 +146,27 @@ Very fine-grained user, group and ACL management is possible.
 
 In practice it is simpler to manage ACL only via groups (role-based ACL).
 
-#### Grant permissions to a user
+#### Create a resource (object which can be managed using permissions)
+```
+POST /resource-new
+{
+   "resource":    "..." // Caller-defined
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+#### Delete a resource
+```
+POST /resource-rm
+{
+   "resource":    "..." // Caller-defined
+}
+```
+RETURNS: "error-code" and "error-message" fields only.
+
+
+
+#### Grant permissions to a user for a resource
 ```javascript
 POST /grant-to-user
 {
@@ -155,7 +178,7 @@ POST /grant-to-user
 RETURNS: "error-code" and "error-message" fields only.
 
 
-#### Revoke permissions from a user
+#### Revoke permissions from a user for a resource
 ```javascript
 POST /revoke-from-user
 {
