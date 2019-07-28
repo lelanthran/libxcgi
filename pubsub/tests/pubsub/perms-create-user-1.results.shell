@@ -1,0 +1,10 @@
+Content-Type: application/json
+Status: 200
+
+
+{
+"error-code": 0,
+"email": "ten@example.com",
+"error-message": "Success",
+"perms": "create-group"
+}

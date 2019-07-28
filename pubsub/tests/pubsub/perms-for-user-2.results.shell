@@ -1,0 +1,11 @@
+Content-Type: application/json
+Status: 200
+
+
+{
+"error-code": 0,
+"email": "five@example.com",
+"error-message": "Success",
+"resource": "Resource-Two",
+"perms": "4,7"
+}

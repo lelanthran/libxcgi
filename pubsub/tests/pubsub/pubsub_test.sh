@@ -90,9 +90,11 @@ function call_cgi_shell () {
 }
 
 
+set +e
+
 function call_cgi_curl () {
 
-   set +e
+   echo "Cookie=[$HTTP_COOKIE]"
 
    echo $3 > tmp.input
    curl -X POST 'http://localhost/~lelanthran/cgi-bin/pubsub.sh'$1 \
@@ -110,7 +112,7 @@ function call_cgi_curl () {
    fi
 
    if [ "$ERRCODE" -ne 0 ]; then
-      echo "Error calling '$PATH_INFO', executable returned: "
+      echo "Error calling '$1', executable returned: "
       display_file "✘" $2.curl
       exit 127
    else
@@ -197,9 +199,11 @@ call_cgi /login login.results '{
    "password": "123456"
 }'
 
-export HTTP_COOKIE=`cat login.results.shell | grep Set-Cookie | grep session-id | cut -f 2 -d \  `
+if [ "$TYPE" == "shell" ]; then
+   export HTTP_COOKIE=`cat login.results.shell | grep Set-Cookie | grep session-id | cut -f 2 -d \  `
+fi
 
-if [ -z "$HTTP_COOKIE" ]; then
+if [ "$TYPE" == "curl" ]; then
    export HTTP_COOKIE=`cat login.results.curl | grep session-id | cut -f 4 -d \"  `
 fi
 
