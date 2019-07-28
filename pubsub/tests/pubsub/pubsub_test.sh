@@ -50,60 +50,90 @@ function display_file () {
 }
 
 echo Removing existing results...
-rm *.results
-#rm *.results.curl
+[ "$1" == "shell" ] && rm -rf *.results.shell
+[ "$1" == "curl" ] && rm -rf *.results.curl
 echo Done.
+
+export TYPE=$1
 
 # For each of the endpoints we test we set PATH_INFO and call the cgi
 # program
-function call_cgi () {
+function call_cgi_shell () {
    export PATH_INFO=$1
    export CONTENT_LENGTH=`echo -ne $3 | wc -c`
    echo $3 > tmp.input
    echo "Calling '$PATH_INFO'"
-   if [ -f "$2" ]; then
-      echo "File '$2' already exists - duplicate test?"
+   if [ -f "$2.shell" ]; then
+      echo "File '$2.shell' already exists - duplicate test?"
       exit 119
    fi
 # I uncomment this snippet when I need to debug a particular test.
-#  if [ "$2" == "grant-create-to-user-1.results" ]; then
+#  if [ "$2" == "resource-rm-Resource-One.results" ]; then
 #     cat tmp.input
 #     gdb pubsub.elf
 #     exit 0;
 #  fi
    if [ -z "$VGOPTS" ]; then
-      ./pubsub.elf < tmp.input >$2
+      ./pubsub.elf < tmp.input >$2.shell
    else
-      valgrind $VGOPTS --error-exitcode=127 ./pubsub.elf < tmp.input >$2
+      valgrind $VGOPTS --error-exitcode=127 ./pubsub.elf < tmp.input >$2.shell
    fi
 
    if [ "$?" -ne 0 ]; then
       echo "Error calling '$PATH_INFO', executable returned: "
-      display_file "✘" $2
+      display_file "✘" $2.shell
       exit 127
    else
       echo "Success calling '$PATH_INFO', executable returned: "
-      display_file "✔" $2
+      display_file "✔" $2.shell
    fi
 }
 
 
-# function call_cgi () {
-#    echo $3 > tmp.input
-#    curl -X POST 'http://localhost/~lelanthran/cgi-bin/pubsub.sh'$1 \
-#       --cookie "session-id=$HTTP_COOKIE" \
-#       -H "Content-type: application/json" \
-#       -d @tmp.input\
-#       -o $2.curl
-#    ERRCODE=`grep error-code $2.curl | cut -f 2 -d : | cut -f 1 -d ,`
-#    if [ "$ERRCODE" -ne 0 ]; then
-#       echo Failed on request \"$1\"
-#       cat tmp.input
-#       echo ======================
-#       display_file "✘" $2.curl
-#       exit -1
-#    fi
-# }
+function call_cgi_curl () {
+
+   set +e
+
+   echo $3 > tmp.input
+   curl -X POST 'http://localhost/~lelanthran/cgi-bin/pubsub.sh'$1 \
+      --cookie "session-id=$HTTP_COOKIE" \
+      -H "Content-type: application/json" \
+      -d @tmp.input\
+      -o $2.curl
+   ERRCODE=`grep error-code $2.curl | cut -f 2 -d : | cut -f 1 -d ,`
+
+   if [ -z "$ERRCODE" ]; then
+      echo "ERRCODE: $ERRCODE"
+      cat $2.curl
+      echo "-------------------------------"
+      exit 119
+   fi
+
+   if [ "$ERRCODE" -ne 0 ]; then
+      echo "Error calling '$PATH_INFO', executable returned: "
+      display_file "✘" $2.curl
+      exit 127
+   else
+      echo "Success calling '$1', executable returned: "
+      display_file "✔" $2.curl
+   fi
+}
+
+function call_cgi () {
+   case "$TYPE" in
+      "shell")
+         call_cgi_shell "$1" "$2" "$3"
+         ;;
+
+      "curl")
+         call_cgi_curl "$1" "$2" "$3"
+         ;;
+
+      *)
+         echo "Unknown function specified. Only \"shell\" or \"curl\" allowed"
+         exit 121
+   esac
+}
 
 export NAMES='
    one
@@ -139,6 +169,20 @@ export LGROUPS='
    Group-Ten
 '
 
+export RESOURCES='
+   Resource-One
+   Resource-Two
+   Resource-Three
+   Resource-Four
+   Resource-Five
+   '
+
+export RESOURCES_DEL='
+   Resource-One
+   Resource-Three
+   Resource-Five
+   '
+
 ###############################################
 
 # call_cgi "" null_endpoint.results '{
@@ -153,7 +197,7 @@ call_cgi /login login.results '{
    "password": "123456"
 }'
 
-export HTTP_COOKIE=`cat login.results | grep Set-Cookie | grep session-id | cut -f 2 -d \  `
+export HTTP_COOKIE=`cat login.results.shell | grep Set-Cookie | grep session-id | cut -f 2 -d \  `
 
 if [ -z "$HTTP_COOKIE" ]; then
    export HTTP_COOKIE=`cat login.results.curl | grep session-id | cut -f 4 -d \"  `
@@ -236,6 +280,7 @@ call_cgi /group-find group-find-1.results '{
 
 for X in $LGROUPS; do
    for Y in $NAMES; do
+      echo "Adding user $Y to group $X ..."
       call_cgi /group-adduser group-adduser-$X-$Y.results '{
          "group-name":   "'$X'",
          "email":        "'$Y'@example.com"
@@ -420,62 +465,74 @@ call_cgi /perms-group-over-group perms-group-over-group-2.results '{
 
 ###############################################
 
+for X in $RESOURCES; do
+   call_cgi /resource-new resource-new-$X.results '{
+      "resource": "'$X'"
+   }'
+done
+
 call_cgi /grant-to-user grant-to-user-1.results '{
    "email":      "four@example.com",
-   "resource":   "MyTempResource",
+   "resource":   "Resource-One",
    "perms":      "0,3,4,6,7"
 }'
 
 call_cgi /grant-to-user grant-to-user-2.results '{
    "email":      "five@example.com",
-   "resource":   "MyTempResource",
+   "resource":   "Resource-Two",
    "perms":      "0,3,4,6,7"
 }'
 
 call_cgi /grant-to-group grant-to-group-1.results '{
    "group-name":  "Group-Four",
-   "resource":    "MyTempResource",
+   "resource":    "Resource-Three",
    "perms":       "0,3,4,6,7"
 }'
 
 call_cgi /grant-to-group grant-to-group-2.results '{
    "group-name":  "Group-Five",
-   "resource":    "MyTempResource",
+   "resource":    "Resource-Four",
    "perms":       "0,3,4,6,7"
 }'
 
 call_cgi /revoke-from-user revoke-from-user-1.results '{
-   "email":       "four@example.com",
-   "resource":    "MyTempResource",
+   "email":       "five@example.com",
+   "resource":    "Resource-Two",
    "perms":       "0,3,6,"
 }'
 
 call_cgi /revoke-from-group revoke-from-group-1.results '{
    "group-name":  "Group-Four",
-   "resource":    "MyTempResource",
+   "resource":    "Resource-Three",
    "perms":       "0,3,6,"
 }'
 
 call_cgi /perms-for-user perms-for-user-1.results '{
    "email":       "four@example.com",
-   "resource":    "MyTempResource",
+   "resource":    "Resource-One",
 }'
 
 call_cgi /perms-for-user perms-for-user-2.results '{
    "email":       "five@example.com",
-   "resource":    "MyTempResource",
+   "resource":    "Resource-Two",
 }'
 
 call_cgi /perms-for-group perms-for-group-1.results '{
    "group-name":  "Group-Four",
-   "resource":    "MyTempResource",
+   "resource":    "Resource-Three",
 }'
 
 call_cgi /perms-for-group perms-for-group-2.results '{
    "group-name":  "Group-Five",
-   "resource":    "MyTempResource",
+   "resource":    "Resource-Four",
 }'
 
+
+for X in $RESOURCES_DEL; do
+   call_cgi /resource-rm resource-rm-$X.results '{
+      "resource": "'$X'"
+   }'
+done
 
 ###############################################
 
