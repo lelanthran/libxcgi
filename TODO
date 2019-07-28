@@ -8,7 +8,5 @@ resource for access control.
    map urls to functions?
 
 ===============
-4. user-mod endpoint doesn't have a test yet.
-
-5. Pass through sensible error messages when the database calls fail.
+4. Pass through sensible error messages when the database calls fail.
 
