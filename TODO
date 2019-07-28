@@ -8,7 +8,7 @@ resource for access control.
    map urls to functions?
 
 ===============
-4. Complete the user-rm and group-rm endpoints.
+4. user-mod endpoint doesn't have a test yet.
 
 5. Pass through sensible error messages when the database calls fail.
 
