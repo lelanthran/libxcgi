@@ -27,6 +27,40 @@
 #define PERM_TYPE_BUILTIN        (1)
 #define PERM_TYPE_BITSTREAM      (2)
 
+// Used to manage the permissions. Each permission is a bit that, if set,
+// allows the corresponding action on the specified target. See the table
+// of targets in the permissions section below.
+#define PERM_STR_ALL                   ("all")
+#define PERM_STR_ALL_OVER              ("all-over")
+#define PERM_STR_CREATE_RESOURCE       ("create-resource")
+#define PERM_STR_CREATE_USER           ("create-user")
+#define PERM_STR_CREATE_GROUP          ("create-group")
+#define PERM_STR_DEL_RESOURCE          ("delete-resource")
+#define PERM_STR_DEL_USER              ("delete-user")
+#define PERM_STR_DEL_GROUP             ("delete-group")
+#define PERM_STR_READ_USER             ("read-user")
+#define PERM_STR_LIST_MEMBERS          ("list-members")
+#define PERM_STR_MODIFY_USER           ("modify-user")
+#define PERM_STR_CHANGE_PERMISSIONS    ("change-permissions")
+#define PERM_STR_CHANGE_MEMBERSHIP     ("change-membership")
+
+#define PERM_BIT_ALL                   ((uint64_t)(((uint64_t)1) << 0))
+#define PERM_BIT_ALL_OVER              ((uint64_t)(((uint64_t)1) << 1))
+#define PERM_BIT_USER_FIND             ((uint64_t)(((uint64_t)1) << 2))
+#define PERM_BIT_GROUP_FIND            ((uint64_t)(((uint64_t)1) << 3))
+#define PERM_BIT_CREATE_RESOURCE       ((uint64_t)(((uint64_t)1) << 4))
+#define PERM_BIT_CREATE_USER           ((uint64_t)(((uint64_t)1) << 5))
+#define PERM_BIT_CREATE_GROUP          ((uint64_t)(((uint64_t)1) << 6))
+#define PERM_BIT_DEL_RESOURCE          ((uint64_t)(((uint64_t)1) << 7))
+#define PERM_BIT_DEL_USER              ((uint64_t)(((uint64_t)1) << 8))
+#define PERM_BIT_DEL_GROUP             ((uint64_t)(((uint64_t)1) << 9))
+#define PERM_BIT_READ_USER             ((uint64_t)(((uint64_t)1) << 10))
+#define PERM_BIT_LIST_MEMBERS          ((uint64_t)(((uint64_t)1) << 11))
+#define PERM_BIT_MODIFY                ((uint64_t)(((uint64_t)1) << 12))
+#define PERM_BIT_CHANGE_PERMISSIONS    ((uint64_t)(((uint64_t)1) << 14))
+#define PERM_BIT_CHANGE_MEMBERSHIP     ((uint64_t)(((uint64_t)1) << 15))
+
+
 static uint64_t flags_decode (const char *str);
 static char *flags_encode (uint64_t flags);
 static uint64_t perms_decode (int perm_type, const char *str);
@@ -135,6 +169,9 @@ bool        g_perms_allowed = 0;
 #define ARG_ERROR                  (0)
 #define ARG_LOGIN                  (BIT_EMAIL | BIT_PASSWORD)
 #define ARG_LOGOUT                 (0)
+
+#define ARG_RESOURCE_NEW           (BIT_RESOURCE)
+#define ARG_RESOURCE_RM            (BIT_RESOURCE)
 
 #define ARG_USER_NEW               (BIT_EMAIL | BIT_NICK | BIT_PASSWORD)
 #define ARG_USER_RM                (BIT_EMAIL)
@@ -528,6 +565,51 @@ static bool endpoint_LOGOUT (ds_hmap_t *jfields,
    jfields = jfields;
    *error_code = EPUBSUB_UNIMPLEMENTED;
    *status_code = 200;
+   return true;
+}
+
+static bool endpoint_RESOURCE_NEW (ds_hmap_t *jfields,
+                                   int *error_code, int *status_code)
+{
+   const char *resource = incoming_find (FIELD_STR_RESOURCE);
+   uint64_t perms = ((uint64_t)-1) << 32;
+
+   perms |= PERM_BIT_ALL_OVER;
+
+   jfields = jfields;
+
+   *status_code = 200;
+   *error_code = 0;
+
+   if (!(sqldb_auth_perms_grant_user (xcgi_db, g_email, resource, perms))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
+   return true;
+}
+
+static bool endpoint_RESOURCE_RM (ds_hmap_t *jfields,
+                                  int *error_code, int *status_code)
+{
+   const char *resource = incoming_find (FIELD_STR_RESOURCE);
+
+   jfields = jfields;
+
+   *status_code = 200;
+   *error_code = 0;
+
+   if (!(sqldb_exec_ignore (xcgi_db, "DELETE t_user_perms, t_group_perms "
+                                     "    WHERE "
+                                     "t_user_perms.c_resource = #1 "
+                                     "    AND "
+                                     "t_group_perms.c_resource = #1 ",
+                                     sqldb_col_TEXT, &resource,
+                                     sqldb_col_UNKNOWN))) {
+      *error_code = EPUBSUB_INTERNAL_ERROR;
+      return false;
+   }
+
    return true;
 }
 
@@ -1619,6 +1701,9 @@ static const struct {
 { endpoint_LOGIN,                  "login",                ARG_LOGIN          },
 { endpoint_LOGOUT,                 "logout",               ARG_LOGOUT         },
 
+{ endpoint_RESOURCE_NEW,           "resource-new",         ARG_RESOURCE_NEW   },
+{ endpoint_RESOURCE_RM,            "resource-rm",          ARG_RESOURCE_RM    },
+
 { endpoint_USER_NEW,               "user-new",             ARG_USER_NEW       },
 { endpoint_USER_RM,                "user-rm",              ARG_USER_RM        },
 { endpoint_USER_INFO,              "user-info",            ARG_USER_INFO      },
@@ -1737,65 +1822,6 @@ static char *flags_encode (uint64_t flags)
  * only the first match against a resource is considered.
  */
 
-uint64_t resource_count (const char *resource)
-{
-   uint64_t ret = 0;
-   sqldb_res_t *res = NULL;
-   if (!(res = sqldb_exec (xcgi_db, "SELECT count(*) FROM "
-                                    "  t_user_perm, t_group_perm "
-                                    "WHERE "
-                                    "  t_user_perm.c_resource=#1 "
-                                    "OR "
-                                    "  t_group_perm.c_resource=#1 ",
-                                    sqldb_col_TEXT, &resource,
-                                    sqldb_col_UNKNOWN))) {
-      PROG_ERR ("Error counting resources\n");
-      goto errorexit;
-   }
-
-   if ((sqldb_res_step (res))!=1) {
-      PROG_ERR ("Failed to step results\n");
-      goto errorexit;
-   }
-
-   if ((sqldb_scan_columns (res, sqldb_col_UINT64, &ret))!=1) {
-      PROG_ERR ("Failed to scan the columns\n");
-      ret = 0;
-      goto errorexit;
-   }
-
-errorexit:
-
-   sqldb_res_del (res);
-
-   return ret;
-}
-
-#define PERM_STR_ALL                   ("all")
-#define PERM_STR_ALL_OVER              ("all-over")
-#define PERM_STR_CREATE_USER           ("create-user")
-#define PERM_STR_CREATE_GROUP          ("create-group")
-#define PERM_STR_DEL_USER              ("delete-user")
-#define PERM_STR_DEL_GROUP             ("delete-group")
-#define PERM_STR_READ_USER             ("read-user")
-#define PERM_STR_LIST_MEMBERS          ("list-members")
-#define PERM_STR_MODIFY_USER           ("modify-user")
-#define PERM_STR_CHANGE_PERMISSIONS    ("change-permissions")
-#define PERM_STR_CHANGE_MEMBERSHIP     ("change-membership")
-
-#define PERM_BIT_ALL                   ((uint64_t)(((uint64_t)1) << 0))
-#define PERM_BIT_ALL_OVER              ((uint64_t)(((uint64_t)1) << 1))
-#define PERM_BIT_USER_FIND             ((uint64_t)(((uint64_t)1) << 2))
-#define PERM_BIT_GROUP_FIND            ((uint64_t)(((uint64_t)1) << 3))
-#define PERM_BIT_CREATE_USER           ((uint64_t)(((uint64_t)1) << 4))
-#define PERM_BIT_CREATE_GROUP          ((uint64_t)(((uint64_t)1) << 5))
-#define PERM_BIT_DEL_USER              ((uint64_t)(((uint64_t)1) << 6))
-#define PERM_BIT_DEL_GROUP             ((uint64_t)(((uint64_t)1) << 7))
-#define PERM_BIT_READ_USER             ((uint64_t)(((uint64_t)1) << 8))
-#define PERM_BIT_LIST_MEMBERS          ((uint64_t)(((uint64_t)1) << 9))
-#define PERM_BIT_MODIFY                ((uint64_t)(((uint64_t)1) << 10))
-#define PERM_BIT_CHANGE_PERMISSIONS    ((uint64_t)(((uint64_t)1) << 12))
-#define PERM_BIT_CHANGE_MEMBERSHIP     ((uint64_t)(((uint64_t)1) << 13))
 
 static bool perms_check_allowed (endpoint_func_t *fptr)
 {
@@ -1805,62 +1831,65 @@ static bool perms_check_allowed (endpoint_func_t *fptr)
       const char      *resource; // FIELD_STR of the resource in request, defailt SQLDB_ALL
       uint64_t         mask;     // Bitmask for this endpoint
    } perms_map [] = {
-{ endpoint_ERROR,                NULL,     NULL,             ((uint64_t)-1) },
-{ endpoint_LOGIN,                NULL,     NULL,             ((uint64_t)-1) },
-{ endpoint_LOGOUT,               NULL,     NULL,             ((uint64_t)-1) },
+      { endpoint_ERROR,                NULL,     NULL,             ((uint64_t)-1) },
+      { endpoint_LOGIN,                NULL,     NULL,             ((uint64_t)-1) },
+      { endpoint_LOGOUT,               NULL,     NULL,             ((uint64_t)-1) },
 
-{ endpoint_USER_NEW,             NULL,     NULL,             PERM_BIT_CREATE_USER    },
-{ endpoint_USER_RM,              NULL,     "email",          PERM_BIT_DEL_USER       },
-{ endpoint_USER_INFO,            NULL,     "email",          PERM_BIT_READ_USER      },
-{ endpoint_USER_FIND,            NULL,     NULL,             PERM_BIT_USER_FIND      },
-{ endpoint_USER_MOD,             NULL,     "old-email",      PERM_BIT_MODIFY         },
+      { endpoint_RESOURCE_NEW,         NULL,     NULL,             PERM_BIT_CREATE_RESOURCE    },
+      { endpoint_RESOURCE_RM,          NULL,     "resource",       PERM_BIT_DEL_RESOURCE       },
 
-{ endpoint_GROUP_NEW,            NULL,     NULL,              PERM_BIT_CREATE_GROUP      },
-{ endpoint_GROUP_RM,             NULL,     "group-name",      PERM_BIT_DEL_GROUP         },
-{ endpoint_GROUP_MOD,            NULL,     "old-group-name",  PERM_BIT_MODIFY            },
-{ endpoint_GROUP_ADDUSER,        NULL,     "group-name",      PERM_BIT_CHANGE_MEMBERSHIP },
-{ endpoint_GROUP_RMUSER,         NULL,     "group-name",      PERM_BIT_CHANGE_MEMBERSHIP },
-{ endpoint_GROUP_FIND,           NULL,     NULL,              PERM_BIT_GROUP_FIND        },
-{ endpoint_GROUP_MEMBERS,        NULL,     "group-name",      PERM_BIT_LIST_MEMBERS      },
+      { endpoint_USER_NEW,             NULL,     NULL,             PERM_BIT_CREATE_USER    },
+      { endpoint_USER_RM,              NULL,     "email",          PERM_BIT_DEL_USER       },
+      { endpoint_USER_INFO,            NULL,     "email",          PERM_BIT_READ_USER      },
+      { endpoint_USER_FIND,            NULL,     NULL,             PERM_BIT_USER_FIND      },
+      { endpoint_USER_MOD,             NULL,     "old-email",      PERM_BIT_MODIFY         },
 
-{ endpoint_FLAGS_SET,            NULL,     "email",           PERM_BIT_MODIFY      },
-{ endpoint_FLAGS_CLEAR,          NULL,     "email",           PERM_BIT_MODIFY      },
+      { endpoint_GROUP_NEW,            NULL,     NULL,              PERM_BIT_CREATE_GROUP      },
+      { endpoint_GROUP_RM,             NULL,     "group-name",      PERM_BIT_DEL_GROUP         },
+      { endpoint_GROUP_MOD,            NULL,     "old-group-name",  PERM_BIT_MODIFY            },
+      { endpoint_GROUP_ADDUSER,        NULL,     "group-name",      PERM_BIT_CHANGE_MEMBERSHIP },
+      { endpoint_GROUP_RMUSER,         NULL,     "group-name",      PERM_BIT_CHANGE_MEMBERSHIP },
+      { endpoint_GROUP_FIND,           NULL,     NULL,              PERM_BIT_GROUP_FIND        },
+      { endpoint_GROUP_MEMBERS,        NULL,     "group-name",      PERM_BIT_LIST_MEMBERS      },
 
-{ endpoint_PERMS_USER,           "email",        "resource",       PERM_BIT_READ_USER },
-{ endpoint_PERMS_GROUP,          "group-name",   "resource",       PERM_BIT_READ_USER },
-{ endpoint_PERMS_CREATE_USER,    NULL,           NULL,             PERM_BIT_READ_USER },
-{ endpoint_PERMS_CREATE_GROUP,   NULL,           NULL,             PERM_BIT_READ_USER },
-{ endpoint_PERMS_USER_O_USER,    NULL,           "email",          PERM_BIT_READ_USER },
-{ endpoint_PERMS_USER_O_GROUP,   NULL,           "email",          PERM_BIT_READ_USER },
-{ endpoint_PERMS_GROUP_O_USER,   NULL,           "group-name",     PERM_BIT_READ_USER },
-{ endpoint_PERMS_GROUP_O_GROUP,  NULL,           "group-name",     PERM_BIT_READ_USER },
+      { endpoint_FLAGS_SET,            NULL,     "email",           PERM_BIT_MODIFY      },
+      { endpoint_FLAGS_CLEAR,          NULL,     "email",           PERM_BIT_MODIFY      },
 
-{ endpoint_GRANT_USER,           NULL,           "resource",       PERM_BIT_CHANGE_PERMISSIONS   },
-{ endpoint_GRANT_GROUP,          NULL,           "resource",       PERM_BIT_CHANGE_PERMISSIONS   },
-{ endpoint_GRANT_CREATE_USER,    NULL,           NULL,             PERM_BIT_CHANGE_PERMISSIONS   },
-{ endpoint_GRANT_CREATE_GROUP,   NULL,           NULL,             PERM_BIT_CHANGE_PERMISSIONS   },
-{ endpoint_GRANT_USER_O_USER,    NULL,           "email",          PERM_BIT_CHANGE_PERMISSIONS   },
-{ endpoint_GRANT_USER_O_GROUP,   NULL,           "email",          PERM_BIT_CHANGE_PERMISSIONS   },
-{ endpoint_GRANT_GROUP_O_USER,   NULL,           "group-name",     PERM_BIT_CHANGE_PERMISSIONS   },
-{ endpoint_GRANT_GROUP_O_GROUP,  NULL,           "group-name",     PERM_BIT_CHANGE_PERMISSIONS   },
+      { endpoint_PERMS_USER,           NULL,           "resource",       PERM_BIT_READ_USER },
+      { endpoint_PERMS_GROUP,          NULL,           "resource",       PERM_BIT_READ_USER },
+      { endpoint_PERMS_CREATE_USER,    NULL,           NULL,             PERM_BIT_READ_USER },
+      { endpoint_PERMS_CREATE_GROUP,   NULL,           NULL,             PERM_BIT_READ_USER },
+      { endpoint_PERMS_USER_O_USER,    NULL,           "email",          PERM_BIT_READ_USER },
+      { endpoint_PERMS_USER_O_GROUP,   NULL,           "email",          PERM_BIT_READ_USER },
+      { endpoint_PERMS_GROUP_O_USER,   NULL,           "group-name",     PERM_BIT_READ_USER },
+      { endpoint_PERMS_GROUP_O_GROUP,  NULL,           "group-name",     PERM_BIT_READ_USER },
 
-{ endpoint_REVOKE_USER,          "email",        "resource",       PERM_BIT_CHANGE_PERMISSIONS   },
-{ endpoint_REVOKE_GROUP,         "group-name",   "resource",       PERM_BIT_CHANGE_PERMISSIONS   },
-{ endpoint_REVOKE_CREATE_USER,   NULL,           NULL,             PERM_BIT_CHANGE_PERMISSIONS   },
-{ endpoint_REVOKE_CREATE_GROUP,  NULL,           NULL,             PERM_BIT_CHANGE_PERMISSIONS   },
-{ endpoint_REVOKE_USER_O_USER,   NULL,           "email",          PERM_BIT_CHANGE_PERMISSIONS   },
-{ endpoint_REVOKE_USER_O_GROUP,  NULL,           "email",          PERM_BIT_CHANGE_PERMISSIONS   },
-{ endpoint_REVOKE_GROUP_O_USER,  NULL,           "group-name",     PERM_BIT_CHANGE_PERMISSIONS   },
-{ endpoint_REVOKE_GROUP_O_GROUP, NULL,           "group-name",     PERM_BIT_CHANGE_PERMISSIONS   },
+      { endpoint_GRANT_USER,           NULL,           "resource",       PERM_BIT_CHANGE_PERMISSIONS   },
+      { endpoint_GRANT_GROUP,          NULL,           "resource",       PERM_BIT_CHANGE_PERMISSIONS   },
+      { endpoint_GRANT_CREATE_USER,    NULL,           NULL,             PERM_BIT_CHANGE_PERMISSIONS   },
+      { endpoint_GRANT_CREATE_GROUP,   NULL,           NULL,             PERM_BIT_CHANGE_PERMISSIONS   },
+      { endpoint_GRANT_USER_O_USER,    NULL,           "email",          PERM_BIT_CHANGE_PERMISSIONS   },
+      { endpoint_GRANT_USER_O_GROUP,   NULL,           "email",          PERM_BIT_CHANGE_PERMISSIONS   },
+      { endpoint_GRANT_GROUP_O_USER,   NULL,           "group-name",     PERM_BIT_CHANGE_PERMISSIONS   },
+      { endpoint_GRANT_GROUP_O_GROUP,  NULL,           "group-name",     PERM_BIT_CHANGE_PERMISSIONS   },
+
+      { endpoint_REVOKE_USER,          NULL,           "resource",       PERM_BIT_CHANGE_PERMISSIONS   },
+      { endpoint_REVOKE_GROUP,         NULL,           "resource",       PERM_BIT_CHANGE_PERMISSIONS   },
+      { endpoint_REVOKE_CREATE_USER,   NULL,           NULL,             PERM_BIT_CHANGE_PERMISSIONS   },
+      { endpoint_REVOKE_CREATE_GROUP,  NULL,           NULL,             PERM_BIT_CHANGE_PERMISSIONS   },
+      { endpoint_REVOKE_USER_O_USER,   NULL,           "email",          PERM_BIT_CHANGE_PERMISSIONS   },
+      { endpoint_REVOKE_USER_O_GROUP,  NULL,           "email",          PERM_BIT_CHANGE_PERMISSIONS   },
+      { endpoint_REVOKE_GROUP_O_USER,  NULL,           "group-name",     PERM_BIT_CHANGE_PERMISSIONS   },
+      { endpoint_REVOKE_GROUP_O_GROUP, NULL,           "group-name",     PERM_BIT_CHANGE_PERMISSIONS   },
 
 #if 0
-{ endpoint_QUEUE_NEW,              "queuenew",                },
-{ endpoint_QUEUE_RM,               "queuerm",                 },
-{ endpoint_QUEUE_MOD,              "queuemod",                },
-{ endpoint_QUEUE_PUT,              "queueput",                },
-{ endpoint_QUEUE_GET,              "queueget",                },
-{ endpoint_QUEUE_DEL,              "queuedel",                },
-{ endpoint_QUEUE_LIST,             "queuelist",               },
+      { endpoint_QUEUE_NEW,              "queuenew",                },
+      { endpoint_QUEUE_RM,               "queuerm",                 },
+      { endpoint_QUEUE_MOD,              "queuemod",                },
+      { endpoint_QUEUE_PUT,              "queueput",                },
+      { endpoint_QUEUE_GET,              "queueget",                },
+      { endpoint_QUEUE_DEL,              "queuedel",                },
+      { endpoint_QUEUE_LIST,             "queuelist",               },
 #endif
    };
 
@@ -1891,14 +1920,16 @@ static bool perms_check_allowed (endpoint_func_t *fptr)
    if (!str_user || !str_resource)
       return false;
 
-   if ((resource_count (str_resource)) == 0) {
-      return true;
-   }
-
    if (!(sqldb_auth_perms_get_all (xcgi_db, &ret, str_user, str_resource))) {
       PROG_ERR ("Failed to get permissions for user [%s/%s]\n", str_user, str_resource);
       return false;
    }
+
+   if (ret & PERM_BIT_ALL)
+      return true;
+
+   if ((ret & PERM_BIT_ALL_OVER) && (strcmp (str_resource, SQLDB_AUTH_GLOBAL_RESOURCE))!=0)
+      return true;
 
    return ret & perms ? true : false;
 }
