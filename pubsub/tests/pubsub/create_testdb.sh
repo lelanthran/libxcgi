@@ -24,4 +24,4 @@ for X in $ENDPOINTS; do
    sqldb_auth_cli.elf $DBARGS grant_user admin@example.com $X $FPERMS
 done
 
-
+chmod a+w $DBFILE
