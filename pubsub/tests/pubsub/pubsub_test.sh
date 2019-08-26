@@ -49,6 +49,11 @@ function display_file () {
    done
 }
 
+if [ -z "$1" ]; then
+   echo "Must specify test to run, either 'shell' or 'curl'"
+   exit 127
+fi
+
 echo Removing existing results...
 [ "$1" == "shell" ] && rm -rf *.results.shell
 [ "$1" == "curl" ] && rm -rf *.results.curl

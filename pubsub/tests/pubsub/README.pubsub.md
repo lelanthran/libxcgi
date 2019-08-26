@@ -1,29 +1,5 @@
 # Generic PubSub Implementation
 
-## Authentication
-Initially I had intended to rely on user authentication via the http spec,
-now I am considering doing the auth in the program itself.
-
-Doing http-auth:
-+ The web server does all the work of authentication, denial, approval,
-  etc. All the cgi program has to do is simply use the name provided by
-  the web server.
-+ As web auth methods get more secure the cgi program will not have to be
-  changed to accomodate them (For example, Mutual Auth, HOBA, AWS-HMAC)
-- The cgi program will be tied to a specific web-server as it will (for
-  apache) manage the UserAuthFile itself which the webserver will read.
-- The security provided by the http specification for authentication may
-  be inadequate (md5 sums) and is a risk if the authfile ever gets leaked.
-
-Doing it in the program:
-+ Makes the cgi program portable to other web-servers.
-- means a whole lot more work just to auth users (check a cookie, lookup a
-  session, determine the user).
-- If an upgrade occurs to a more secure authentication scheme then the
-  cgi program needs to be updated (and will for a time allow old and new
-  authentication schemes). This is more work.
-
-
 ## Access control
 Initially performed by the admin/installer who must set up an admin
 account with which to manage usernames, groups and permissions.
@@ -57,17 +33,17 @@ endpoint if the returned error indicates an invalid session.
 The cookie name is `session-id` (note case).
 
 ### Error handling
-All the responses except `queue-get` will include in the root of the reply
+All the responses except `binary-get` will include in the root of the reply
 two fields (note case):
 ```javascript
 ."error-code"      // An integer value containing a the error number
 ."error-message"   // An english description of the error
 ```
 
-The `queue-get` indicates errors using http status codes only, as it does
+The `binary-get` indicates errors using http status codes only, as it does
 not return a JSON tree.
 
-(TODO: Create a list of error response codes).
+(TODO: `binary-get` not planned for near future)
 
 ### Session management
 #### Login
@@ -722,7 +698,7 @@ POST /perms-grant-user
 {
    "email":       "example@email.com",
    "perms":       "See list of perms allowed",
-   "resource":    "A queue, user or group"
+   "resource":    "A resource, user or group"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -734,7 +710,7 @@ POST /perms-revoke-user
 {
    "email":       "example@email.com",
    "perms":       "See list of perms allowed",
-   "resource":    "A queue, user or group"
+   "resource":    "A resource, user or group"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -764,7 +740,7 @@ POST /perms-grant-group
 {
    "group-name":  "group name",
    "perms":       "See list of perms allowed",
-   "resource":    "A queue, user or group"
+   "resource":    "A resource, user or group"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -776,7 +752,7 @@ POST /perms-revoke-group
 {
    "group-name":  "group name",
    "perms":       "See list of perms allowed",
-   "resource":    "A queue, user or group"
+   "resource":    "A resource, user or group"
 }
 ```
 RETURNS: "error-code" and "error-message" fields only.
@@ -799,78 +775,14 @@ RETURNS:
 }
 ```
 
-### Queue creation, enqueuing and deleting
-#### Add queue
-```javascript
-POST /queue-new
-{
-   "queue-name":        "name",
-   "queue-description": "A description of the queue",
-}
-```
-RETURNS:
-```javascript
-{
-   "queue-id":     "ID of created queue"
-}
-```
 
-#### Remove queue
-```javascript
-POST /queue-rm
-{
-   "queue-id":        "queue ID",
-}
-```
-RETURNS: "error-code" and "error-message" fields only.
+### Data definitions
 
 
-#### Modify queue
-```javascript
-POST /queue-mod
-{
-   "queue-id":    "ID of queue to modify",
-   ...   // Still haven't decided what properties go into a queue
-}
-```
-RETURNS: "error-code" and "error-message" fields only.
 
 
-#### Putting a message into a queue
-`PUT /queue-put/queue-id`
-`<content body>`
-
-RETURNS:
-```javascript
-{
-   "message-id:   "ID of message added to queue"
-}
-```
-
-#### Getting a message from a queue
-`GET /queue-get/queue-id/message-id`
-
-RETURNS: HTTP status code and raw data only
-```javascript
-<binary data/octet-stream>
-```
 
 
-#### Removing a message from a queue
-`DELETE /queue-del/queue-id`
-RETURNS: "error-code" and "error-message" fields only.
-
-
-#### Listing messages in a queue
-Retrieves all message ids starting at the specified id
-`GET /queue-list/queue-id/message-id`
-
-RETURNS:
-```javascript
-{
-   "message-ids":    [message-id, ...]
-}
-```
 
 
 ## Implementation in brief
@@ -883,32 +795,50 @@ Unfortunately this means at least one more dependency: a RDBMS. To this
 end the dependency is [libsqldb](https://github.com/lelanthran/libsqldb),
 with a minimum version of v0.1.5.
 
-### Queues
-Queues will be implemented using a combination of the database and the
-filesystem - the metadata and a filename is written to the database, the
-queue contents is written to the file. The use of files is to enable very
-large messages to be processed/stored.
+### Data manipulation
+Clients must create a database, then create tables within this database,
+and finally rows within the tables.
 
-"Listening" on a queue must result in a SSE GET request (not yet in the
-spec above), while the usual requests will be used for examining the queue,
-removing items from a queue, etc.
+The database, table and column names are very restricted; this is to
+prevent SQL injection attacks (it is not possible to parameterise table
+creation).
 
-Metadata for a queue must include, at a minimum:
-1. Queue name.
-2. Queue description.
-3. An expiry based on inactivity for the queue.
-4. An expiry for messages (expired items expunged).
-5. A maximum queue length (older items expunged).
-6. An optional password for posting to a queue.
-7. An optional password for reading from a queue.
-8. List of listeners.
+new_database : {
+   "database-name" : "database_name"
+}
 
-Arbitrary metadata (set by callers) in the form name/value pairs must be
-supported.
-
-There must be a few default queues (for example, a queue that will email the
-contents. Useful for notifying users of actions).
-
+new_table : {
+   "database-name":  "database_name",
+   "name":           "Table_Name",
+   "description":    "Table Description",
+   "columns":
+      [
+         {
+            "column-name":    "Column_Name_1",
+            "attributes":     "unique,primary,indexed",
+            "type":           "text | integer | key",
+         },
+         {
+            "column-name":    "Column_Name_2",
+            "attributes":     "unique,primary,indexed",
+            "type":           "text | integer | key",
+         },
+         ...
+      ],
+   "keys":
+      [
+         {
+            "local-column":   "Column_Name",
+            "foreign-table":  "Table_Name",
+            "foreign-column": "Column_Name",
+         },
+         {
+            "local-column":   "Column_Name",
+            "foreign-table":  "Table_Name",
+            "foreign-column": "Column_Name",
+         },
+      ],
+}
 
 ### Sample usage
 1. Client #1: create queue "ChessName1", metadata parameters (rndcolor=b)

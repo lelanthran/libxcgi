@@ -15,7 +15,7 @@ export ENDPOINTS='
    '
 
 rm -rfv ./localdb.sqlite
-sqldb_auth_cli.elf create $DBFILE
+sqldb_auth_cli.elf create $DBFILE sqlite
 sqldb_auth_cli.elf init sqlite $DBFILE
 sqldb_auth_cli.elf $DBARGS user_create admin@example.com admin 123456
 
