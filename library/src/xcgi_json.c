@@ -12,6 +12,7 @@ static const char *lstrchr (const char *haystack, char needle)
    while ((tmp = strchr (tmp, needle))) {
       if (tmp == haystack || tmp[-1] != '\\')
          return tmp;
+      tmp++;
    }
    return NULL;
 }

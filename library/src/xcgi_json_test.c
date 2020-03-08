@@ -6,7 +6,7 @@
 
 #define JSOURCE \
   "{\n"\
-  "   \"field1\":   \"value1\",\n"\
+  "   \"fi\\\"eld1\":   \"valu\\\"e1\",\n"\
   "   \"field2\":   \"value2\",\n"\
   "   \"field3\":   {\n"\
   "            \"f3.1\":   123,\n"\
