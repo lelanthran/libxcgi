@@ -268,7 +268,7 @@ void xcgi_header_cookie_clear (const char *name)
       cookie_t *cookie = xcgi_cookielist[i];
       if ((strcmp (cookie->name, name))==0) {
          cookie_del (cookie);
-         ds_array_remove ((void ***)&xcgi_cookielist, i);
+         ds_array_rm ((void ***)&xcgi_cookielist, i);
       }
    }
 }
@@ -343,7 +343,7 @@ static bool qs_content_types_remove (const char *ct)
 
    for (size_t i=0; xcgi_qstrings_content_types[i]; i++) {
       if ((strcmp (tmp, xcgi_qstrings_content_types[i]))==0) {
-         char *old = ds_array_remove ((void ***)&xcgi_qstrings_content_types, i);
+         char *old = ds_array_rm ((void ***)&xcgi_qstrings_content_types, i);
          free (old);
          found = true;
          // DO NOT BREAK HERE! We want to remove duplicates as well.
@@ -1080,7 +1080,7 @@ void xcgi_headers_clear (const char *header)
 
    if (index != (size_t)-1) {
       free ((void *)xcgi_response_headers[index]);
-      ds_array_remove ((void ***)&xcgi_response_headers, index);
+      ds_array_rm ((void ***)&xcgi_response_headers, index);
    }
 }
 
