@@ -56,7 +56,7 @@ int main (void)
 
    static const size_t nvars = sizeof vars / sizeof vars[0];
 
-   printf ("Test: libxcgi v%s\n", XCGI_VERSION);
+   printf ("Test: libxcgi v%s\n", xcgi_version);
 
    for (size_t i=0; i<nvars; i++) {
       vars[i].value = (*vars[i].variable);
