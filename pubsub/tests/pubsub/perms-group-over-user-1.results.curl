@@ -1,8 +1,0 @@
-
-{
-"target-user": "four@example.com",
-"error-code": 0,
-"error-message": "Success",
-"group-name": "Group-Two",
-"perms": "delete-user,read-user,modify-user"
-}
