@@ -9,7 +9,6 @@
 #include "xcgi.h"
 #include "xcgi_cfg.h"
 
-#include "ds_array.h"
 #include "ds_str.h"
 
 #define EPRINTF(...)     eprintf (__FILE__, __LINE__, __func__, __VA_ARGS__)
@@ -26,6 +25,57 @@ static void eprintf (const char *file, size_t line, const char *func, ...)
 
    va_end (ap);
 }
+
+static void **simple_array_new (void)
+{
+   void **ret = calloc (1, sizeof *ret);
+   return ret;
+}
+
+static void simple_array_del (void **sarray)
+{
+   free (sarray);
+}
+
+static size_t simple_array_length (void **sarray)
+{
+   if (!sarray)
+      return 0;
+
+   size_t ret = 0;
+   for (size_t i=0; sarray[i]; i++)
+      ret++;
+
+   return ret;
+}
+
+static void *simple_array_ins_tail (void ***sarray, void *el)
+{
+   size_t nelems = simple_array_length (*sarray);
+   size_t newsize = nelems + 2;
+   void **tmp = realloc (*sarray, newsize * (sizeof *tmp));
+   if (!tmp)
+      return NULL;
+
+   tmp[nelems] = el;
+   tmp[nelems + 1] = NULL;
+   *sarray = tmp;
+   return el;
+}
+
+static void *simple_array_rm (void ***sarray, size_t index)
+{
+   size_t nelems = simple_array_length (*sarray);
+   if (nelems < (index - 1))
+      return NULL;
+
+   void **tmp = *sarray;
+   void *ret = tmp[index];
+
+   memcpy (&tmp[index], &tmp[index + 1], (sizeof *tmp) * ((nelems - index)));
+   return ret;
+}
+
 
 const char *xcgi_CONTENT_LENGTH;
 const char *xcgi_CONTENT_TYPE;
@@ -144,7 +194,7 @@ static cookie_t **xcgi_cookielist;
 
 static bool cookielist_init (void)
 {
-   return (xcgi_cookielist = (cookie_t **)ds_array_new ()) ? true : false;
+   return (xcgi_cookielist = (cookie_t **)simple_array_new ()) ? true : false;
 }
 
 static const char *cookie_time (time_t expires)
@@ -236,7 +286,7 @@ static void cookielist_shutdown (void)
    for (size_t i=0; xcgi_cookielist && xcgi_cookielist[i]; i++) {
       cookie_del (xcgi_cookielist[i]);
    }
-   ds_array_del ((void **)xcgi_cookielist);
+   simple_array_del ((void **)xcgi_cookielist);
    xcgi_cookielist = NULL;
 }
 
@@ -250,7 +300,7 @@ bool xcgi_header_cookie_set (const char *name, const char *value,
    if (!(newcookie = cookie_new (name, value, expires, flags)))
       goto errorexit;
 
-   if (!(ds_array_ins_tail ((void ***)&xcgi_cookielist, newcookie)))
+   if (!(simple_array_ins_tail ((void ***)&xcgi_cookielist, newcookie)))
       goto errorexit;
 
    error = false;
@@ -268,7 +318,7 @@ void xcgi_header_cookie_clear (const char *name)
       cookie_t *cookie = xcgi_cookielist[i];
       if ((strcmp (cookie->name, name))==0) {
          cookie_del (cookie);
-         ds_array_rm ((void ***)&xcgi_cookielist, i);
+         simple_array_rm ((void ***)&xcgi_cookielist, i);
       }
    }
 }
@@ -278,7 +328,7 @@ void xcgi_header_cookie_clear (const char *name)
  */
 static bool qs_content_types_init (void)
 {
-   return (xcgi_qstrings_content_types = (const char **)ds_array_new ())
+   return (xcgi_qstrings_content_types = (const char **)simple_array_new ())
             ? true : false;
 }
 
@@ -290,7 +340,7 @@ static void qs_content_types_shutdown (void)
    for (size_t i=0; xcgi_qstrings_content_types[i]; i++) {
       free ((char *)xcgi_qstrings_content_types[i]);
    }
-   ds_array_del ((void **)xcgi_qstrings_content_types);
+   simple_array_del ((void **)xcgi_qstrings_content_types);
    xcgi_qstrings_content_types = NULL;
 }
 
@@ -313,7 +363,7 @@ static char *qs_content_types_add (const char *ct)
 
    ret[len-1] = 0;
 
-   if (!(ds_array_ins_tail ((void ***)&xcgi_qstrings_content_types, ret)))
+   if (!(simple_array_ins_tail ((void ***)&xcgi_qstrings_content_types, ret)))
       goto errorexit;
 
    error = false;
@@ -343,7 +393,7 @@ static bool qs_content_types_remove (const char *ct)
 
    for (size_t i=0; xcgi_qstrings_content_types[i]; i++) {
       if ((strcmp (tmp, xcgi_qstrings_content_types[i]))==0) {
-         char *old = ds_array_rm ((void ***)&xcgi_qstrings_content_types, i);
+         char *old = simple_array_rm ((void ***)&xcgi_qstrings_content_types, i);
          free (old);
          found = true;
          // DO NOT BREAK HERE! We want to remove duplicates as well.
@@ -383,7 +433,7 @@ static bool qs_content_types_check (const char *ct)
  */
 static bool qstrings_init (void)
 {
-   return (xcgi_qstrings = (const char ***)ds_array_new ()) ? true : false;
+   return (xcgi_qstrings = (const char ***)simple_array_new ()) ? true : false;
 }
 
 static void qstrings_shutdown (void)
@@ -393,7 +443,7 @@ static void qstrings_shutdown (void)
       free ((void *)xcgi_qstrings[i][1]);
       free ((void *)xcgi_qstrings[i]);
    }
-   ds_array_del ((void **)xcgi_qstrings);
+   simple_array_del ((void **)xcgi_qstrings);
    xcgi_qstrings = NULL;
 }
 
@@ -412,7 +462,7 @@ static char **qstrings_add (const char *name, const char *value)
    if (!ret[0] || !ret[1])
       goto errorexit;
 
-   if (!(ds_array_ins_tail ((void ***)&xcgi_qstrings, ret)))
+   if (!(simple_array_ins_tail ((void ***)&xcgi_qstrings, ret)))
       goto errorexit;
 
    error = false;
@@ -432,7 +482,7 @@ errorexit:
  */
 static bool parse_path_info (void)
 {
-   if (!(xcgi_path_info = (const char **)ds_array_new ()))
+   if (!(xcgi_path_info = (const char **)simple_array_new ()))
       return false;
 
    char *tmp = ds_str_dup (xcgi_PATH_INFO);
@@ -442,7 +492,7 @@ static bool parse_path_info (void)
    char *pathf = strtok (tmp, "/");
    while (pathf) {
       char *e = ds_str_dup (pathf);
-      if (!e || !ds_array_ins_tail ((void ***)&xcgi_path_info, e)) {
+      if (!e || !simple_array_ins_tail ((void ***)&xcgi_path_info, e)) {
          free (tmp);
          return false;
       }
@@ -458,7 +508,7 @@ static void path_info_shutdown (void)
    for (size_t i=0; xcgi_path_info && xcgi_path_info[i]; i++) {
       free ((void *)xcgi_path_info[i]);
    }
-   ds_array_del ((void **)xcgi_path_info);
+   simple_array_del ((void **)xcgi_path_info);
    xcgi_path_info = NULL;
 }
 
@@ -485,7 +535,7 @@ static bool load_path (const char *path)
  */
 static bool parse_cookies (void)
 {
-   if (!(xcgi_cookies = (const char **)ds_array_new ()))
+   if (!(xcgi_cookies = (const char **)simple_array_new ()))
       return false;
 
    char *tmp = ds_str_dup (xcgi_HTTP_COOKIE);
@@ -500,7 +550,7 @@ static bool parse_cookies (void)
          continue;
       }
       char *e = ds_str_dup (cookie);
-      if (!e || !ds_array_ins_tail ((void ***)&xcgi_cookies, e)) {
+      if (!e || !simple_array_ins_tail ((void ***)&xcgi_cookies, e)) {
          free (tmp);
          return false;
       }
@@ -516,7 +566,7 @@ static void cookies_shutdown (void)
    for (size_t i=0; xcgi_cookies && xcgi_cookies[i]; i++) {
       free ((void *)xcgi_cookies[i]);
    }
-   ds_array_del ((void **)xcgi_cookies);
+   simple_array_del ((void **)xcgi_cookies);
    xcgi_cookies = NULL;
 }
 
@@ -527,7 +577,7 @@ static bool response_headers_init (void)
    if (!(cookielist_init ()))
       return false;
 
-   return (xcgi_response_headers = (const char **)ds_array_new ())
+   return (xcgi_response_headers = (const char **)simple_array_new ())
                ? true : false;
 }
 
@@ -541,7 +591,7 @@ static void response_headers_shutdown (void)
    for (size_t i=0; xcgi_response_headers[i]; i++) {
       free ((char *)xcgi_response_headers[i]);
    }
-   ds_array_del ((void **)xcgi_response_headers);
+   simple_array_del ((void **)xcgi_response_headers);
    xcgi_response_headers = NULL;
 }
 
@@ -1046,7 +1096,7 @@ errorexit:
 
 size_t xcgi_qstrings_count (void)
 {
-   return ds_array_length ((void **)xcgi_qstrings);
+   return simple_array_length ((void **)xcgi_qstrings);
 }
 
 bool xcgi_headers_value_set (const char *header, const char *value)
@@ -1059,7 +1109,7 @@ bool xcgi_headers_value_set (const char *header, const char *value)
       if (!(ds_str_printf (&tmp, "%s: %s", header, value)))
          return false;
 
-      bool ret = ds_array_ins_tail ((void ***)&xcgi_response_headers, tmp);
+      bool ret = simple_array_ins_tail ((void ***)&xcgi_response_headers, tmp);
       if (!ret)
          free (tmp);
       return ret;
@@ -1080,7 +1130,7 @@ void xcgi_headers_clear (const char *header)
 
    if (index != (size_t)-1) {
       free ((void *)xcgi_response_headers[index]);
-      ds_array_rm ((void ***)&xcgi_response_headers, index);
+      simple_array_rm ((void ***)&xcgi_response_headers, index);
    }
 }
 
@@ -1116,12 +1166,12 @@ size_t xcgi_cookies_count (void)
 
 size_t xcgi_path_info_count (void)
 {
-   return ds_array_length ((void **)xcgi_path_info);
+   return simple_array_length ((void **)xcgi_path_info);
 }
 
 size_t xcgi_headers_count (void)
 {
-   return ds_array_length ((void **)xcgi_response_headers);
+   return simple_array_length ((void **)xcgi_response_headers);
 }
 
 const char *xcgi_reason_phrase (int status_code)

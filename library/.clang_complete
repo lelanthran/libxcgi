@@ -1,5 +1,6 @@
 -I.
 -I./include
--Dskeleton_version='"0.1.2"'
+-I/home/lelanthran/install-prefix/include/x86_64-linux-gnu/
+-Dxcgi_version='"0.1.2"'
 -DBUILD_TIMESTAMP='"201909162104"'
 
