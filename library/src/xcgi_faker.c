@@ -34,7 +34,7 @@ int main (int argc, char ** argv)
       goto errorexit;
    }
 
-   if (!(xcgi_init ("./"))) {
+   if (!(xcgi_init ("./", XCGI_INIT_ALL))) {
       fprintf (stderr, "Failed to initialise the xcgi library\n");
       xcgi_active = true;
       goto errorexit;

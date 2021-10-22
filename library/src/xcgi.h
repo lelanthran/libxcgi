@@ -43,6 +43,9 @@
 #define XCGI_COOKIE_SAMESITE_STRICT    (1 << 2)
 #define XCGI_COOKIE_SAMESITE_LAX       (1 << 3)
 
+#define XCGI_INIT_ALL         (0xffffffffffffffffL)
+#define XCGI_INIT_CWD         (1 << 0)
+#define XCGI_INIT_DBMS        (1 << 1)
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,7 +71,13 @@ extern "C" {
    // If we unconditionally consume all of the stdin input trying to find
    // query strings then we won't later be able to read it when we
    // discover that the POST data was not query strings.
-   bool xcgi_init (const char *path);
+   //
+   // FLAGS:
+   //    XCGI_INIT_ALL:                Initialise everything
+   //    XCGI_INIT_CWD:                Perform a chdir() to the path specified, if possible
+   //    XCGI_INIT_DBMS:               Initialise the database handle.
+   //
+   bool xcgi_init (const char *path, uint64_t flags);
 
    // Frees and/or closes all resources allocated or opened during the
    // course of execution of this library.
@@ -78,7 +87,7 @@ extern "C" {
    //////////////////////////////////////////////////////////////////
    // Environment functions
 
-   // Load/save the cgi environment for later playback.
+   // Load/save the cgi environment for later playback. NOTE: This is not properly tested yet.
    bool xcgi_load (const char *path, const char *fname);
    bool xcgi_save (const char *fname);
 

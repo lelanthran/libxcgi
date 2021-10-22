@@ -14,7 +14,7 @@ int main (void)
 
    size_t nqstrings = 0;
 
-   if (!(xcgi_init ("./"))) {
+   if (!(xcgi_init ("./", XCGI_INIT_ALL))) {
       fprintf (stderr, "Failed to initialise the library\n");
       goto errorexit;
    }

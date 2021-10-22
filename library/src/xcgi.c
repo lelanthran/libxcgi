@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <inttypes.h>
 
 #include <unistd.h>
 
@@ -120,9 +121,10 @@ const char **xcgi_qstrings_content_types;
 const char ***xcgi_qstrings;
 const char **xcgi_response_headers;
 
-
 char **xcgi_config;
 sqldb_t   *xcgi_db;
+
+uint64_t xcgi_init_flags;
 
 
 
@@ -136,8 +138,15 @@ sqldb_t   *xcgi_db;
 #define CFG_DBTYPE         ("xcgi_dbtype")
 #define CFG_DBSTRING       ("xcgi_dbstring")
 
+static void xcgi_dbms_shutdown (void)
+{
+   sqldb_close (xcgi_db);
+   xcgi_db = NULL;
+}
+
 static bool xcgi_dbms_init (void)
 {
+   xcgi_dbms_shutdown ();
    bool error = true;
    const char *dbstring = xcgi_cfg_get (xcgi_config, CFG_DBSTRING),
               *dbtype = xcgi_cfg_get (xcgi_config, CFG_DBTYPE);
@@ -169,12 +178,6 @@ static bool xcgi_dbms_init (void)
 errorexit:
 
    return !error;
-}
-
-static void xcgi_dbms_shutdown (void)
-{
-   sqldb_close (xcgi_db);
-   xcgi_db = NULL;
 }
 
 
@@ -326,12 +329,6 @@ void xcgi_header_cookie_clear (const char *name)
 
 /* ************************************************************************
  */
-static bool qs_content_types_init (void)
-{
-   return (xcgi_qstrings_content_types = (const char **)simple_array_new ())
-            ? true : false;
-}
-
 static void qs_content_types_shutdown (void)
 {
    if (!xcgi_qstrings_content_types)
@@ -342,6 +339,13 @@ static void qs_content_types_shutdown (void)
    }
    simple_array_del ((void **)xcgi_qstrings_content_types);
    xcgi_qstrings_content_types = NULL;
+}
+
+static bool qs_content_types_init (void)
+{
+   qs_content_types_shutdown ();
+   return (xcgi_qstrings_content_types = (const char **)simple_array_new ())
+            ? true : false;
 }
 
 static char *qs_content_types_add (const char *ct)
@@ -431,11 +435,6 @@ static bool qs_content_types_check (const char *ct)
 
 /* ************************************************************************
  */
-static bool qstrings_init (void)
-{
-   return (xcgi_qstrings = (const char ***)simple_array_new ()) ? true : false;
-}
-
 static void qstrings_shutdown (void)
 {
    for (size_t i=0; xcgi_qstrings && xcgi_qstrings[i]; i++) {
@@ -445,6 +444,12 @@ static void qstrings_shutdown (void)
    }
    simple_array_del ((void **)xcgi_qstrings);
    xcgi_qstrings = NULL;
+}
+
+static bool qstrings_init (void)
+{
+   qstrings_shutdown ();
+   return (xcgi_qstrings = (const char ***)simple_array_new ()) ? true : false;
 }
 
 static char **qstrings_add (const char *name, const char *value)
@@ -480,8 +485,18 @@ errorexit:
 
 /* ************************************************************************
  */
+static void path_info_shutdown (void)
+{
+   for (size_t i=0; xcgi_path_info && xcgi_path_info[i]; i++) {
+      free ((void *)xcgi_path_info[i]);
+   }
+   simple_array_del ((void **)xcgi_path_info);
+   xcgi_path_info = NULL;
+}
+
 static bool parse_path_info (void)
 {
+   path_info_shutdown ();
    if (!(xcgi_path_info = (const char **)simple_array_new ()))
       return false;
 
@@ -503,16 +518,7 @@ static bool parse_path_info (void)
    return true;
 }
 
-static void path_info_shutdown (void)
-{
-   for (size_t i=0; xcgi_path_info && xcgi_path_info[i]; i++) {
-      free ((void *)xcgi_path_info[i]);
-   }
-   simple_array_del ((void **)xcgi_path_info);
-   xcgi_path_info = NULL;
-}
-
-static bool load_path (const char *path)
+static bool switch_path (const char *path)
 {
    if (!path || !path[0]) {
       EPRINTF ("No path specified, ignoring\n");
@@ -524,17 +530,23 @@ static bool load_path (const char *path)
       return false;
    }
 
-   if (!(xcgi_config = xcgi_cfg_load ("xcgi.ini", NULL))) {
-      EPRINTF ("Unable to load [%s/xcgi.ini]\n", path);
-   }
-
    return true;
 }
 
 /* ************************************************************************
  */
+static void cookies_shutdown (void)
+{
+   for (size_t i=0; xcgi_cookies && xcgi_cookies[i]; i++) {
+      free ((void *)xcgi_cookies[i]);
+   }
+   simple_array_del ((void **)xcgi_cookies);
+   xcgi_cookies = NULL;
+}
+
 static bool parse_cookies (void)
 {
+   cookies_shutdown ();
    if (!(xcgi_cookies = (const char **)simple_array_new ()))
       return false;
 
@@ -561,26 +573,8 @@ static bool parse_cookies (void)
    return true;
 }
 
-static void cookies_shutdown (void)
-{
-   for (size_t i=0; xcgi_cookies && xcgi_cookies[i]; i++) {
-      free ((void *)xcgi_cookies[i]);
-   }
-   simple_array_del ((void **)xcgi_cookies);
-   xcgi_cookies = NULL;
-}
-
 /* ************************************************************************
  */
-static bool response_headers_init (void)
-{
-   if (!(cookielist_init ()))
-      return false;
-
-   return (xcgi_response_headers = (const char **)simple_array_new ())
-               ? true : false;
-}
-
 static void response_headers_shutdown (void)
 {
    cookielist_shutdown ();
@@ -593,6 +587,16 @@ static void response_headers_shutdown (void)
    }
    simple_array_del ((void **)xcgi_response_headers);
    xcgi_response_headers = NULL;
+}
+
+static bool response_headers_init (void)
+{
+   response_headers_shutdown ();
+   if (!(cookielist_init ()))
+      return false;
+
+   return (xcgi_response_headers = (const char **)simple_array_new ())
+               ? true : false;
 }
 
 static size_t response_headers_find (const char *name)
@@ -657,13 +661,21 @@ struct {
       { "SERVER_SOFTWARE",          &xcgi_SERVER_SOFTWARE         },
 };
 
-bool xcgi_init (const char *path)
+bool xcgi_init (const char *path, uint64_t flags)
 {
    bool error = true;
 
-   if (!(load_path (path))) {
+   xcgi_init_flags = flags;
+
+   if ((flags & XCGI_INIT_CWD) && !(switch_path (path))) {
       EPRINTF ("Could not load path for [%s], aborting.\n", path);
       goto errorexit;
+   }
+
+   xcgi_cfg_del (xcgi_config);
+   xcgi_config = NULL;
+   if (!(xcgi_config = xcgi_cfg_load ("xcgi.ini", NULL))) {
+      EPRINTF ("Unable to load [%s/xcgi.ini]\n", path);
    }
 
    for (size_t i=0; i<sizeof g_vars/sizeof g_vars[0]; i++) {
@@ -699,7 +711,7 @@ bool xcgi_init (const char *path)
       goto errorexit;
    }
 
-   if (!(xcgi_dbms_init ())) {
+   if ((flags & XCGI_INIT_DBMS) && !(xcgi_dbms_init ())) {
       EPRINTF ("Could not connect to db for [%s], ignoring.\n", path);
       // Optional, so don't return error
    }
@@ -744,6 +756,8 @@ bool xcgi_save (const char *fname)
       EPRINTF ("Failed to open [%s] for writing: %m\n", fname);
       goto errorexit;
    }
+
+   fprintf (outf, "%" PRIx64 "\n", xcgi_init_flags);
 
    for (size_t i=0; i<sizeof g_vars/sizeof g_vars[0]; i++) {
       char *tmp = xcgi_string_escape (*(g_vars[i].variable));
@@ -790,6 +804,7 @@ bool xcgi_load (const char *path, const char *fname)
       goto errorexit;
    }
 
+
    while (!(feof (inf) && !ferror (inf))) {
       char *ltmp = fgets (g_line, sizeof g_line - 1, inf);
       if (!ltmp) {
@@ -828,7 +843,7 @@ bool xcgi_load (const char *path, const char *fname)
    path_info_shutdown ();
    response_headers_shutdown ();
 
-   xcgi_init (path);
+   xcgi_init (path, xcgi_init_flags);
 
    if (!(fgets (g_line, sizeof g_line - 1, inf))) {
       error = false;
